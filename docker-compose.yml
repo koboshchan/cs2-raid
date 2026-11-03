@@ -1,0 +1,70 @@
+services:
+  server:
+    build:
+      context: .
+      target: runner
+    image: cs2-raid:local
+    platform: linux/amd64
+    restart: unless-stopped
+    stop_grace_period: 60s
+    environment:
+      GSLT: ${GSLT:-}
+      RCON_PASSWORD: ${RCON_PASSWORD:?Set RCON_PASSWORD in .env}
+      SERVER_PASSWORD: ${SERVER_PASSWORD:?Set SERVER_PASSWORD in .env}
+      MAP: ${MAP:?Set MAP to an installed map (Space City asset not bundled)}
+      MAXPLAYERS: "7"
+      UPDATE_ON_START: ${UPDATE_ON_START:-1}
+      VALIDATE: ${VALIDATE:-0}
+      RAID_ENABLE_SCAFFOLD: "0"
+      RAID_BACKEND_URL: http://backend:3000
+      BRIDGE_TOKEN: ${BRIDGE_TOKEN:?Generate a distinct random bridge token}
+    ports:
+      - "${PORT:-27015}:27015/udp"
+      - "${PORT:-27015}:27015/tcp"
+    volumes:
+      - cs2-data:/home/steam/cs2
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks: [bridge, egress]
+    security_opt: [no-new-privileges:true]
+    cap_drop: [ALL]
+    healthcheck:
+      test: [CMD, python3, /opt/deltaops/scripts/healthcheck.py]
+      interval: 60s
+      timeout: 10s
+      start_period: 90m
+      retries: 3
+    logging:
+      driver: json-file
+      options: {max-size: 10m, max-file: "3"}
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    image: cs2-raid-backend:local
+    restart: unless-stopped
+    environment:
+      PORT: "3000"
+      SSG_API_ORIGIN: ${SSG_API_ORIGIN:?Set HTTPS SSG origin}
+      SSG_CLIENT_ID: ${SSG_CLIENT_ID:?Set administrator-approved client ID}
+      SSG_APP_SECRET: ${SSG_APP_SECRET:?Set confidential SSG app credential}
+      BRIDGE_TOKEN: ${BRIDGE_TOKEN:?Generate a distinct random bridge token}
+      SERVER_ID: ${SERVER_ID:-raid-friends}
+      DATA_DIR: /data
+      CATALOG_PATH: /app/config/prices.json
+    volumes:
+      - backend-data:/data
+    networks: [bridge, egress]
+    security_opt: [no-new-privileges:true]
+    cap_drop: [ALL]
+    logging:
+      driver: json-file
+      options: {max-size: 10m, max-file: "3"}
+volumes:
+  cs2-data:
+  backend-data:
+networks:
+  bridge:
+    internal: true
+  egress: {}
