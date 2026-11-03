@@ -1,0 +1,7 @@
+{
+  "map": "TODO_SPACE_CITY_WORKSHOP_MAP",
+  "maxPlayers": 7,
+  "raidSeconds": 1800,
+  "extractionDelaySeconds": 300,
+  "sellbackPercent": 90
+}
