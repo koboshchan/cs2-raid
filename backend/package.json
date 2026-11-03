@@ -1,0 +1,7 @@
+{
+  "name": "cs2-raid-backend", "version": "0.1.0", "private": true,
+  "engines": { "node": ">=24 <25" },
+  "scripts": { "build": "tsc", "test": "tsx --test src/*.test.ts", "start": "node dist/server.js" },
+  "dependencies": { "@scure/bip39": "^2.0.1", "fastify": "^5.6.2", "zod": "^4.1.12" },
+  "devDependencies": { "@types/node": "^24.10.0", "tsx": "^4.20.6", "typescript": "^5.9.3" }
+}
