@@ -11,6 +11,7 @@ internal static class PrivateLinkTests
         }
     }
     private static HttpResponseMessage Json(string text,HttpStatusCode status=HttpStatusCode.OK)=>new(status){Content=new StringContent(text,Encoding.UTF8,"application/json")};
+    private static string SourcePath([System.Runtime.CompilerServices.CallerFilePath]string path="")=>path;
     internal static void Run()=>RunAsync().GetAwaiter().GetResult();
     private static async Task RunAsync()
     {
@@ -123,6 +124,63 @@ internal static class PrivateLinkTests
             var old=service.Start("76561198000000001",34,generation,true)!;await old.Work;
             var replacement=service.Start("76561198000000002",34,generation,true)!;await replacement.Work;
             Check(!service.Current(old)&&service.Current(replacement));
+        }
+
+        var pluginSource=File.ReadAllText(Path.Combine(Path.GetDirectoryName(SourcePath())!,"../RaidPlugin.cs"));
+        Check(pluginSource.Contains("RegisterListener<Listeners.OnMapEnd>(()=>privateLinks?.EndMap(()=>mapGeneration=Guid.NewGuid()))"));
+        Check(pluginSource.Contains("privateLinks?.Schedule(session,action=>Server.NextFrame(action)"));
+        // Review regressions: strict words/URL, explicit failures, map-end gap, native exceptions.
+        foreach(var bad in new[]{"four test words here\n","four test words here\r","four test\x01 words here","four test words here\u2028","four test words here\u200b","four  test words here"}){
+            var messages=new List<string>();
+            using var fake=new Fake((r,c)=>Task.FromResult(Json(r.RequestUri!.AbsolutePath=="/link/status"?"{\"linked\":false}":Code().Replace("four test words here",System.Text.Json.JsonEncodedText.Encode(bad).ToString()))));
+            using var client=new HttpClient(fake);
+            using var service=new PrivateLink(client,(s,m)=>messages.Add(m));
+            await service.Start("76561198000000001",101,generation,false)!.Work;
+            Check(messages.Count==1&&!messages[0].Contains("Private SSG code")&&fake.Calls==2);
+        }
+        foreach(var badUrl in new[]{"https://example.test/link%0a","https://example.test/link\u202e","https://example.test/link%01","https://example.test/link%7f"}){
+            var messages=new List<string>();
+            using var fake=new Fake((r,c)=>Task.FromResult(Json(r.RequestUri!.AbsolutePath=="/link/status"?"{\"linked\":false}":Code().Replace("https://example.test/link",System.Text.Json.JsonEncodedText.Encode(badUrl).ToString()))));
+            using var client=new HttpClient(fake);
+            using var service=new PrivateLink(client,(s,m)=>messages.Add(m));
+            await service.Start("76561198000000001",101,generation,false)!.Work;
+            Check(messages.Count==1&&!messages[0].Contains("Private SSG code")&&fake.Calls==2);
+        }
+        foreach(var malformed in new[]{false,true}){
+            var messages=new List<string>();
+            using var fake=new Fake((r,c)=>Task.FromResult(malformed?Json("{\"bad\":true}"):Json("{}",HttpStatusCode.Unauthorized)));
+            using var client=new HttpClient(fake);
+            using var service=new PrivateLink(client,(s,m)=>messages.Add(m));
+            await service.Start("76561198000000001",102,generation,false)!.Work;
+            Check(messages.Count==1&&messages[0].Contains("unavailable"));
+        }
+        {
+            var entered=new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+            var finish=new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+            var notifications=0;var delivered=0;Action? queued=null;bool advanced=false;
+            using var fake=new Fake(async(r,c)=>{entered.SetResult();await finish.Task;return Json("{\"linked\":false}");});
+            using var client=new HttpClient(fake);
+            using var service=new PrivateLink(client,(s,m)=>notifications++);
+            var session=service.Start("76561198000000001",103,generation,true)!;await entered.Task;
+            service.Schedule(session,a=>queued=a,()=>delivered++);
+            service.EndMap(()=>advanced=true);finish.SetResult();await session.Work;queued!();
+            Check(advanced&&fake.Calls==1&&notifications==0&&delivered==0&&!service.Current(session));
+        }
+        {
+            using var fake=new Fake((r,c)=>Task.FromResult(Json("{\"linked\":true}")));
+            using var client=new HttpClient(fake);
+            using var service=new PrivateLink(client,(s,m)=>{});
+            var session=service.Start("76561198000000001",104,generation,true)!;await session.Work;
+            foreach(var stage in new[]{"reacquire","property","chat"}){
+                Action? queued=null;int after=0;
+                service.Schedule(session,a=>queued=a,()=>{throw new Exception(stage+" secret");});
+                queued!();Check(after==0); // Exceptions from native provider/property/chat cannot escape.
+            }
+            service.Schedule(session,a=>throw new Exception("scheduler secret"),()=>throw new Exception());
+            PrivateLink.NativeSafe(()=>throw new Exception("disconnect provider secret"));Check(true);
+            Action? stale=null;int delivered=0;
+            service.Schedule(session,a=>stale=a,()=>delivered++);
+            service.Disconnect(104);stale!();Check(delivered==0);
         }
         Environment.SetEnvironmentVariable("RAID_BACKEND_URL",null);
         Environment.SetEnvironmentVariable("BRIDGE_TOKEN",null);

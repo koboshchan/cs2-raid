@@ -21,14 +21,14 @@ public sealed partial class RaidPlugin : BasePlugin
     private readonly HttpClient linkHttp=new(new LinkOnlyHandler()) {Timeout=Timeout.InfiniteTimeSpan};
     public override void Load(bool hotReload)
     {
-        privateLinks=new PrivateLink(linkHttp,(session,message)=>Server.NextFrame(()=>{
+        privateLinks=new PrivateLink(linkHttp,(session,message)=>privateLinks?.Schedule(session,action=>Server.NextFrame(action),()=>{
             if(privateLinks?.Current(session)!=true||session.Generation!=mapGeneration||testUnloaded)return;
             var current=Utilities.GetPlayers().FirstOrDefault(p=>p.IsValid&&p.EntityHandle.Raw==session.Raw);
             if(current is {IsValid:true,IsBot:false}&&current.AuthorizedSteamID!=null&&current.SteamID.ToString()==session.Steam)
                 current.PrintToChat(message);
         }));
         RegisterEventHandler<EventPlayerConnectFull>((e,i)=>{
-            BeginLink(e.Userid,true);return HookResult.Continue;
+            PrivateLink.NativeSafe(()=>BeginLink(e.Userid,true));return HookResult.Continue;
         });
         LoadGameplay();
         RegisterTestMode();
@@ -75,19 +75,24 @@ public sealed partial class RaidPlugin : BasePlugin
             return HookResult.Continue;
         });
         RegisterEventHandler<EventPlayerDisconnect>((e, info) => {
+            PrivateLink.NativeSafe(()=>{
             var p = e.Userid;
             if(p is {IsValid:true})privateLinks?.Disconnect(p.EntityHandle.Raw);
             if (p is { IsValid: true } && raid.Players.TryGetValue(p.SteamID.ToString(), out var s) && s.Alive && !s.Extracted)
                 raid.Die(p.SteamID.ToString());
+            });
             return HookResult.Continue;
         });
+        RegisterListener<Listeners.OnMapEnd>(()=>privateLinks?.EndMap(()=>mapGeneration=Guid.NewGuid()));
         RegisterListener<Listeners.OnMapStart>(_ => { raid = new RaidState(); mapGeneration = Guid.NewGuid(); linking.Clear(); privateLinks?.Reset(); });
         AddTimer(1.0f, () => raid.Tick(DateTimeOffset.UtcNow), TimerFlags.REPEAT);
     }
     private void BeginLink(CCSPlayerController? p, bool join)
     {
-        if(testUnloaded || p is not {IsValid:true,IsBot:false} || p.AuthorizedSteamID==null)return;
-        privateLinks?.Start(p.SteamID.ToString(),p.EntityHandle.Raw,mapGeneration,join);
+        PrivateLink.NativeSafe(()=>{
+            if(testUnloaded || p is not {IsValid:true,IsBot:false} || p.AuthorizedSteamID==null)return;
+            privateLinks?.Start(p.SteamID.ToString(),p.EntityHandle.Raw,mapGeneration,join);
+        });
     }
     public override void Unload(bool hotReload) {
         privateLinks?.Dispose();linkHttp.Dispose();

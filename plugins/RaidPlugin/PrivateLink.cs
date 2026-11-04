@@ -48,6 +48,13 @@ internal sealed class PrivateLink : IDisposable
     internal void Reset() {lock(sync){foreach(var s in sessions.Values)s.Stop.Cancel();sessions.Clear();}}
     public void Dispose(){lock(sync){disposed=true;Reset();}}
     private void Say(Session s,string text){if(Current(s))notify(s,text);}
+    // Printable ASCII only for engine chat; reject encoded URL controls as well.
+    private static bool UnsafeChat(string text)=>text.Any(c=>c<' '||c>'~')||
+        text.Any(c=>c=='\x7f');
+    internal static void NativeSafe(Action action){try{action();}catch{/* No exception payloads or secrets in logs/chat. */}}
+    internal void Schedule(Session session,Action<Action> schedule,Action deliver)
+        =>NativeSafe(()=>schedule(()=>NativeSafe(()=>{if(Current(session))deliver();})));
+    internal void EndMap(Action advanceGeneration){Reset();advanceGeneration();}
     private async Task Run(Session s,SemaphoreSlim lane,bool join)
     {
         var ct=s.Stop.Token;var held=false;
@@ -79,7 +86,7 @@ internal sealed class PrivateLink : IDisposable
                         await Pause(wait);continue;
                     }
                     if(!response.IsSuccessStatusCode){
-                        if(!probe)Say(s,"SSG link unavailable. Use !link or ask the server owner; no charge was made.");
+                        if(!join||!probe)Say(s,"SSG link unavailable. Use !link or ask the server owner; no charge was made.");
                         return;
                     }
                     using var doc=JsonDocument.Parse(await response.Content.ReadAsStringAsync(timeout.Token));
@@ -91,8 +98,8 @@ internal sealed class PrivateLink : IDisposable
                     if(create){
                         var words=root.GetProperty("user_code").GetString()??"";
                         var uri=root.GetProperty("verification_uri").GetString()??"";
-                        if(words.Length>128||!Regex.IsMatch(words,@"^[a-z]+ [a-z]+ [a-z]+ [a-z]+$")||
-                           uri.Length>512||uri.Any(c=>char.IsControl(c)||c==0x2028||c==0x2029)||
+                        if(words.Length>128||UnsafeChat(words)||!Regex.IsMatch(words,@"\A[a-z]+ [a-z]+ [a-z]+ [a-z]+\z",RegexOptions.NonBacktracking)||
+                           uri.Length>512||UnsafeChat(uri)||UnsafeChat(Uri.UnescapeDataString(uri))||
                            !Uri.TryCreate(uri,UriKind.Absolute,out var url)||url.Scheme!="https"||
                            !string.IsNullOrEmpty(url.UserInfo))throw new FormatException();
                         expires=root.GetProperty("expires_at").GetDateTimeOffset();
@@ -114,7 +121,7 @@ internal sealed class PrivateLink : IDisposable
                 }catch(OperationCanceledException) when(ct.IsCancellationRequested){return;}
                 catch(HttpRequestException){await Retry();}
                 catch(OperationCanceledException){await Retry();}
-                catch{if(!probe)Say(s,"SSG linking unavailable. Use !link or ask the server owner.");return;}
+                catch{if(!join||!probe)Say(s,"SSG linking unavailable. Use !link or ask the server owner.");return;}
             }
             async Task Pause(double seconds){
                 var left=(expires-now()).TotalSeconds;
