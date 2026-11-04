@@ -22,3 +22,4 @@ Console.WriteLine($"{checks} raid rule checks passed");
 FlowTests.Run();
 
 SettlementTests.Run();
+SettlementRecoveryChecks.Run();
