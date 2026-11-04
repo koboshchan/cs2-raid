@@ -58,7 +58,7 @@ public static class SpawnProfileTests
         }
         Check(SpawnProfile.Parse(JsonSerializer.Serialize(p)).ExtractionZone==zone);
         Reject(json.Replace("\"unboundedZ\": true","\"unboundedZ\": false"));
-        Reject(json.Replace("943.874","1e400"));Reject(json.Replace("1374.076","1000"));
+        Reject(json.Replace("943.874","1e400"));Reject(json.Replace("1374.076","900"));
         // Legacy bounded radius and vertical distance are unchanged.
         var legacy=new GameplayConfig{ExtractionCenter=new(0,0,0),ExtractionRadius=10};
         Check(new Position(0,0,10).Within(legacy.ExtractionCenter,legacy.ExtractionRadius));

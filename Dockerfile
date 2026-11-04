@@ -102,7 +102,7 @@ for n in 1 2; do
   grep -q '0 Error(s)' /work/artifacts/build-$n.log
   dotnet restore /work/run$n/src/tests/RaidState.Tests.csproj --configfile /work/NuGet.Config >> /work/artifacts/build-$n.log 2>&1
   dotnet build /work/run$n/src/tests/RaidState.Tests.csproj -c Release --no-restore -p:TreatWarningsAsErrors=true >> /work/artifacts/build-$n.log 2>&1
-  dotnet /work/run$n/src/tests/bin/Release/net10.0/RaidState.Tests.dll >> /work/artifacts/build-$n.log 2>&1
+  dotnet /work/run$n/src/tests/bin/Release/net10.0/RaidState.Tests.dll >> /work/artifacts/build-$n.log 2>&1 || { cat /work/artifacts/build-$n.log; exit 1; }
   grep '19 raid rule checks passed' /work/artifacts/build-$n.log
   grep 'flow v2 checks passed' /work/artifacts/build-$n.log
 done
