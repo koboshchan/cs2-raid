@@ -5,7 +5,6 @@ using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Attributes.Registration;
 using CounterStrikeSharp.API.Modules.Commands;
 using CounterStrikeSharp.API.Modules.Memory;
-using CounterStrikeSharp.API.Modules.Menu;
 using CounterStrikeSharp.API.Modules.Timers;
 using CounterStrikeSharp.API.Modules.UserMessages;
 using CounterStrikeSharp.API.Modules.Utils;
@@ -14,7 +13,7 @@ using CssTimer = CounterStrikeSharp.API.Modules.Timers.Timer;
 
 namespace DeltaOps;
 
-public sealed class DeltaOpsPlugin : BasePlugin, IPluginConfig<DeltaOpsConfig>
+public sealed partial class DeltaOpsPlugin : BasePlugin, IPluginConfig<DeltaOpsConfig>
 {
     private enum OperatorId
     {
@@ -66,10 +65,8 @@ public sealed class DeltaOpsPlugin : BasePlugin, IPluginConfig<DeltaOpsConfig>
         public CssTimer? XReadyTimer { get; set; }
         public string LastKnownName { get; set; } = string.Empty;
         public CssTimer? SelectionTimer { get; set; }
-        public CenterHtmlMenu? SelectionMenu { get; set; }
-        public int SelectionMenuPage { get; set; } = -1;
-        public int SelectionPage { get; set; }
         public int SelectionSecondsRemaining { get; set; }
+        public bool BindingHelpShown { get; set; }
         public int LastLunaFlashRound { get; set; } = -1;
         public string? LastLunaDamagedTargetKey { get; set; }
         public string? LastLunaAttackerKey { get; set; }
@@ -221,16 +218,7 @@ public sealed class DeltaOpsPlugin : BasePlugin, IPluginConfig<DeltaOpsConfig>
 
     public override void Load(bool hotReload)
     {
-        // Legacy operator ally checks/free utilities are unsafe in custom-team raid mode.
-        var raidConfig = Path.Combine(ModuleDirectory, "..", "RaidPlugin", "gameplay.json");
-        if (File.Exists(raidConfig))
-        {
-            try {
-                using var doc = System.Text.Json.JsonDocument.Parse(File.ReadAllText(raidConfig));
-                if (doc.RootElement.EnumerateObject().Any(p => p.Name.Equals("enabled", StringComparison.OrdinalIgnoreCase) && p.Value.ValueKind == System.Text.Json.JsonValueKind.True))
-                { Logger.LogInformation("DeltaOps disabled in Raid gameplay mode pending custom-team integration."); return; }
-            } catch (Exception e) { Logger.LogError("DeltaOps disabled: gameplay config unreadable ({Failure}).", e.GetType().Name); return; }
-        }
+        ConfigureRaidBridge();
         RegisterEventHandler<EventPlayerSpawn>(OnPlayerSpawn);
         RegisterEventHandler<EventPlayerTeam>(OnPlayerTeam);
         RegisterEventHandler<EventRoundStart>(OnRoundStart);
@@ -251,13 +239,14 @@ public sealed class DeltaOpsPlugin : BasePlugin, IPluginConfig<DeltaOpsConfig>
 
         Logger.LogInformation(
             "DeltaOps loaded. Operators={OperatorCount}, selectionTimeout={Timeout}s, " +
-            "cooldowns=V:{VCooldown}s/X:{XCooldown}s, autoBind={AutoBind}.",
+            "cooldowns=V:{VCooldown}s/X:{XCooldown}s, bindingHelp={BindingHelp}.",
             _operators.Count, Config.SelectionSeconds, Config.VCooldownSeconds,
             Config.XCooldownSeconds, Config.AutoBindSkillKeys);
     }
 
     public override void Unload(bool hotReload)
     {
+        _bridgeLoaded = false;
         ResetAllPlayersAndState("插件卸载", broadcast: false);
     }
 
@@ -278,8 +267,7 @@ public sealed class DeltaOpsPlugin : BasePlugin, IPluginConfig<DeltaOpsConfig>
                 return;
             }
 
-            BindSkillKeys(current);
-            ScheduleSkillKeyBinding(current);
+            ShowSkillBindingHelp(current);
             var state = GetOrCreateState(current, key);
             if (state.Operator == null)
             {
@@ -383,7 +371,7 @@ public sealed class DeltaOpsPlugin : BasePlugin, IPluginConfig<DeltaOpsConfig>
         }
 
         if (IsHumanController(attacker) && IsCombatController(victim) &&
-            attacker!.Handle != victim!.Handle && attacker.TeamNum != victim.TeamNum)
+            attacker!.Handle != victim!.Handle && IsEnemy(attacker, victim))
         {
             var attackerState = GetExistingState(attacker);
             if (attackerState?.Operator == OperatorId.RedWolf)
@@ -406,7 +394,7 @@ public sealed class DeltaOpsPlugin : BasePlugin, IPluginConfig<DeltaOpsConfig>
         if (attacker == null || victim == null ||
             !IsHumanController(attacker) || !IsCombatController(victim) ||
             attacker.Handle == victim.Handle ||
-            attacker.TeamNum == victim.TeamNum ||
+            !IsEnemy(attacker, victim) ||
             @event.DmgHealth <= 0)
         {
             return HookResult.Continue;
@@ -467,7 +455,7 @@ public sealed class DeltaOpsPlugin : BasePlugin, IPluginConfig<DeltaOpsConfig>
         var attacker = @event.Attacker;
         var victim = @event.Userid;
         if (!IsHumanController(attacker) || !IsCombatController(victim) ||
-            attacker!.Handle == victim!.Handle || attacker.TeamNum == victim.TeamNum ||
+            attacker!.Handle == victim!.Handle || !IsEnemy(attacker, victim) ||
             @event.BlindDuration < 0.1f)
         {
             return HookResult.Continue;
@@ -673,52 +661,29 @@ public sealed class DeltaOpsPlugin : BasePlugin, IPluginConfig<DeltaOpsConfig>
             var player = Utilities.GetPlayerFromSlot(slot);
             if (player != null && IsHumanController(player))
             {
-                BindSkillKeys(player);
-                ScheduleSkillKeyBinding(player);
+                ShowSkillBindingHelp(player);
             }
         });
     }
 
-    private void BindSkillKeys(CCSPlayerController player)
+    private void ShowSkillBindingHelp(CCSPlayerController player, bool force = false)
     {
-        if (!Config.AutoBindSkillKeys || !IsHumanController(player))
+        if (!IsHumanController(player))
         {
             return;
         }
 
-        // CS2 builds differ in which server-to-client command path accepts bind.
-        // Send through both supported APIs; a repeated identical bind is harmless.
-        player.ExecuteClientCommand("bind \"v\" \"css_v\"");
-        player.ExecuteClientCommand("bind \"x\" \"css_x\"");
-        player.ExecuteClientCommandFromServer("bind v css_v");
-        player.ExecuteClientCommandFromServer("bind x css_x");
-    }
-
-    private void ScheduleSkillKeyBinding(CCSPlayerController player)
-    {
-        if (!Config.AutoBindSkillKeys)
+        var state = GetOrCreateState(player, GetPlayerKey(player));
+        if (!force && (!Config.AutoBindSkillKeys || state.BindingHelpShown))
         {
             return;
         }
 
-        var key = GetPlayerKey(player);
-        AddTimer(3.0f, () =>
-        {
-            var current = FindPlayerByKey(key);
-            if (current != null)
-            {
-                BindSkillKeys(current);
-            }
-        }, TimerFlags.STOP_ON_MAPCHANGE);
-
-        AddTimer(8.0f, () =>
-        {
-            var current = FindPlayerByKey(key);
-            if (current != null)
-            {
-                BindSkillKeys(current);
-            }
-        }, TimerFlags.STOP_ON_MAPCHANGE);
+        state.BindingHelpShown = true;
+        // Bind is local input configuration, not a server command. Never send it
+        // through ExecuteClientCommand[FromServer], and never claim it succeeded.
+        player.PrintToChat(" [DeltaOps] 技能输入 !v / !x；按键需自己在游戏控制台绑定：");
+        player.PrintToChat(" bind \"v\" \"css_v\"; bind \"x\" \"css_x\"");
     }
 
     private void OnClientDisconnect(int slot)
@@ -737,9 +702,11 @@ public sealed class DeltaOpsPlugin : BasePlugin, IPluginConfig<DeltaOpsConfig>
         ClearLandminesForOwner(key);
     }
 
+    [ConsoleCommand("css_characterselect", "选择干员：!characterselect <1-6>；无参数查看列表")]
     [ConsoleCommand("css_op", "选择或重新查看干员：!op 1")]
     public void OnOperatorCommand(CCSPlayerController? player, CommandInfo command)
     {
+        if (_raidMode) return; // Raid owns selection and confirms only after capability success.
         if (player == null || !IsHumanController(player))
         {
             command.ReplyToCommand("[三角洲模式] 该命令需要在游戏内使用。");
@@ -770,46 +737,6 @@ public sealed class DeltaOpsPlugin : BasePlugin, IPluginConfig<DeltaOpsConfig>
         SelectOperator(player, key, _operators[selectedIndex - 1], automatic: false);
     }
 
-    [ConsoleCommand("css_opnext", "选角页面：下一页")]
-    public void OnOperatorNextPageCommand(CCSPlayerController? player, CommandInfo command)
-    {
-        MoveOperatorSelectionPage(player, command, delta: 1);
-    }
-
-    [ConsoleCommand("css_opprev", "选角页面：上一页")]
-    public void OnOperatorPreviousPageCommand(CCSPlayerController? player, CommandInfo command)
-    {
-        MoveOperatorSelectionPage(player, command, delta: -1);
-    }
-
-    private void MoveOperatorSelectionPage(CCSPlayerController? player, CommandInfo command, int delta)
-    {
-        if (player == null || !IsHumanController(player))
-        {
-            command.ReplyToCommand("[三角洲模式] 该命令需要在游戏内使用。");
-            return;
-        }
-
-        var key = GetPlayerKey(player);
-        var state = GetOrCreateState(player, key);
-        if (state.Operator.HasValue)
-        {
-            player.PrintToChat(" [三角洲模式] 干员已经选定。输入 !ops 查看详情。");
-            return;
-        }
-
-        if (state.SelectionTimer == null)
-        {
-            ShowOperatorSelection(player, key);
-            state = GetOrCreateState(player, key);
-        }
-
-        var pageCount = GetSelectionPageCount();
-        CloseSelectionMenu(player, state);
-        state.SelectionPage = (state.SelectionPage + delta + pageCount) % pageCount;
-        RenderSelectionPage(player, state);
-    }
-
     private void ResetOperatorForSwitch(
         CCSPlayerController player,
         string key,
@@ -817,7 +744,6 @@ public sealed class DeltaOpsPlugin : BasePlugin, IPluginConfig<DeltaOpsConfig>
     {
         state.SelectionTimer?.Kill();
         state.SelectionTimer = null;
-        CloseSelectionMenu(player, state);
         CancelArmedGrenade(key);
         StopLunaDot(key);
         ClearControl(key);
@@ -834,7 +760,7 @@ public sealed class DeltaOpsPlugin : BasePlugin, IPluginConfig<DeltaOpsConfig>
         var pawn = player.PlayerPawn.Value;
         if (pawn != null && pawn.IsValid)
         {
-            pawn.MaxHealth = 100;
+            pawn.MaxHealth = _raidMode ? 200 : 100;
             pawn.Health = Math.Min(pawn.Health, pawn.MaxHealth);
             pawn.VelocityModifier = 1.0f;
             Utilities.SetStateChanged(pawn, "CBaseEntity", "m_iMaxHealth");
@@ -856,6 +782,7 @@ public sealed class DeltaOpsPlugin : BasePlugin, IPluginConfig<DeltaOpsConfig>
             return;
         }
 
+        if (_raidMode && !RaidActive(player.SteamID)) return;
         var state = GetExistingState(player);
         if (state?.Operator == null)
         {
@@ -880,6 +807,7 @@ public sealed class DeltaOpsPlugin : BasePlugin, IPluginConfig<DeltaOpsConfig>
             return;
         }
 
+        if (_raidMode && !RaidActive(player.SteamID)) return;
         var state = GetExistingState(player);
         if (state?.Operator == null)
         {
@@ -1004,7 +932,7 @@ public sealed class DeltaOpsPlugin : BasePlugin, IPluginConfig<DeltaOpsConfig>
         var target = Utilities.GetPlayerFromSlot(targetSlot);
         if (luna == null || target == null ||
             !IsHumanController(luna) || !IsCombatController(target) ||
-            luna.TeamNum == target.TeamNum)
+            !IsEnemy(luna, target))
         {
             command.ReplyToCommand("需要两名不同队伍的存活玩家。");
             return;
@@ -1042,7 +970,7 @@ public sealed class DeltaOpsPlugin : BasePlugin, IPluginConfig<DeltaOpsConfig>
         if (attacker == null || victim == null ||
             !IsHumanController(attacker) || !IsCombatController(victim) ||
             !attacker.PawnIsAlive || !victim.PawnIsAlive ||
-            attacker.TeamNum == victim.TeamNum)
+            !IsEnemy(attacker, victim))
         {
             command.ReplyToCommand("需要两名不同队伍的存活玩家。");
             return;
@@ -1091,10 +1019,7 @@ public sealed class DeltaOpsPlugin : BasePlugin, IPluginConfig<DeltaOpsConfig>
             return;
         }
 
-        BindSkillKeys(player);
-        player.PrintToChat(" [三角洲模式] 已尝试绑定 V/X。");
-        player.PrintToChat(" 若按键未生效，请在游戏控制台执行：");
-        player.PrintToChat(" bind \"v\" \"css_v\"; bind \"x\" \"css_x\"");
+        ShowSkillBindingHelp(player, force: true);
     }
 
     private void UseSkillSlot(CCSPlayerController? player, CommandInfo command, bool useV)
@@ -1105,10 +1030,11 @@ public sealed class DeltaOpsPlugin : BasePlugin, IPluginConfig<DeltaOpsConfig>
             return;
         }
 
+        if (_raidMode && !RaidActive(player.SteamID)) return;
         var state = GetExistingState(player);
         if (state?.Operator == null)
         {
-            player.PrintToChat(" [三角洲模式] 请先输入 !op 1-6 选择干员。");
+            player.PrintToChat(" [三角洲模式] 请先输入 !characterselect <1-6> 选择干员。");
             return;
         }
 
@@ -1166,6 +1092,7 @@ public sealed class DeltaOpsPlugin : BasePlugin, IPluginConfig<DeltaOpsConfig>
 
     private void ShowOperatorSelection(CCSPlayerController player, string key)
     {
+        if (_raidMode) return;
         var state = GetOrCreateState(player, key);
         if (state.Operator.HasValue)
         {
@@ -1174,19 +1101,18 @@ public sealed class DeltaOpsPlugin : BasePlugin, IPluginConfig<DeltaOpsConfig>
 
         if (state.SelectionTimer == null)
         {
-            state.SelectionPage = 0;
             state.SelectionSecondsRemaining = Config.SelectionSeconds;
-            state.SelectionTimer = AddTimer(1.0f, () => TickSelectionPage(key),
+            state.SelectionTimer = AddTimer(1.0f, () => TickSelectionTimeout(key),
                 TimerFlags.REPEAT | TimerFlags.STOP_ON_MAPCHANGE);
             player.PrintToChat(
-                $" [三角洲模式] 选角页面已打开，{Config.SelectionSeconds} 秒内输入 " +
-                "!op 1-6 选择；!opnext/!opprev 翻页。");
+                $" [三角洲模式] 选角已开始，{Config.SelectionSeconds} 秒内输入 " +
+                "!characterselect <1-6> 选择。");
         }
 
-        RenderSelectionPage(player, state);
+        PrintRoleList(player, includeDescriptions: false);
     }
 
-    private void TickSelectionPage(string key)
+    private void TickSelectionTimeout(string key)
     {
         if (!_states.TryGetValue(key, out var state) || state.Operator.HasValue)
         {
@@ -1218,98 +1144,13 @@ public sealed class DeltaOpsPlugin : BasePlugin, IPluginConfig<DeltaOpsConfig>
             var warningPlayer = FindPlayerByKey(key);
             warningPlayer?.PrintToChat(
                 $" [三角洲模式] 选角剩余 {state.SelectionSecondsRemaining} 秒，" +
-                "请尽快输入 !op 1-6。");
+                "请尽快输入 !characterselect <1-6>。");
         }
-
-        var player = FindPlayerByKey(key);
-        if (player != null)
-        {
-            RenderSelectionPage(player, state);
-        }
-    }
-
-    private void RenderSelectionPage(CCSPlayerController player, PlayerState state)
-    {
-        var pageCount = GetSelectionPageCount();
-        state.SelectionPage = Math.Clamp(state.SelectionPage, 0, pageCount - 1);
-        var start = state.SelectionPage * 3;
-        var pageOperators = _operators.Skip(start).Take(3).ToList();
-        var title =
-            $"<font color='lightblue'>干员选择 {state.SelectionPage + 1}/{pageCount}</font>" +
-            " <font color='grey'>|</font> " +
-            $"<font color='orange'>剩余 {state.SelectionSecondsRemaining}s</font>" +
-            " <font color='grey'>|</font> " +
-            "<font color='grey'>!1-!3 | !opnext/!opprev</font>";
-
-        if (state.SelectionMenu == null || state.SelectionMenuPage != state.SelectionPage)
-        {
-            CloseSelectionMenu(player, state);
-            var menu = new CenterHtmlMenu(title, this)
-            {
-                ExitButton = false,
-                PostSelectAction = PostSelectAction.Close
-            };
-
-            for (var i = 0; i < pageOperators.Count; i++)
-            {
-                var definition = pageOperators[i];
-                var index = start + i + 1;
-                menu.AddMenuOption(
-                    BuildSelectionOption(definition, index),
-                    (selectedPlayer, _) =>
-                    {
-                        var selectedState = GetOrCreateState(selectedPlayer, GetPlayerKey(selectedPlayer));
-                        if (selectedState.Operator == null)
-                        {
-                            SelectOperator(selectedPlayer, GetPlayerKey(selectedPlayer), definition, automatic: false);
-                        }
-                    });
-            }
-
-            state.SelectionMenu = menu;
-            state.SelectionMenuPage = state.SelectionPage;
-            menu.Open(player);
-            return;
-        }
-
-        state.SelectionMenu.Title = title;
-        for (var i = 0; i < pageOperators.Count && i < state.SelectionMenu.MenuOptions.Count; i++)
-        {
-            var index = start + i + 1;
-            state.SelectionMenu.MenuOptions[i].Text = BuildSelectionOption(pageOperators[i], index);
-        }
-    }
-
-    private string BuildSelectionOption(OperatorDefinition definition, int index)
-    {
-        return
-            $"<font color='red'>[{index}] {definition.Name}</font>" +
-            $" <font color='lightblue'>{definition.Role}</font> | " +
-            $"<font color='green'>V</font> {definition.VName} | " +
-            $"<font color='orange'>X</font> {definition.XName} | " +
-            $"<font color='grey'>被动</font> {definition.PassiveName}";
-    }
-
-    private static void CloseSelectionMenu(CCSPlayerController player, PlayerState state)
-    {
-        if (state.SelectionMenu != null)
-        {
-            var activeMenu = MenuManager.GetActiveMenu(player) as CenterHtmlMenuInstance;
-            activeMenu?.Close();
-        }
-
-        state.SelectionMenu = null;
-        state.SelectionMenuPage = -1;
-    }
-
-    private int GetSelectionPageCount()
-    {
-        return Math.Max(1, (int)Math.Ceiling(_operators.Count / 3.0));
     }
 
     private void PrintRoleList(CCSPlayerController player, bool includeDescriptions)
     {
-        player.PrintToChat(" [三角洲模式] 选择干员：!op 1 到 !op 6");
+        player.PrintToChat(" [三角洲模式] 选择干员：!characterselect <1-6>");
         for (var i = 0; i < _operators.Count; i++)
         {
             var role = _operators[i];
@@ -1321,7 +1162,7 @@ public sealed class DeltaOpsPlugin : BasePlugin, IPluginConfig<DeltaOpsConfig>
             }
             else
             {
-                player.PrintToChat($" {i + 1}. {role.Name} [{role.Role}] V:{role.VName} X:{role.XName}");
+                player.PrintToChat($" {i + 1}. {role.Name} / {role.EnglishName} [{role.Role}] V:{role.VName} X:{role.XName}");
             }
         }
     }
@@ -1332,6 +1173,7 @@ public sealed class DeltaOpsPlugin : BasePlugin, IPluginConfig<DeltaOpsConfig>
         OperatorDefinition definition,
         bool automatic)
     {
+        if (_raidMode && !_bridgeAssigning) return;
         var state = GetOrCreateState(player, key);
         if (state.Operator.HasValue && state.Operator.Value != definition.Id)
         {
@@ -1340,12 +1182,10 @@ public sealed class DeltaOpsPlugin : BasePlugin, IPluginConfig<DeltaOpsConfig>
         state.SelectionTimer?.Kill();
         state.SelectionTimer = null;
         CancelArmedGrenade(key);
-        CloseSelectionMenu(player, state);
         state.Operator = definition.Id;
         ResetSkillCooldowns(state);
         ApplyPassive(player, definition.Id);
-        BindSkillKeys(player);
-        ScheduleSkillKeyBinding(player);
+        ShowSkillBindingHelp(player);
 
         player.PrintToChat(
             $" [三角洲模式] {(automatic ? "超时自动选择" : "已选择")} {definition.Name} " +
@@ -1427,7 +1267,7 @@ public sealed class DeltaOpsPlugin : BasePlugin, IPluginConfig<DeltaOpsConfig>
         foreach (var target in Utilities.GetPlayers().ToList())
         {
             if (!IsCombatController(target) || !target.PawnIsAlive ||
-                target.TeamNum != player.TeamNum ||
+                !IsAlly(player, target) ||
                 Distance(player, target) > Config.StingerHealRadius)
             {
                 continue;
@@ -1601,7 +1441,7 @@ public sealed class DeltaOpsPlugin : BasePlugin, IPluginConfig<DeltaOpsConfig>
         var targetKey = state.LastLunaDamagedTargetKey ??
                         state.LastLunaAttackerKey;
         var target = targetKey == null ? null : FindPlayerByKey(targetKey);
-        if (target == null || !target.PawnIsAlive || target.TeamNum == player.TeamNum)
+        if (target == null || !target.PawnIsAlive || !IsEnemy(player, target))
         {
             player.PrintToChat(" [露娜] 最近被你伤害的敌人已不在场或已经死亡。");
             return false;
@@ -1648,7 +1488,7 @@ public sealed class DeltaOpsPlugin : BasePlugin, IPluginConfig<DeltaOpsConfig>
             var currentTarget = FindPlayerByKey(targetKey);
             if (currentLuna == null || currentTarget == null ||
                 !currentLuna.PawnIsAlive || !currentTarget.PawnIsAlive ||
-                currentTarget.TeamNum == currentLuna.TeamNum)
+                !IsEnemy(currentLuna, currentTarget))
             {
                 StopLunaDot(lunaKey);
                 return;
@@ -1966,7 +1806,7 @@ public sealed class DeltaOpsPlugin : BasePlugin, IPluginConfig<DeltaOpsConfig>
         foreach (var target in Utilities.GetPlayers().ToList())
         {
             if (!IsCombatController(target) || !target.PawnIsAlive ||
-                target.TeamNum == mine.OwnerTeam ||
+                !IsEnemy(owner, target) ||
                 DistanceToPoint(target, mine.Position) > Config.ShepherdMineTriggerRadius)
             {
                 continue;
@@ -1999,7 +1839,7 @@ public sealed class DeltaOpsPlugin : BasePlugin, IPluginConfig<DeltaOpsConfig>
         foreach (var target in Utilities.GetPlayers().ToList())
         {
             if (!IsCombatController(target) || !target.PawnIsAlive ||
-                target.TeamNum == owner.TeamNum)
+                !IsEnemy(owner, target))
             {
                 continue;
             }
@@ -2466,7 +2306,7 @@ public sealed class DeltaOpsPlugin : BasePlugin, IPluginConfig<DeltaOpsConfig>
         {
             foreach (var teammate in Utilities.GetPlayers().ToList())
             {
-                if (IsHumanInController(teammate) && teammate.TeamNum == player.TeamNum &&
+                if (IsHumanInController(teammate) && IsAlly(player, teammate) &&
                     teammate.Handle != player.Handle)
                 {
                     teammate.PrintToCenter($"{skillName}: 共 {targets.Count} 名敌人");
@@ -2570,7 +2410,7 @@ public sealed class DeltaOpsPlugin : BasePlugin, IPluginConfig<DeltaOpsConfig>
 
         var definition = GetOperator(operatorId);
         var state = GetExistingState(player);
-        pawn.MaxHealth = 100 + definition.BonusHealth;
+        pawn.MaxHealth = _raidMode ? 200 : 100 + definition.BonusHealth;
         pawn.Health = pawn.MaxHealth;
         pawn.VelocityModifier = definition.BaseSpeed;
         if (state != null)
@@ -2774,11 +2614,12 @@ public sealed class DeltaOpsPlugin : BasePlugin, IPluginConfig<DeltaOpsConfig>
         return Math.Max(0, pawn.Health - before);
     }
 
-    private static void DealDamage(
+    private void DealDamage(
         CCSPlayerController attacker,
         CCSPlayerController victim,
         int damage)
     {
+        if (!IsEnemy(attacker, victim)) return;
         var attackerPawn = attacker.PlayerPawn.Value;
         var victimPawn = victim.PlayerPawn.Value;
         if (attackerPawn == null || victimPawn == null ||
@@ -2863,6 +2704,7 @@ public sealed class DeltaOpsPlugin : BasePlugin, IPluginConfig<DeltaOpsConfig>
 
     private void ShowOutline(CCSPlayerController player, float? duration = null)
     {
+        if (_raidMode) return; // Legacy global glow leaks enemy positions to other squads.
         if (!IsCombatController(player))
         {
             return;
@@ -3080,8 +2922,8 @@ public sealed class DeltaOpsPlugin : BasePlugin, IPluginConfig<DeltaOpsConfig>
             var pawn = player.PlayerPawn.Value;
             if (pawn != null && pawn.IsValid)
             {
-                pawn.MaxHealth = 100;
-                pawn.Health = Math.Min(pawn.Health, 100);
+                pawn.MaxHealth = _raidMode ? 200 : 100;
+                pawn.Health = Math.Min(pawn.Health, pawn.MaxHealth);
                 pawn.VelocityModifier = 1.0f;
                 Utilities.SetStateChanged(pawn, "CBaseEntity", "m_iMaxHealth");
                 Utilities.SetStateChanged(pawn, "CBaseEntity", "m_iHealth");
@@ -3091,11 +2933,6 @@ public sealed class DeltaOpsPlugin : BasePlugin, IPluginConfig<DeltaOpsConfig>
             if (broadcast)
             {
                 player.PrintToChat($" [三角洲模式] {reason}，干员和技能状态已清空。");
-            }
-
-            if (state != null)
-            {
-                CloseSelectionMenu(player, state);
             }
         }
 
@@ -3130,7 +2967,7 @@ public sealed class DeltaOpsPlugin : BasePlugin, IPluginConfig<DeltaOpsConfig>
         return Utilities.GetPlayers().Where(candidate =>
             IsCombatController(candidate) &&
             candidate.PawnIsAlive &&
-            candidate.TeamNum != player.TeamNum &&
+            IsEnemy(player, candidate) &&
             candidate.TeamNum is 2 or 3);
     }
 

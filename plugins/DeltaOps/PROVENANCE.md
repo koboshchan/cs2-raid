@@ -7,3 +7,5 @@ On November 3, 2026, the repository owner confirmed this plugin was made by a fr
 The live repository API returned visibility public and private false on November 4, 2026 UTC (November 3 local). Earlier notes calling the repository private were incorrect. No visibility change was made. Source publication was held until the explicit MIT authorization arrived.
 
 The source ZIP and its download link/key are not committed. The root Dockerfile build stages, license, provenance and integration notes are separate from the unchanged upstream files. Build artifacts and downloaded dependencies stay outside git.
+
+November 4 raid bridge modification note. DeltaOpsPlugin.cs is now a modified derivative, not byte-for-byte upstream. It incorporates the already-authorized deltaops-abilities-fix 4df1896 changes and adds primitive-delegate capabilities, custom squad targeting, raid selection/skill gating, a 200 HP raid baseline and a fail-closed global-outline suppression. RaidCapabilityBridge.cs is new project code. The refreshed source.sha256 identifies these modified inputs. The earlier archive hashes describe the original provenance, not the current modified source.
