@@ -14,7 +14,7 @@ test("HTTP authenticates, rejects Origin, and never invokes money movement",asyn
  assert.equal((await app.inject({url:"/health"})).statusCode,401);
  const headers={authorization:"Bearer "+token};
  assert.equal((await app.inject({url:"/health",headers:{...headers,origin:"https://evil.example"}})).statusCode,401);
- for(const url of ["/purchase","/buy","/debit","/sell","/sellback","/extract","/payout"])
+ for(const url of ["/purchase","/buy","/debit","/sell","/sellback","/cashin","/cashout","/extract","/payout","/settlement"])
  assert.equal((await app.inject({url,method:"POST",headers,payload:{steamId64:steam}})).statusCode,503);
  assert.equal(calls,0);
  assert.equal((await app.inject({url:"/link",method:"POST",headers,payload:{steamId64:steam}})).statusCode,200);

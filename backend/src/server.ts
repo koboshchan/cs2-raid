@@ -29,7 +29,7 @@ export function createServer(token: string, catalog: Catalog, links: Pick<LinkSt
   // Caller MUST be trusted server plugin using an engine-authenticated SteamID, never a client supplied ID.
   app.post("/link", async req => links.create(identity(req.body)));
   app.post("/link/poll", async req => links.poll(identity(req.body)));
-  for (const route of ["/purchase", "/buy", "/debit", "/sell", "/sellback", "/extract", "/payout"])
+  for (const route of ["/purchase", "/buy", "/debit", "/sell", "/sellback", "/cashin", "/cashout", "/extract", "/payout", "/settlement"])
     app.post(route, async (_req, reply) => reply.code(503).send({ error: "native_session_bridge_not_ready", moneyMovement: "disabled" }));
   return app;
 }
