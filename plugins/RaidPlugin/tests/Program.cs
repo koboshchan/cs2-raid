@@ -27,3 +27,5 @@ TestModeTests.Run();
 BotCombatTests.Run();
 
 SettlementRecoveryChecks.Run();
+
+NativeBuyPolicyTests.Run();
