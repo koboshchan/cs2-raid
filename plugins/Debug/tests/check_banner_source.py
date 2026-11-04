@@ -2,7 +2,11 @@
 from pathlib import Path
 source = (Path(__file__).resolve().parents[1] / "DebugPlugin.cs").read_text()
 handler = source[source.index("    private void SimpleBannerCommand"):source.index("    private static bool TryPose")]
-assert 'c.ArgCount != 2 || !BannerInput.TryParse(c.ArgCount - 1, c.GetArg(1), out var result)' in handler
+assert 'if (c.ArgCount != 2)' in handler
+assert handler.index('if (c.ArgCount != 2)') < handler.index('var action = c.GetArg(1);')
+assert 'if (action.Equals("reset", StringComparison.OrdinalIgnoreCase))' in handler
+assert '{ ResetBanner(p!, c); return; }' in handler
+assert 'BannerInput.TryParse(c.ArgCount - 1, action, out var result)' in handler
 assert handler.count('if (!Ready(p, c)) return;') == 2
 assert 'RoundBanner.TryCreate(p!.TeamNum, result, out var banner)' in handler
 assert 'bannerLimiter.Allow(p.SteamID' in handler
@@ -22,6 +26,8 @@ reset = source[source.index("    private void BannerResetCommand"):source.index(
 assert 'AddCommand("css_bannerreset", "Reset your private native banner preview", BannerResetCommand);' in source
 assert 'if (!Ready(p, c)) return;' in reset
 assert 'if (c.ArgCount != 1)' in reset
+assert reset.index('if (c.ArgCount != 1)') < reset.index('ResetBanner(p!, c);')
+assert 'private void ResetBanner(CCSPlayerController p, CommandInfo c)' in reset
 assert 'bannerResetLimiter.Allow(p!.SteamID, Environment.TickCount64, 1000)' in reset
 assert 'var reset = new EventRoundStart(true);' in reset
 assert 'try { reset.FireEventToClient(p); }' in reset
@@ -35,5 +41,5 @@ assert 'bannerResetLimiter.Clear();' in source and 'bannerResetLimiter.Remove(id
 import subprocess
 before = subprocess.check_output(['git', 'show', '34fa384e67cdfc7d0e01a922fbd585e6b0587ccb:plugins/Debug/DebugPlugin.cs'], cwd=Path(__file__).resolve().parents[3]).decode()
 old = before[before.index('    private void SimpleBannerCommand'):before.index('    private static bool TryPose')]
-assert handler == old
-print("PASS reset human/active/arity/rate gates, invoker-only delivery, finally-free, cleanup, no shared writes; previous preview handlers identical")
+assert handler[handler.index('    private void BannerCommand'):] == old[old.index('    private void BannerCommand'):]
+print("PASS reset human/active/arity/rate gates, invoker-only delivery, finally-free, cleanup, no shared writes; canonical reset and optional alias share private reset; existing preview sender identical")

@@ -49,7 +49,7 @@ public sealed class DebugPlugin : BasePlugin, IPluginConfig<DebugConfig>
     {
         loaded = true;
         AddCommand("css_bannerreset", "Reset your private native banner preview", BannerResetCommand);
-        AddCommand("css_banner", "Private native banner: win|lose|draw", SimpleBannerCommand);
+        AddCommand("css_banner", "Private native banner: win|lose|draw|reset", SimpleBannerCommand);
         AddCommand("css_testwin", "Preview a private native round-win banner", (p, c) => BannerCommand(p, c, BannerResult.Win));
         AddCommand("css_testlose", "Preview a private native round-loss banner", (p, c) => BannerCommand(p, c, BannerResult.Lose));
         AddCommand("css_testdraw", "Preview a private native round-draw banner", (p, c) => BannerCommand(p, c, BannerResult.Draw));
@@ -173,7 +173,11 @@ public sealed class DebugPlugin : BasePlugin, IPluginConfig<DebugConfig>
     {
         if (!Ready(p, c)) return;
         if (c.ArgCount != 1)
-        { c.ReplyToCommand("Usage: !bannerreset"); return; }
+        { c.ReplyToCommand("Usage: !bannerreset (or !banner reset)"); return; }
+        ResetBanner(p!, c);
+    }
+    private void ResetBanner(CCSPlayerController p, CommandInfo c)
+    {
         if (!bannerResetLimiter.Allow(p!.SteamID, Environment.TickCount64, 1000))
         { c.ReplyToCommand("Wait one second between banner resets."); return; }
         try
@@ -196,8 +200,13 @@ public sealed class DebugPlugin : BasePlugin, IPluginConfig<DebugConfig>
     private void SimpleBannerCommand(CCSPlayerController? p, CommandInfo c)
     {
         if (!Ready(p, c)) return;
-        if (c.ArgCount != 2 || !BannerInput.TryParse(c.ArgCount - 1, c.GetArg(1), out var result))
-        { c.ReplyToCommand("Usage: !banner <win|lose|draw>"); return; }
+        if (c.ArgCount != 2)
+        { c.ReplyToCommand("Usage: !banner <win|lose|draw|reset>"); return; }
+        var action = c.GetArg(1);
+        if (action.Equals("reset", StringComparison.OrdinalIgnoreCase))
+        { ResetBanner(p!, c); return; }
+        if (!BannerInput.TryParse(c.ArgCount - 1, action, out var result))
+        { c.ReplyToCommand("Usage: !banner <win|lose|draw|reset>"); return; }
         BannerCommand(p, c, result);
     }
     private void BannerCommand(CCSPlayerController? p, CommandInfo c, BannerResult result)
