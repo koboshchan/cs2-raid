@@ -55,7 +55,7 @@ public sealed class PriceTestPlugin : BasePlugin
         });
         RegisterListener<Listeners.OnMapStart>(map=> { originals.Clear(); pending.Clear(); beforeBuy.Clear(); AddTimer(2f,Initialize); });
         RegisterListener<Listeners.OnMapEnd>(()=> { originals.Clear(); pending.Clear(); beforeBuy.Clear(); });
-        Initialize();
+        if(hotReload) Server.NextFrame(Initialize);
     }
     private void Patch(CCSWeaponBase weapon)
     {
