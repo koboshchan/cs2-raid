@@ -71,15 +71,9 @@ public sealed class PriceTestPlugin : BasePlugin
     {
         foreach(var x in prices) {
             Logger.LogInformation("PriceTest MAP {Name} = ${Price}",x.Key,x.Value);
-            if(x.Key is "vest" or "vesthelm" or "defuser") continue;
-            CCSWeaponBase? entity=null;
-            try {
-                entity=Utilities.CreateEntityByName<CCSWeaponBase>("weapon_"+x.Key);
-                if(entity==null || !entity.IsValid) continue;
-                entity.DispatchSpawn();
-                Patch(entity);
-            } catch(Exception ex) { Logger.LogWarning(ex,"PriceTest VData unavailable for {Item}; purchase fallback only",x.Key); }
-            finally { if(entity is {IsValid:true}) entity.Remove(); }
+            // Do not create entities during map loading. Patch real spawned entities instead.
+            foreach(var entity in Utilities.FindAllEntitiesByDesignerName<CCSWeaponBase>("weapon_"+x.Key))
+                if(entity.IsValid) Patch(entity);
         }
         Logger.LogInformation("PriceTest ready. {Count} stable prices. Server VData writes do NOT prove client buy menu display.",prices.Count);
     }
