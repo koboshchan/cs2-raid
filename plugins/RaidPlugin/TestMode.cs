@@ -48,6 +48,7 @@ public sealed partial class RaidPlugin
     private sealed class TestStartup { public bool DefaultEnabled {get;set;} }
     private void RegisterTestMode()
     {
+        RegisterTestPresentation();
         var path=Path.Combine(ModuleDirectory,"testmode.json");
         var startup=File.Exists(path)?JsonSerializer.Deserialize<TestStartup>(File.ReadAllText(path),new JsonSerializerOptions{PropertyNameCaseInsensitive=true}):null;
         var startupGeneration=testMode.Generation;
@@ -385,7 +386,7 @@ try{
         // Explicit enrollment/respawn resets inventory for a bounded fixture loadout.
         // Inventory is not an economic snapshot and is never restored/refunded on OFF.
         p.RemoveWeapons();
-        GrantTestGun(p,"glock");
+        GrantTestGun(p,"glock");GiveFixtureKnife(p);
         p.PrintToChat("TEST lobby: shoot each other to duo; !team single; !cancelteam. Then !characterselect 1..6. !testshop lists finite-credit guns. NO DeltaOps abilities / SSG.");
     }
     private bool GrantTestGun(CCSPlayerController p,string name){
@@ -469,9 +470,12 @@ try{
             , "active-enemy-or-phase-duo-living-policy");
     }
     private void TestSecond(){
-        if(!testMode.NativeActive||testUnloaded)return;
+        if(testUnloaded)return;
+        if(testMode.Enabled&&!testMode.NativeActive){try{TestPresentationSecond();}catch(Exception ex){FailTestNative(ex);}return;}
+        if(!testMode.NativeActive)return;
         try{
             if(!TestScope()||sessionLoaded){StopTestMode();return;}
+            TestPresentationSecond();
             if(testFlow.Manual)return;
             // Full-connect may precede Steam authorization; retry only in Lobby, no mid-match credit grants.
             AutoEnrollTestHumans();AutoEnrollTestBots();
