@@ -14,6 +14,17 @@ public sealed class TestFlow
     public List<string> Ledger { get; }=[];
     public bool Manual {get;set;}
     public bool Join(string id){if(Teams.Phase!=GamePhase.Lobby||!Teams.Join(id))return false;Wallet.Add(id,Credits);return true;}
+    // Single game-thread transaction; native setup occurs only AFTER all policy stores agree.
+    public bool Enroll(TestModeState mode,string id,bool authenticated){
+        if(!mode.Enabled||mode.Phase!=TestModeState.Stage.Lobby||!authenticated||string.IsNullOrEmpty(id))return false;
+        if(mode.Participants.ContainsKey(id))return Teams.Players.ContainsKey(id)&&Wallet.ContainsKey(id);
+        if(!Join(id))return false; // Shared GameplayState cap7; nothing in fixture mode changed.
+        try{mode.Join(id,true);return true;}
+        catch{Teams.Leave(id);Wallet.Remove(id);throw;}
+    }
+    // Unknown non-world sources fail closed; they must never inherit world damage permission.
+    public static bool DamageAllowed(bool active,bool enrolledVictim,bool enrolledAttacker,bool actualWorld,bool living,bool canDamage)
+        => active&&enrolledVictim&&living&&(enrolledAttacker?canDamage:actualWorld);
     public void Leave(string id){Teams.Leave(id);Wallet.Remove(id);}
     public bool Spend(string id,string item){
         if(Teams.Phase!=GamePhase.Buy || !Teams.Living(id) || !Prices.TryGetValue(item,out var price)||!Wallet.TryGetValue(id,out var balance)||balance<price)return false;

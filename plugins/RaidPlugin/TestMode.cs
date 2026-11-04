@@ -75,7 +75,9 @@ public sealed partial class RaidPlugin
                             if(!testSpawns.Any(x=>x.Within(point,64)))testSpawns.Add(point);
                             c.ReplyToCommand($"Captured actual position {point}; spawn-count={testSpawns.Count}");break;
                         case "join":
-                            var a=Participant(2);testMode.Join(Id(a),Human(a));testControllers[Id(a)]=a.EntityHandle.Raw;testFlow.Join(Id(a));
+                            var a=Participant(2);
+                            if(!testFlow.Enroll(testMode,Id(a),Human(a)))throw new InvalidOperationException("Enrollment rejected atomically: authenticated Lobby only, maximum seven participants.");
+                            testControllers[Id(a)]=a.EntityHandle.Raw;
                             if(a.PawnIsAlive)PrepareTestLobby(a);else c.ReplyToCommand("Enrolled but dead/spectator. Use css_raid_test spawn <userid> <2|3> in Lobby; then verify 200HP before next.");break;
                         case "spawn":
                             var spawning=Participant(2);
@@ -287,11 +289,27 @@ public sealed partial class RaidPlugin
     private HookResult TestDamage(CBaseEntity entity,CTakeDamageInfo info){
         if(!TestServer||!testMode.NativeActive)return HookResult.Continue;
         if(!TestScope()){StopTestMode();return HookResult.Continue;}
-        var victim=Controller(entity);var attacker=Controller(info.Attacker.Value);
+        var victim=Controller(entity);
+        // Unlike production Controller(), resolve ALL controllers, including bots and projectile owners.
+        CCSPlayerController? ResolveActor(CBaseEntity? source){
+            var visited=new HashSet<uint>();
+            for(int depth=0;depth<8&&source is {IsValid:true}&&visited.Add(source.EntityHandle.Raw);depth++){
+                var found=Utilities.GetPlayers().FirstOrDefault(p=>p.IsValid&&
+                    (p.EntityHandle.Raw==source.EntityHandle.Raw||p.PlayerPawn.Raw==source.EntityHandle.Raw));
+                if(found!=null)return found;
+                source=source.OwnerEntity.Value;
+            }return null;
+        }
+        var damageSource=info.Attacker.Value;var inflictor=info.Inflictor.Value;
+        var attacker=ResolveActor(damageSource)??ResolveActor(inflictor);
+        // Only explicit worldspawn (or an absent attacker AND inflictor) is actual world damage.
+        // Unknown/map/projectile entities without resolvable player ownership fail closed.
+        bool World(CBaseEntity? source)=>source==null||source is {IsValid:true,DesignerName:"worldspawn"};
+        var actualWorld=attacker==null&&World(damageSource)&&World(inflictor);
         var enrolledVictim=TestParticipant(victim);var enrolledAttacker=TestParticipant(attacker);
         if(!enrolledVictim&&!enrolledAttacker)return HookResult.Continue;
         // No cross-fixture damage (including bots/unenrolled humans). World damage only in Active.
-        if(!enrolledVictim || attacker!=null&&!enrolledAttacker)return HookResult.Handled;
+        if(!enrolledVictim || !enrolledAttacker&&!actualWorld)return HookResult.Handled;
         if(testMode.Phase==TestModeState.Stage.Lobby){
             if(enrolledAttacker&&info.Damage>0&&(info.BitsDamageType&DamageTypes_t.DMG_BULLET)!=0){
                 if(testFlow.Teams.ShootRequest(Id(attacker!),Id(victim!))){
@@ -299,9 +317,9 @@ public sealed partial class RaidPlugin
                 }else attacker!.PrintToChat("TEST team request sent if both unpaired; the other player must shoot back.");
             }return HookResult.Handled;
         }
-        if(testMode.Phase!=TestModeState.Stage.Active)return HookResult.Handled;
-        if(enrolledAttacker&&!testFlow.Teams.CanDamage(Id(attacker!),Id(victim!)))return HookResult.Handled;
-        return testFlow.Teams.Living(Id(victim!))?HookResult.Continue:HookResult.Handled;
+        return TestFlow.DamageAllowed(testMode.Phase==TestModeState.Stage.Active,enrolledVictim,enrolledAttacker,actualWorld,
+            testFlow.Teams.Living(Id(victim!)),enrolledAttacker&&testFlow.Teams.CanDamage(Id(attacker!),Id(victim!)))
+            ?HookResult.Continue:HookResult.Handled;
     }
     private void TestSecond(){
         if(!testMode.NativeActive||testUnloaded)return;

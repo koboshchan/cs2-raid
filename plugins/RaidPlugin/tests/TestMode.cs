@@ -120,6 +120,24 @@ static class TestModeTests
         Check(!duoFlow.Teams.CanDamage("x","y")&&duoFlow.Teams.CanDamage("x","z")&&duoFlow.Teams.Spectate("x")=="y");
         duoFlow.Teams.Kill("y",null);Check(duoFlow.Teams.Spectate("x")==null);
         duoFlow.Tick(now.AddMinutes(31),true);Check(duoFlow.Teams.Phase==GamePhase.Closed);
+        var capped=new TestFlow();var enrollment=new TestModeState();enrollment.Start(true);
+        for(int i=0;i<7;i++)Check(capped.Enroll(enrollment,"cap"+i,true));
+        Check(!capped.Enroll(enrollment,"eighth",true));
+        Check(capped.Teams.Players.Count==7&&capped.Wallet.Count==7&&enrollment.Participants.Count==7);
+        Check(!capped.Teams.Players.ContainsKey("eighth")&&!capped.Wallet.ContainsKey("eighth")&&!enrollment.Participants.ContainsKey("eighth"));
+        Check(capped.Enroll(enrollment,"cap0",true)&&capped.Wallet["cap0"]==15000);
+        Check(!capped.Enroll(enrollment,"unauth",false)&&!capped.Enroll(enrollment,"",true));
+        capped.Leave("cap0");enrollment.Leave("cap0");
+        Check(capped.Enroll(enrollment,"replacement",true)&&capped.Wallet.Count==7&&enrollment.Participants.Count==7);
+        enrollment.Advance();Check(!capped.Enroll(enrollment,"late",true));
+        // Source classification is native adapter responsibility; exact final policy exercised here.
+        Check(!TestFlow.DamageAllowed(true,true,false,false,true,false)); // bot or unenrolled human/projectile
+        Check(TestFlow.DamageAllowed(true,true,false,true,true,false)); // actual world in Active
+        Check(!TestFlow.DamageAllowed(false,true,false,true,true,false)); // world in Lobby
+        Check(!TestFlow.DamageAllowed(true,true,true,false,true,false)); // custom partner
+        Check(TestFlow.DamageAllowed(true,true,true,false,true,true)); // enrolled enemy
+        Check(!TestFlow.DamageAllowed(true,false,true,false,true,true)); // cross-fixture victim
+        Check(!TestFlow.DamageAllowed(true,true,false,true,false,false)); // dead victim
         var oldServer=Environment.GetEnvironmentVariable("RAID_TEST_SERVER");
         var oldMoney=Environment.GetEnvironmentVariable("RAID_FINANCIAL_ENABLED");
         var oldScaffold=Environment.GetEnvironmentVariable("RAID_ENABLE_SCAFFOLD");
