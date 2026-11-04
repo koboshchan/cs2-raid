@@ -40,7 +40,7 @@ public sealed partial class DebugPlugin
             c.ReplyToCommand("Requires explicit exclusive HUD channel approval and default-20261105 asset attestation.");return;
         }
         var a=PreviewArgs.Parse(Enumerable.Range(1,c.ArgCount-1).Select(c.GetArg).ToArray());
-        if(a==null){c.ReplyToCommand("Usage: !extracthud [1..3600] [css|png] or !extracthud stop");return;}
+        if(a==null){c.ReplyToCommand("Usage: !extracthud [1..3600] [css|png|plain|tags|classes] or !extracthud stop");return;}
         StopPreview(p!);if(a.Stop)return;
         if(Server.MapName!="df_spaceport_player_scale_raytrace"||!p!.PawnIsAlive||p.TeamNum<2||p.PlayerPawn.Value is not {IsValid:true}){
             c.ReplyToCommand("Requires correct map and current living T/CT pawn.");return;
@@ -61,7 +61,10 @@ public sealed partial class DebugPlugin
             var origin=valid?p.PlayerPawn.Value!.AbsOrigin:null;
             var zone=origin==null?0:PreviewClock.Zone(origin.X,origin.Y,origin.Z);
             var text=v.Clock.Tick(now,zone,valid,MenuManager.GetActiveMenu(p)==null,v.Style);
-            if(text!=null)p.PrintToCenterHtml(text,1);
+            if(text!=null){
+                try{p.PrintToCenterHtml(text,2);}
+                catch{previews.Remove(id);v.Clock.Clear(false);previewNative.Stop();throw;}
+            }
             if(!valid||now>=v.Clock.End)previews.Remove(id);
         }
     }

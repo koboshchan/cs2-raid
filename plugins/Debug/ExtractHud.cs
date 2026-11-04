@@ -7,7 +7,7 @@ public sealed record PreviewArgs(int Seconds,string Style,bool Stop)
         int seconds=300;string style="css";bool number=false,variant=false;
         foreach(var a in args){
             if(int.TryParse(a,NumberStyles.None,CultureInfo.InvariantCulture,out var n)&&!number&&n>=1&&n<=3600){seconds=n;number=true;}
-            else if((a=="css"||a=="png")&&!variant){style=a;variant=true;}
+            else if((a=="css"||a=="png"||a=="plain"||a=="tags"||a=="classes")&&!variant){style=a;variant=true;}
             else return null;
         }
         return new(seconds,style,false);
@@ -19,6 +19,7 @@ public sealed class PreviewClock
     public bool Owned {get;private set;}
     private long next;
     private int color;
+    private string? lastMarkup;
     public PreviewClock(long now,int seconds){End=now+seconds*1000L;}
     public static int Zone(double x,double y,double z){
         if(!double.IsFinite(x)||!double.IsFinite(y)||!double.IsFinite(z))return 0;
@@ -26,15 +27,21 @@ public sealed class PreviewClock
         return x>=997.650&&x<=1320.300&&y>=-6607.493&&y<=-5352.790?1:0;
     }
     public int Remaining(long now)=>(int)Math.Clamp((End-now+999)/1000,0,3600);
-    public string? Clear(bool channel){var had=Owned;Owned=false;return had&&channel?"":null;}
+    public string? Clear(bool channel){var had=Owned;Owned=false;lastMarkup=null;return had&&channel?"":null;}
     public string? Tick(long now,int zone,bool valid,bool channel,string style){
         if(!valid||!channel||zone==0||now>=End)return Clear(channel);
-        if(Owned&&now<next&&zone==color)return null;
-        Owned=true;next=now+250;color=zone;
-        return Markup(Remaining(now),zone==1,style);
+        var markup=Markup(Remaining(now),zone==1,style);
+        // Content changes are immediate; unchanged content renews only at Duration2 minus0.5s.
+        if(Owned&&lastMarkup==markup&&now<next)return null;
+        Owned=true;next=now+1500;color=zone;lastMarkup=markup;
+        return markup;
     }
     public static string Markup(int n,bool red,string style){
-        var c=red?"#FF3030":"#00FFAA";
+        var c=red?"#FF0000":"#00FF00";
+        var clock=n<=10?"[ "+n.ToString(CultureInfo.InvariantCulture)+" ]":(n/60).ToString("00",CultureInfo.InvariantCulture)+":"+(n%60).ToString("00",CultureInfo.InvariantCulture);
+        if(style=="plain")return clock+"<br>Extracting";
+        if(style=="tags")return "<font color='"+c+"'><b>"+clock+"</b><br>Extracting</font>";
+        if(style=="classes")return "<font color='"+c+"' class='fontSize-xxl fontWeight-Bold'>"+clock+"</font><br><font color='"+c+"' class='fontSize-s'>Extracting</font>";
         if(n<=10)return "<font color='"+c+"' size='48'>[ "+n.ToString(CultureInfo.InvariantCulture)+" ]</font><br><font color='"+c+"' size='20'>Extracting</font>";
         var text="<font color='"+c+"' size='20'>Extracting</font><br><font color='"+c+"' size='48'>"+(n/60).ToString("00",CultureInfo.InvariantCulture)+":"+(n%60).ToString("00",CultureInfo.InvariantCulture)+"</font>";
         // CSS is an explicit capability PROBE, not a promise of native support.
