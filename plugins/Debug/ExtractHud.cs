@@ -43,7 +43,7 @@ public sealed class PreviewClock
         if(!valid||!channel||zone==0||now>=End)return Clear(channel);
         var markup=Markup(Remaining(now),zone==1,style);
         // Requested native Duration2 is not evidence of actual client lifetime.
-        // Separate changed content from empirical HTML renewal; cap aggregate sends to20/s.
+        // Separate changed content from empirical HTML renewal; cap sends to20/s PER PREVIEW (unchanged default HTML renews at5/s).
         var html=style!="alert"&&style!="world";
         var changed=!Owned||lastMarkup!=markup;
         var renew=html&&now>=keepaliveDeadline;

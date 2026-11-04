@@ -372,3 +372,27 @@ Check(LootCatalog.Entries[0].X==544.23495&&LootCatalog.Entries[0].Y==41.55400000
 Check(LootCatalog.MapAllowed("df_spaceport_player_scale_raytrace","default-20261105"),"loot exact binding");
 Check(!LootCatalog.MapAllowed("de_dust2","default-20261105")&&!LootCatalog.MapAllowed(LootCatalog.Map,"old"),"loot map release denied");
 Check(!LootCatalog.SafeModel("models/../bad.vmdl")&&!LootCatalog.SafeModel("models/bad.vmdl;quit")&&LootCatalog.SafeModel("models/test.vmdl"),"loot model path validation");
+
+// Actual cleanup policy used by WorldHud, exercised without unsafe native calls.
+{
+    var faults=0;var removes=0;
+    Check(WorldCleanup.Attempt(()=>true,()=>throw new Exception(),()=>removes++,()=>faults++)&&removes==1&&faults==1,"WORLD disable failure still removes");
+    removes=0;faults=0;
+    Check(!WorldCleanup.Attempt(()=>true,()=>{},()=>{removes++;throw new Exception();},()=>faults++),"WORLD removal failure retained");
+    Check(WorldCleanup.Attempt(()=>true,()=>{},()=>removes++,()=>faults++)&&removes==2,"WORLD retained removal next attempt succeeds");
+    removes=0;
+    Check(WorldCleanup.Attempt(()=>false,()=>throw new Exception(),()=>removes++,()=>{})&&removes==0,"WORLD stale generation untouched");
+    Check(!WorldCleanup.Attempt(()=>throw new Exception(),()=>{},()=>removes++,()=>{}),"WORLD validity exception retains generation");
+    var pending=1;var passes=0;var residual=0;
+    WorldCleanup.FinalDrain(()=>{passes++;if(passes==2)pending=0;},()=>pending,n=>residual=n);
+    Check(passes==2&&pending==0&&residual==0,"WORLD unload synchronous retry succeeds without ticks");
+    pending=1;passes=0;
+    WorldCleanup.FinalDrain(()=>passes++,()=>pending,n=>residual=n);
+    Check(passes==3&&residual==1,"WORLD unload persistent failure bounded and reported no callbacks");
+    var active=true;var worldTestOwned=1;var cleanup=0;
+    WorldCleanup.Guard(()=>throw new Exception("native gate"),()=>{active=false;worldTestOwned=0;cleanup++;});
+    Check(!active&&worldTestOwned==0&&cleanup==1,"WORLD gate exception cancels managed refresh and attempts cleanup");
+    var otherRemoved=0;
+    foreach(var fail in new[]{true,false})WorldCleanup.Attempt(()=>true,()=>{if(fail)throw new Exception();},()=>otherRemoved++,()=>{});
+    Check(otherRemoved==2,"WORLD disable failure continues other entities");
+}

@@ -125,6 +125,7 @@ public sealed partial class DebugPlugin : BasePlugin, IPluginConfig<DebugConfig>
     public override void Unload(bool hotReload)
     {
         previewNative.Stop(); // Global availability is not guaranteed during error-unload/teardown.
+        FinalWorldCleanup(); // bounded synchronous engine calls before listener disposal; logs residuals
         RevokeTestAdmins();
         active = false; loaded = false;
         RestoreCvars(); ClearState(); store?.Dispose(); store = null;

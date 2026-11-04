@@ -12,14 +12,14 @@ public sealed partial class DebugPlugin
     private void StopPreview(CCSPlayerController p){
         // Blank HTML reopens/retains the native panel on the observed client.
         // Until full-dismiss semantics are verified, cancel only and allow the last Duration2 to expire.
-        RemoveWorld(p.SteamID);
         if(previews.Remove(p.SteamID,out var v))v.Clock.Clear(false);
+        RemoveWorld(p.SteamID);
     }
     private void ClearPreviews(){
-        ClearWorld();
         var detached=previews.Values.ToArray();
         previews.Clear(); // Managed cancellation before any callbacks; never enumerate globals on teardown.
         foreach(var v in detached)v.Clock.Clear(false);
+        ClearWorld();
     }
     private void ClearProbe(CCSPlayerController p,string mode,CommandInfo c){
         if(!previews.TryGetValue(p.SteamID,out var v)||!Same(p,v)||!v.Clock.Owned||(v.Style=="world"||!PreviewDispatch.IsHtml(v.Style))||
@@ -45,6 +45,9 @@ public sealed partial class DebugPlugin
     }
     private bool HudReady => RaidInactiveForHud()&&(Config.ExtractHudOnly?HudOnlyReady():active);
     private void ExtractHudCommand(CCSPlayerController? p,CommandInfo c){
+        WorldCleanup.Guard(()=>ExtractHudCommandCore(p,c),()=>{worldFault=true;previewNative.Stop();ClearPreviews();});
+    }
+    private void ExtractHudCommandCore(CCSPlayerController? p,CommandInfo c){
         if(!previewNative.Available||!HudReady||!Human(p)){ClearPreviews();c.ReplyToCommand("HUD mode unavailable or private scope not attested.");return;}
         if(!Config.ExtractHudExclusive||Config.ExtractHudRelease!="default-20261105"){
             c.ReplyToCommand("Requires explicit exclusive HUD channel approval and default-20261105 asset attestation.");return;
@@ -66,6 +69,9 @@ public sealed partial class DebugPlugin
         c.ReplyToCommand(a.Style=="world"?"WORLD PROBE: world-visible, NOT private. Stops rendering if another human is present. Upper-view placement/appearance unverified. !extracthud stop removes owned entity.":a.Style=="alert"?"Private per-player alert probe started. Alert lifetime/dismissal and appearance unverified; no raid or money changes.":"Private live-position HTML capability probe started. CSS/image/layout support unverified; no raid timer or money changes.");
     }
     private void TickPreviews(){
+        WorldCleanup.Guard(TickPreviewsCore,()=>{worldFault=true;previewNative.Stop();ClearPreviews();});
+    }
+    private void TickPreviewsCore(){
         if(lootOn&&!HudReady)ClearLoot();
         if(lootFault&&lootOwned.Count>0)ClearLoot();
         DrainWorld();
