@@ -28,10 +28,16 @@ public sealed partial class RaidPlugin
     {
         AddCommandListener("buy",(p,c)=>{
             if(!Human(p))return HookResult.Continue;
+            if(!sessionLoaded)return HookResult.Continue;
+            var requested=c.ArgCount==2?PriceItem(c.GetArg(1)):null;
+            if(game.Phase!=GamePhase.Buy || !game.Living(Id(p)) || requested==null || GameplayConfig.Utility(requested.Entity)) {
+                p.PrintToChat("Buying is limited to guns/armor in the 30s buy phase. Utility comes from character kits.");return HookResult.Handled;
+            }
+            ObserveNativeSpend(p);
             if(!gameplayConfig.CustomPricingEnabled)return HookResult.Continue;
             buySnapshots.Remove(p.Slot);
             var item=c.ArgCount==2?PriceItem(c.GetArg(1)):null;
-            if(!sessionLoaded || game.Phase!=GamePhase.Active || !game.Living(Id(p)) || item==null || item.PriceDollars<0) {
+            if(!sessionLoaded || game.Phase!=GamePhase.Buy || !game.Living(Id(p)) || item==null || item.PriceDollars<0) {
                 p.PrintToChat("Purchase unavailable.");return HookResult.Handled;
             }
             var balance=game.Players[Id(p)].Cash;
@@ -44,7 +50,8 @@ public sealed partial class RaidPlugin
             var p=e.Userid;
             if(!Human(p))return HookResult.Continue;
             if(!gameplayConfig.CustomPricingEnabled) {
-                // Informational only: no catalog debit/refund, HUD rewrite or price assertion.
+                // Observe the ENGINE debit once, never a second catalog charge.
+                ObserveNativeSpend(p);
                 p.PrintToChat($"Purchased {SafeName(e.Weapon=="ak47"?"AK-47":e.Weapon)} (vanilla pricing).");
                 return HookResult.Continue;
             }

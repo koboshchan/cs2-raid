@@ -99,9 +99,7 @@ for n in 1 2; do
   dotnet build /work/run$n/src/tests/RaidState.Tests.csproj -c Release --no-restore -p:TreatWarningsAsErrors=true >> /work/artifacts/build-$n.log 2>&1
   dotnet /work/run$n/src/tests/bin/Release/net10.0/RaidState.Tests.dll >> /work/artifacts/build-$n.log 2>&1
   grep '19 raid rule checks passed' /work/artifacts/build-$n.log
-  grep 'gameplay checks passed' /work/artifacts/build-$n.log
-  grep '8 vanilla pricing checks passed' /work/artifacts/build-$n.log
-  grep '12 purchase checks passed' /work/artifacts/build-$n.log
+  grep 'flow v2 checks passed' /work/artifacts/build-$n.log
 done
 for ext in dll deps.json pdb; do
   cmp /work/artifacts/build-1/RaidPlugin.$ext /work/artifacts/build-2/RaidPlugin.$ext
@@ -123,9 +121,7 @@ cat > receipt.json <<EOF
   "errors_per_build": 0,
   "deterministic_match": true,
   "raid_rule_checks_per_build": 19,
-  "gameplay_checks_per_build": 10072,
-  "purchase_checks_per_build": 12,
-  "vanilla_pricing_checks_per_build": 8,
+  "flow_v2_checks_per_build": "see build logs",
   "archive_sha256": "$(sha256sum RaidPlugin-build.tar.gz | cut -d ' ' -f1)",
   "dll_sha256": "$(sha256sum build-1/RaidPlugin.dll | cut -d ' ' -f1)",
   "deps_json_sha256": "$(sha256sum build-1/RaidPlugin.deps.json | cut -d ' ' -f1)",
