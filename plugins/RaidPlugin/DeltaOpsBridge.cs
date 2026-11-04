@@ -12,6 +12,7 @@ public sealed partial class RaidPlugin
     private static readonly PluginCapability<Func<bool>> DeltaOpsReset =
         new("deltaops:raid-reset:v1");
     private bool deltaOpsBridgeLoaded;
+    private bool deltaOpsCharactersReady;
 
     // Call after game.ResetLobby and sessionLoaded=true, before any new selection.
     private bool ResetDeltaOpsCharacters()
@@ -32,6 +33,7 @@ public sealed partial class RaidPlugin
     private void StopDeltaOpsBridge()
     {
         deltaOpsBridgeLoaded = false;
+        deltaOpsCharactersReady = false;
         assignCharacter = null;
     }
 
@@ -42,7 +44,7 @@ public sealed partial class RaidPlugin
         string b = second.ToString(System.Globalization.CultureInfo.InvariantCulture);
         return operation switch
         {
-            0 => game.Phase == GamePhase.CharacterSelect && game.Living(a) &&
+            0 => deltaOpsCharactersReady && game.Phase == GamePhase.CharacterSelect && game.Living(a) &&
                 game.Players[a].Team != null,
             1 => game.Living(a) && game.Living(b) && game.SameTeam(a, b),
             2 => first != second && game.CanDamage(a, b),

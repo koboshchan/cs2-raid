@@ -36,7 +36,7 @@ public sealed partial class RaidPlugin
         if(File.Exists(path)) gameplayConfig=JsonSerializer.Deserialize<GameplayConfig>(File.ReadAllText(path),new JsonSerializerOptions { PropertyNameCaseInsensitive=true }) ?? new();
         gameplayConfig.Validate();
         if(!gameplayConfig.Enabled) return;
-        RegisterPartnerVisuals(); RegisterPricing(); RegisterTonightGameplay();
+        RegisterDeltaOpsBridge(); RegisterPartnerVisuals(); RegisterPricing(); RegisterTonightGameplay();
         VirtualFunctions.CCSPlayer_WeaponServices_CanUseFunc.Hook(BlockGroundPickup,HookMode.Pre);
         VirtualFunctions.CBaseTrigger_StartTouchFunc.Hook(ExtractionTouchStart,HookMode.Post);
         VirtualFunctions.CBaseTrigger_EndTouchFunc.Hook(ExtractionTouchEnd,HookMode.Post);
@@ -49,7 +49,7 @@ public sealed partial class RaidPlugin
         });
         AddCommand("css_characterselect","Select character 1-6",(p,c)=>{
             if(!Human(p) || game.Phase!=GamePhase.CharacterSelect || c.ArgCount!=2 || !int.TryParse(c.GetArg(1),out var number) || number<1 || number>6)return;
-            if(assignCharacter==null || !assignCharacter(p,number)) {p.PrintToChat("Character bridge unavailable. Selection not confirmed; raid stays in selection.");return;}
+            if(!deltaOpsCharactersReady || assignCharacter==null || !assignCharacter(p,number)) {p.PrintToChat("Character bridge unavailable. Selection not confirmed; raid stays in selection.");return;}
             if(game.SelectCharacter(Id(p),number))p.PrintToChat("Selected "+GameplayState.Characters[number-1]);
         });
         AddCommand("css_cashout","Cash in from SSG",(p,c)=>c.ReplyToCommand("Cash-in disabled until durable backend debit and receipt reconciliation are installed. No funds moved."));
@@ -116,6 +116,7 @@ public sealed partial class RaidPlugin
         SetCvar("mp_startmoney",0);SetCvar("mp_playercashawards",0);SetCvar("mp_teamcashawards",0);
         SetCvar("mp_maxmoney",TonightRules.HudLimit);SetCvar("mp_buy_anywhere",0);
         PatchExistingSpread();
+        deltaOpsCharactersReady=ResetDeltaOpsCharacters();
         foreach(var p in Utilities.GetPlayers().Where(Human)) {if(game.Join(Id(p)))PrepareLobby(p);else p.ChangeTeam(CsTeam.Spectator);}
     }
     private void PrepareLobby(CCSPlayerController p)
@@ -127,7 +128,7 @@ public sealed partial class RaidPlugin
         Place(p,game.Players.TryGetValue(Id(p),out var m)&&m.Team!=null?gameplayConfig.ReadyPlatform:gameplayConfig.Lobby);
         SetMoney(p,0);
     }
-    private static Position? Location(CCSPlayerController p) => p.PlayerPawn.Value?.AbsOrigin is {} v ? new(v.X,v.Y,v.Z) : null;
+    private static Position? Location(CCSPlayerController p) => p.PlayerPawn.Value?.AbsOrigin is {} v ? new(v.X,v.Y,v.Z,p.PlayerPawn.Value?.EyeAngles.Y??0) : null;
     private static void Place(CCSPlayerController p,Position pos) => p.PlayerPawn.Value?.Teleport(new Vector(pos.X,pos.Y,pos.Z),new QAngle(0,pos.Yaw,0),new Vector(0,0,0));
     private static void SetPresentation(CCSPlayerController p,bool frozen,bool invisible)
     {
@@ -171,8 +172,9 @@ public sealed partial class RaidPlugin
             if(game.Phase==GamePhase.Lobby) {if(game.Join(Id(p)))PrepareLobby(p);}
             else if(!game.Players.ContainsKey(Id(p))&&p.TeamNum!=(int)CsTeam.Spectator)p.ChangeTeam(CsTeam.Spectator);
         }
+        if(game.Phase==GamePhase.Lobby && !deltaOpsCharactersReady)deltaOpsCharactersReady=ResetDeltaOpsCharacters();
         var previous=game.Phase;
-        var count=game.Tick(DateTimeOffset.UtcNow,gameplayConfig.Ready(game.Players.Values.Select(x=>x.Team).Distinct().Count()));
+        var count=game.Tick(DateTimeOffset.UtcNow,deltaOpsCharactersReady && gameplayConfig.Ready(game.Players.Values.Select(x=>x.Team).Distinct().Count()));
         if(game.Phase!=previous)OnPhaseChanged();
         if(count is int n && n!=lastCountdown){lastCountdown=n;Server.PrintToChatAll(game.Phase+" "+n+"s");}
         if(game.Phase==GamePhase.Active && game.ExtractionAt is {} at && DateTimeOffset.UtcNow>=at) {
@@ -184,7 +186,7 @@ public sealed partial class RaidPlugin
             game.FinishExtractionWindow(DateTimeOffset.UtcNow);
         }
         if(game.Phase==GamePhase.Closed) {
-            foreach(var m in game.Players.Values.Where(x=>!x.Extracted)){var p=Find(m.Id);if(p is {PawnIsAlive:true})p.CommitSuicide(false,true);}
+            foreach(var m in game.Players.Values.Where(x=>!x.Extracted)){var p=Find(m.Id);if(p!=null) {try {ShowRaidResult(p,false);} catch(Exception) { /* UI must not prevent closing a raid. */ } if(p.PawnIsAlive)p.CommitSuicide(false,true);}}
             ResetLobby();
         }
     }
