@@ -44,3 +44,10 @@ public sealed class PreviewClock
         return "<img src='data:image/png;base64,"+asset+"' width='240' height='100'><br>"+text;
     }
 }
+
+public static class PreviewActivation
+{
+    public static bool HudOnly(bool enabled,string target,int port,bool lan) =>
+        enabled&&target=="192.168.1.162:27016"&&port==27016&&lan;
+    public static bool Legacy(bool enabled,bool hudOnly)=>enabled&&!hudOnly;
+}

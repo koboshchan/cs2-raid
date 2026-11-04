@@ -12,6 +12,8 @@ public sealed class DebugConfig : BasePluginConfig
 {
     public bool Enabled { get; set; } = true;
     // Operator asset attestation and exclusive center-channel approval, never inferred from map filename.
+    public bool ExtractHudOnly {get;set;}
+    public string ExtractHudPrivateTarget {get;set;}="";
     public string ExtractHudRelease {get;set;}="";
     public bool ExtractHudExclusive {get;set;}
 
@@ -23,7 +25,7 @@ public sealed class DebugConfig : BasePluginConfig
 public sealed partial class DebugPlugin : BasePlugin, IPluginConfig<DebugConfig>
 {
     public override string ModuleName => "Map Debug";
-    public override string ModuleVersion => "0.1.4";
+    public override string ModuleVersion => "0.1.4-hudonly.1";
     public override string ModuleAuthor => "koboshchan";
     public override string ModuleDescription => "Debug economy and durable map issue reports";
     public DebugConfig Config { get; set; } = new();
@@ -128,7 +130,9 @@ public sealed partial class DebugPlugin : BasePlugin, IPluginConfig<DebugConfig>
         RevokeTestAdmins();
         active = false;
         RestoreCvars(); ClearState(); store?.Dispose(); store = null;
-        if (!Config.Enabled) return;
+        // HUD-only never reaches legacy activation, report store, cvars, admin grants or money tick.
+        if (Config.ExtractHudOnly) return;
+        if (!PreviewActivation.Legacy(Config.Enabled,Config.ExtractHudOnly)) return;
         // Debug's unlimited-money/Glock markers and gameplay are mutually exclusive.
         var raidConfig = Path.Combine(ModuleDirectory, "..", "RaidPlugin", "gameplay.json");
         if (File.Exists(raidConfig))

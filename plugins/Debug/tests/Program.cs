@@ -225,3 +225,12 @@ foreach(var style in new[]{"css","png"}){
  Check(h.Clear(true)==null,"clear ownership revoked");
  h=new(0,15);h.Tick(0,2,true,true,style);Check(h.Tick(1,2,true,false,style)==null,"menu no unowned clear");
 }
+
+Check(PreviewActivation.HudOnly(true,"192.168.1.162:27016",27016,true),"explicit private HUD scope");
+Check(!PreviewActivation.HudOnly(false,"192.168.1.162:27016",27016,true),"HUD defaults off");
+Check(!PreviewActivation.HudOnly(true,"192.168.1.162:27016",27015,true),"public port denied");
+Check(!PreviewActivation.HudOnly(true,"192.168.1.162:27016",27016,false),"non LAN denied");
+Check(!PreviewActivation.HudOnly(true,"",27016,true),"target attestation required");
+Check(!PreviewActivation.Legacy(true,true),"HUD-only excludes legacy economy activation");
+Check(PreviewActivation.Legacy(true,false),"legacy consumer behavior preserved");
+Check(!PreviewActivation.Legacy(false,false),"legacy disabled preserved");

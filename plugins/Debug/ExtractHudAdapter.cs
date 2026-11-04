@@ -13,8 +13,15 @@ public sealed partial class DebugPlugin
             p.PrintToCenterHtml(text,1);
     }
     private void ClearPreviews(){foreach(var p in Utilities.GetPlayers().Where(Human))StopPreview(p);previews.Clear();}
+    private bool HudOnlyReady() {
+        var port=CounterStrikeSharp.API.Modules.Cvars.ConVar<int>.Find("hostport");
+        var lan=CounterStrikeSharp.API.Modules.Cvars.ConVar<bool>.Find("sv_lan");
+        return PreviewActivation.HudOnly(Config.ExtractHudOnly,Config.ExtractHudPrivateTarget,
+            port?.Value??0,lan?.Value??false);
+    }
+    private bool HudReady => Config.ExtractHudOnly?HudOnlyReady():active;
     private void ExtractHudCommand(CCSPlayerController? p,CommandInfo c){
-        if(!Ready(p,c))return;
+        if(!HudReady||!Human(p)){c.ReplyToCommand("HUD mode unavailable or private scope not attested.");return;}
         if(!Config.ExtractHudExclusive||Config.ExtractHudRelease!="default-20261105"){
             c.ReplyToCommand("Requires explicit exclusive HUD channel approval and default-20261105 asset attestation.");return;
         }
@@ -33,7 +40,7 @@ public sealed partial class DebugPlugin
             var p=Utilities.GetPlayers().FirstOrDefault(p=>Human(p)&&p.SteamID==id);
             if(p==null){previews.Remove(id);continue;}
             if(!Same(p,v)){previews.Remove(id);continue;}
-            var valid=active&&Config.ExtractHudExclusive&&Config.ExtractHudRelease=="default-20261105"&&Server.MapName=="df_spaceport_player_scale_raytrace"&&p.PawnIsAlive&&p.TeamNum>=2&&
+            var valid=HudReady&&Config.ExtractHudExclusive&&Config.ExtractHudRelease=="default-20261105"&&Server.MapName=="df_spaceport_player_scale_raytrace"&&p.PawnIsAlive&&p.TeamNum>=2&&
                 p.PlayerPawn.Value is {IsValid:true,AbsOrigin:not null};
             var origin=valid?p.PlayerPawn.Value!.AbsOrigin:null;
             var zone=origin==null?0:PreviewClock.Zone(origin.X,origin.Y,origin.Z);
