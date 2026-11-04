@@ -206,10 +206,10 @@ Check(PreviewArgs.Parse(["stop"])!.Stop,"canonical stop");
 var clock=new PreviewClock(0,15);
 Check(clock.Tick(0,0,true,true)==null,"outside invisible");
 Check(clock.Remaining(4000)==11,"outside clock advances");
-Check(clock.Tick(4000,1,true,true)=="WARNING 00:11 Extracting","reentry shortened warning");
-Check(clock.Tick(4050,2,true,true)=="EXTRACT 00:11 Extracting","real immediately extract");
-Check(clock.Tick(5000,1,true,true)=="WARNING [ 10 ] Extracting","ten bracket");
-Check(clock.Tick(14000,2,true,true)=="EXTRACT [ 1 ] Extracting","one bracket");
+Check(clock.Tick(4000,1,true,true)=="WARNING 00:11","reentry shortened warning");
+Check(clock.Tick(4050,2,true,true)=="EXTRACT 00:11","real immediately extract");
+Check(clock.Tick(5000,1,true,true)=="WARNING 00:10","ten bracket");
+Check(clock.Tick(14000,2,true,true)=="EXTRACT 00:01","one bracket");
 Check(clock.Tick(15000,2,true,true)=="","zero owned clear (never sent)");
 Check(clock.Tick(15001,2,true,true)==null,"idempotent clear");
 foreach(var z in new[]{-1e200,0,1e200}){
@@ -220,13 +220,13 @@ Check(PreviewClock.Zone(1100,-6000,double.NaN)==0,"nonfinite reject");
 var dedupe=new PreviewClock(0,15);
 Check(dedupe.Tick(0,2,true,true)!=null,"first render");
 for(int ms=1;ms<1000;ms++)Check(dedupe.Tick(ms,2,true,true)==null,"same displayed second no resend");
-Check(dedupe.Tick(1000,2,true,true)=="EXTRACT 00:14 Extracting","next second render");
-Check(dedupe.Tick(1050,1,true,true)=="WARNING 00:14 Extracting","immediate zone change");
+Check(dedupe.Tick(1000,2,true,true)=="EXTRACT 00:14","next second render");
+Check(dedupe.Tick(1050,1,true,true)=="WARNING 00:14","immediate zone change");
 Check(dedupe.Tick(1101,0,true,true)=="","exit owned clear");
 Check(dedupe.Tick(1102,0,true,true)==null,"exit clear once");
 Check(dedupe.Tick(1150,2,true,true)!=null,"reenter immediate");
-Check(PreviewClock.Markup(300,false)=="EXTRACT 05:00 Extracting"&&PreviewClock.Markup(264,false)=="EXTRACT 04:24 Extracting","clock format");
-Check(PreviewClock.Markup(15,false)=="EXTRACT 00:15 Extracting"&&PreviewClock.Markup(15,true)=="WARNING 00:15 Extracting","alert state expressed in words not colors");
+Check(PreviewClock.Markup(300,false)=="EXTRACT 05:00"&&PreviewClock.Markup(264,false)=="EXTRACT 04:24","clock format");
+Check(PreviewClock.Markup(15,false)=="EXTRACT 00:15"&&PreviewClock.Markup(15,true)=="WARNING 00:15","alert state expressed in words not colors");
 var hh=new PreviewClock(0,15);hh.Tick(0,2,true,true);Check(hh.Tick(1,2,false,true)=="","invalid/dead/spec clears");
 Check(hh.Clear(true)==null,"clear ownership revoked");
 hh=new(0,15);hh.Tick(0,2,true,true);Check(hh.Tick(1,2,true,false)==null,"menu no unowned clear");
@@ -304,3 +304,20 @@ Check(LootCatalog.MapAllowed("df_spaceport_player_scale_raytrace","default-20261
 Check(!LootCatalog.MapAllowed("de_dust2","default-20261105")&&!LootCatalog.MapAllowed(LootCatalog.Map,"old"),"loot map release denied");
 Check(!LootCatalog.SafeModel("models/../bad.vmdl")&&!LootCatalog.SafeModel("models/bad.vmdl;quit")&&LootCatalog.SafeModel("models/test.vmdl"),"loot model path validation");
 Console.WriteLine($"ALL {checks} CHECKS PASSED");
+
+foreach(var n in new[]{0,1,9,10,11,59,60,300,3600}){
+ var expected=(n/60).ToString("00")+":"+(n%60).ToString("00");
+ Check(PreviewClock.Markup(n,false)=="EXTRACT "+expected,"exact extract MMSS");
+ Check(PreviewClock.Markup(n,true)=="WARNING "+expected,"exact warning MMSS");
+}
+foreach(var z in new[]{double.NaN,double.NegativeInfinity,double.PositiveInfinity}){
+ Check(PreviewClock.Zone(1100,-6000,z)==0,"nonfinite Z rejected");
+}
+var moving=new PreviewClock(0,15);
+Check(moving.Tick(0,PreviewClock.Zone(1100,-6000,0),true,true)=="EXTRACT 00:15","current green position");
+Check(moving.Tick(1,PreviewClock.Zone(800,-6000,0),true,true)=="WARNING 00:15","current ring position");
+Check(moving.Tick(2,PreviewClock.Zone(0,0,0),true,true)=="","outside clear signal not dispatched");
+Check(moving.Tick(4000,PreviewClock.Zone(0,0,0),true,true)==null,"outside silent");
+Check(moving.Tick(6000,PreviewClock.Zone(1100,-6000,0),true,true)=="EXTRACT 00:09","timer continues hidden");
+moving.Clear(false);Check(!moving.Owned,"stop cleanup revokes ownership");
+Console.WriteLine($"FINAL {checks} CHECKS PASSED");

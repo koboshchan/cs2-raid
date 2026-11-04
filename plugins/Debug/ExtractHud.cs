@@ -41,8 +41,8 @@ public sealed class PreviewClock
         return markup;
     }
     public static string Markup(int n,bool red){
-        var clock=n<=10?"[ "+n.ToString(CultureInfo.InvariantCulture)+" ]":(n/60).ToString("00",CultureInfo.InvariantCulture)+":"+(n%60).ToString("00",CultureInfo.InvariantCulture);
-        return (red?"WARNING ":"EXTRACT ")+clock+" Extracting";
+        var clock=(n/60).ToString("00",CultureInfo.InvariantCulture)+":"+(n%60).ToString("00",CultureInfo.InvariantCulture);
+        return (red?"WARNING ":"EXTRACT ")+clock;
     }
 }
 
