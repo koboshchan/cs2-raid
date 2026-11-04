@@ -17,7 +17,6 @@ public sealed class DebugConfig : BasePluginConfig
     public string ExtractHudPrivateTarget {get;set;}="";
     public string ExtractHudRelease {get;set;}="";
     public bool ExtractHudExclusive {get;set;}
-    public int ExtractHudHtmlKeepaliveMs {get;set;}=200;
 
     // Opt-in only for isolated LAN map tests. Never enable on a public server.
     public bool EveryoneIsAdmin { get; set; } = false;
@@ -27,7 +26,7 @@ public sealed class DebugConfig : BasePluginConfig
 public sealed partial class DebugPlugin : BasePlugin, IPluginConfig<DebugConfig>
 {
     public override string ModuleName => "Map Debug";
-    public override string ModuleVersion => "0.1.4-world.2";
+    public override string ModuleVersion => "0.1.4-alert.1";
     public override string ModuleAuthor => "koboshchan";
     public override string ModuleDescription => "Debug economy and durable map issue reports";
     public DebugConfig Config { get; set; } = new();
@@ -55,7 +54,7 @@ public sealed partial class DebugPlugin : BasePlugin, IPluginConfig<DebugConfig>
     public override void Load(bool hotReload)
     {
         loaded = true;
-        AddCommand("css_extracthud", "Debug alert default: !extracthud [seconds] [alert|plain|tags|classes|world] or stop", ExtractHudCommand);
+        AddCommand("css_extracthud", "Private extraction alert: !extracthud [seconds] or !extracthud stop", ExtractHudCommand);
         AddCommand("css_banner", "Private native banner: win|lose|tie gold|blue|red|gray", ColoredBannerCommand);
         AddCommand("css_testwin", "Preview a private native round-win banner", (p, c) => BannerCommand(p, c, BannerResult.Win));
         AddCommand("css_testlose", "Preview a private native round-loss banner", (p, c) => BannerCommand(p, c, BannerResult.Lose));
@@ -125,7 +124,7 @@ public sealed partial class DebugPlugin : BasePlugin, IPluginConfig<DebugConfig>
     public override void Unload(bool hotReload)
     {
         previewNative.Stop(); // Global availability is not guaranteed during error-unload/teardown.
-        FinalWorldCleanup(); // bounded synchronous engine calls before listener disposal; logs residuals
+        ClearPreviews();
         RevokeTestAdmins();
         active = false; loaded = false;
         RestoreCvars(); ClearState(); store?.Dispose(); store = null;
@@ -174,7 +173,6 @@ public sealed partial class DebugPlugin : BasePlugin, IPluginConfig<DebugConfig>
     }
     private void ForgetId(ulong id)
     {
-        RemoveWorld(id);
         previews.Remove(id);
         if (grantedAdmins.Remove(id)) AdminManager.RemovePlayerPermissions(new SteamID(id), "@css/root");
         shots.Remove(id); reportLimiter.Remove(id);

@@ -1,28 +1,21 @@
 using System.Globalization;
 namespace Cs2Debug;
-public sealed record PreviewArgs(int Seconds,string Style,bool Stop)
+public sealed record PreviewArgs(int Seconds,bool Stop)
 {
+    // Only "[seconds]" (1..3600, default 300) or "stop". Anything else is rejected.
     public static PreviewArgs? Parse(string[] args){
-        if(args.Length==1&&args[0]=="stop")return new(0,"alert",true);
-        int seconds=300;string style="alert";bool number=false,variant=false;
-        foreach(var a in args){
-            if(int.TryParse(a,NumberStyles.None,CultureInfo.InvariantCulture,out var n)&&!number&&n>=1&&n<=3600){seconds=n;number=true;}
-            else if((a=="plain"||a=="tags"||a=="classes"||a=="alert"||a=="world")&&!variant){style=a;variant=true;}
-            else return null;
-        }
-        return new(seconds,style,false);
+        if(args.Length==0)return new(300,false);
+        if(args.Length!=1)return null;
+        if(args[0]=="stop")return new(0,true);
+        return int.TryParse(args[0],NumberStyles.None,CultureInfo.InvariantCulture,out var n)&&n>=1&&n<=3600?new(n,false):null;
     }
 }
 public sealed class PreviewClock
 {
     public long End {get;}
     public bool Owned {get;private set;}
-    private long keepaliveDeadline;
-    private long lastDispatch=long.MinValue/2;
-    private readonly int htmlKeepaliveMs;
-    private int color;
     private string? lastMarkup;
-    public PreviewClock(long now,int seconds,int htmlKeepaliveMs=200){End=now+seconds*1000L;this.htmlKeepaliveMs=Math.Clamp(htmlKeepaliveMs,100,500);}
+    public PreviewClock(long now,int seconds){End=now+seconds*1000L;}
     // Same embedded release-qualified JSON authority as Raid, no independently rounded HUD bounds.
     private static readonly System.Text.Json.JsonDocument ZoneProfile=System.Text.Json.JsonDocument.Parse(
         typeof(PreviewClock).Assembly.GetManifestResourceStream("SpaceportZoneProfile")
@@ -39,28 +32,17 @@ public sealed class PreviewClock
     }
     public int Remaining(long now)=>(int)Math.Clamp((End-now+999)/1000,0,3600);
     public string? Clear(bool channel){var had=Owned;Owned=false;lastMarkup=null;return had&&channel?"":null;}
-    public string? Tick(long now,int zone,bool valid,bool channel,string style){
+    // Returns alert text only when the displayed text changes (about once per second); "" means owned clear, never sent.
+    public string? Tick(long now,int zone,bool valid,bool channel){
         if(!valid||!channel||zone==0||now>=End)return Clear(channel);
-        var markup=Markup(Remaining(now),zone==1,style);
-        // Requested native Duration2 is not evidence of actual client lifetime.
-        // Separate changed content from empirical HTML renewal; cap sends to20/s PER PREVIEW (unchanged default HTML renews at5/s).
-        var html=style!="alert"&&style!="world";
-        var changed=!Owned||lastMarkup!=markup;
-        var renew=html&&now>=keepaliveDeadline;
-        if(!changed&&!renew)return null;
-        if(html&&now-lastDispatch<50)return null; // No catch-up burst; next tick uses current content.
-        Owned=true;lastDispatch=now;keepaliveDeadline=now+htmlKeepaliveMs;color=zone;lastMarkup=markup;
+        var markup=Markup(Remaining(now),zone==1);
+        if(Owned&&lastMarkup==markup)return null;
+        Owned=true;lastMarkup=markup;
         return markup;
     }
-    public static string Markup(int n,bool red,string style){
-        if(style=="world")return WorldProbeGeometry.Text(n,red);
-        if(style=="alert")return (red?"WARNING ":"EXTRACT ")+(n<=10?"[ "+n.ToString(CultureInfo.InvariantCulture)+" ]":(n/60).ToString("00",CultureInfo.InvariantCulture)+":"+(n%60).ToString("00",CultureInfo.InvariantCulture))+" Extracting";
-        var c=red?"#FF0000":"#00FF00";
+    public static string Markup(int n,bool red){
         var clock=n<=10?"[ "+n.ToString(CultureInfo.InvariantCulture)+" ]":(n/60).ToString("00",CultureInfo.InvariantCulture)+":"+(n%60).ToString("00",CultureInfo.InvariantCulture);
-        if(style=="plain")return clock+"<br>Extracting";
-        if(style=="tags")return "<font color='"+c+"'><b>"+clock+"</b><br>Extracting</font>";
-        if(style=="classes")return "<font color='"+c+"' class='fontSize-xxl fontWeight-Bold'>"+clock+"</font><br><font color='"+c+"' class='fontSize-s'>Extracting</font>";
-        throw new ArgumentException("Unsupported text preview mode",nameof(style));
+        return (red?"WARNING ":"EXTRACT ")+clock+" Extracting";
     }
 }
 
@@ -112,33 +94,4 @@ public static class PreviewCleanup
         }
         if(errors!=null)throw new AggregateException("Owned preview cleanup failed after managed cancellation",errors);
     }
-}
-
-public static class PreviewDismiss
-{
-    // These are experiments, NOT claimed full-dismiss semantics.
-    public static int? ProbeDuration(string mode)=>mode=="clearblank"?1:mode=="clearttl"?0:null;
-    public static bool ShouldRender(string? text)=>!string.IsNullOrEmpty(text);
-}
-
-public static class PreviewDispatch
-{
-    public static bool IsHtml(string style)=>style is "plain" or "tags" or "classes";
-    public static void Send(string style,string? message,Action<string> html,Action<string> alert){
-        if(!PreviewDismiss.ShouldRender(message))return;
-        if(IsHtml(style))html(message!);else if(style=="alert")alert(message!);else throw new ArgumentException("Unsupported preview dispatch mode",nameof(style));
-    }
-}
-
-// Pure camera-relative placement, intended upper view, client appearance is unverified.
-public static class WorldProbeGeometry
-{
-    public static (float X,float Y,float Z) Place(float x,float y,float z,float pitch,float yaw){
-        if(!float.IsFinite(x)||!float.IsFinite(y)||!float.IsFinite(z)||!float.IsFinite(pitch)||!float.IsFinite(yaw))throw new ArgumentException("Nonfinite eyes");
-        var p=pitch*Math.PI/180;var a=yaw*Math.PI/180;
-        return ((float)(x+48*Math.Cos(p)*Math.Cos(a)+12*Math.Sin(p)*Math.Cos(a)),
-                (float)(y+48*Math.Cos(p)*Math.Sin(a)+12*Math.Sin(p)*Math.Sin(a)),
-                (float)(z-48*Math.Sin(p)+12*Math.Cos(p)));
-    }
-    public static string Text(int n,bool red)=>(n<=10?"[ "+n.ToString(CultureInfo.InvariantCulture)+" ]":(n/60).ToString("00",CultureInfo.InvariantCulture)+":"+(n%60).ToString("00",CultureInfo.InvariantCulture))+"\n"+(red?"WARNING":"Extracting");
 }

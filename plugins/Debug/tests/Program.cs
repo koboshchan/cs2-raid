@@ -197,35 +197,39 @@ try
     Check(!closed.Append(Report(1)), "disposed store never acknowledges");
 }
 finally { Directory.Delete(root, true); }
-Console.WriteLine($"ALL {checks} CHECKS PASSED");
-Check(PreviewArgs.Parse([])==new PreviewArgs(300,"alert",false),"preview default");
-foreach(var bad in new[]{new[]{"red"},new[]{"15","red"},new[]{"plain","tags","classes"},new[]{"15","16"},new[]{"0"},new[]{"3601"},new[]{"stop","css"}})
- Check(PreviewArgs.Parse(bad)==null,"invalid preview args rejected");
-Check(PreviewArgs.Parse(["15","png"])==null&&PreviewArgs.Parse(["15","css"])==null,"retired backgrounds rejected no fallback");
+Check(PreviewArgs.Parse([])==new PreviewArgs(300,false),"preview default");
+foreach(var bad in new[]{new[]{"red"},new[]{"15","red"},new[]{"alert"},new[]{"15","alert"},new[]{"world"},new[]{"plain"},new[]{"tags"},new[]{"classes"},new[]{"css"},new[]{"png"},new[]{"15","css"},new[]{"15","png"},new[]{"15","world"},new[]{"clearblank"},new[]{"clearttl"},new[]{"instructor"},new[]{"0"},new[]{"3601"},new[]{"-5"},new[]{"15","16"},new[]{"stop","15"}})
+ Check(PreviewArgs.Parse(bad)==null,"legacy/invalid args rejected "+string.Join(" ",bad));
+Check(PreviewArgs.Parse(["15"])==new PreviewArgs(15,false),"seconds only");
+Check(PreviewArgs.Parse(["3600"])==new PreviewArgs(3600,false)&&PreviewArgs.Parse(["1"])==new PreviewArgs(1,false),"seconds bounds");
 Check(PreviewArgs.Parse(["stop"])!.Stop,"canonical stop");
 var clock=new PreviewClock(0,15);
-Check(clock.Tick(0,0,true,true,"tags")==null,"outside invisible");
+Check(clock.Tick(0,0,true,true)==null,"outside invisible");
 Check(clock.Remaining(4000)==11,"outside clock advances");
-Check(clock.Tick(4000,1,true,true,"tags")!.Contains("00:11"),"reentry shortened box");
-Check(clock.Tick(4050,2,true,true,"tags")!.Contains("#00FF00"),"real immediately green");
-Check(clock.Tick(5000,1,true,true,"tags")!.Contains("[ 10 ]"),"ten bracket");
-Check(clock.Tick(14000,2,true,true,"tags")!.Contains("[ 1 ]"),"one bracket");
-Check(clock.Tick(15000,2,true,true,"tags")=="","zero clear");
-Check(clock.Tick(15001,2,true,true,"tags")==null,"idempotent clear");
+Check(clock.Tick(4000,1,true,true)=="WARNING 00:11 Extracting","reentry shortened warning");
+Check(clock.Tick(4050,2,true,true)=="EXTRACT 00:11 Extracting","real immediately extract");
+Check(clock.Tick(5000,1,true,true)=="WARNING [ 10 ] Extracting","ten bracket");
+Check(clock.Tick(14000,2,true,true)=="EXTRACT [ 1 ] Extracting","one bracket");
+Check(clock.Tick(15000,2,true,true)=="","zero owned clear (never sent)");
+Check(clock.Tick(15001,2,true,true)==null,"idempotent clear");
 foreach(var z in new[]{-1e200,0,1e200}){
  Check(PreviewClock.Zone(943.874,-6000,z)==2,"real edge priority");
  Check(PreviewClock.Zone(513.673,-6000,z)==1,"warning edge");
 }
 Check(PreviewClock.Zone(1100,-6000,double.NaN)==0,"nonfinite reject");
-foreach(var style in new[]{"plain","tags","classes"}){
- Check(PreviewClock.Markup(300,false,style).Contains("05:00"),"five minute format");
- Check(PreviewClock.Markup(264,false,style).Contains("04:24"),"reference format");
- var h=new PreviewClock(0,15);h.Tick(0,2,true,true,style);
- Check(h.Tick(1,2,false,true,style)=="","invalid/dead/spec clears");
- Check(h.Clear(true)==null,"clear ownership revoked");
- h=new(0,15);h.Tick(0,2,true,true,style);Check(h.Tick(1,2,true,false,style)==null,"menu no unowned clear");
-}
-
+var dedupe=new PreviewClock(0,15);
+Check(dedupe.Tick(0,2,true,true)!=null,"first render");
+for(int ms=1;ms<1000;ms++)Check(dedupe.Tick(ms,2,true,true)==null,"same displayed second no resend");
+Check(dedupe.Tick(1000,2,true,true)=="EXTRACT 00:14 Extracting","next second render");
+Check(dedupe.Tick(1050,1,true,true)=="WARNING 00:14 Extracting","immediate zone change");
+Check(dedupe.Tick(1101,0,true,true)=="","exit owned clear");
+Check(dedupe.Tick(1102,0,true,true)==null,"exit clear once");
+Check(dedupe.Tick(1150,2,true,true)!=null,"reenter immediate");
+Check(PreviewClock.Markup(300,false)=="EXTRACT 05:00 Extracting"&&PreviewClock.Markup(264,false)=="EXTRACT 04:24 Extracting","clock format");
+Check(PreviewClock.Markup(15,false)=="EXTRACT 00:15 Extracting"&&PreviewClock.Markup(15,true)=="WARNING 00:15 Extracting","alert state expressed in words not colors");
+var hh=new PreviewClock(0,15);hh.Tick(0,2,true,true);Check(hh.Tick(1,2,false,true)=="","invalid/dead/spec clears");
+Check(hh.Clear(true)==null,"clear ownership revoked");
+hh=new(0,15);hh.Tick(0,2,true,true);Check(hh.Tick(1,2,true,false)==null,"menu no unowned clear");
 Check(PreviewActivation.HudOnly(true,"192.168.1.162:27016",27016,true),"explicit private HUD scope");
 Check(!PreviewActivation.HudOnly(false,"192.168.1.162:27016",27016,true),"HUD defaults off");
 Check(!PreviewActivation.HudOnly(true,"192.168.1.162:27016",27015,true),"public port denied");
@@ -242,12 +246,11 @@ Check(!RaidHudGuard.ReadInactive(()=>throw new FileNotFoundException(),false),"m
 Check(RaidHudGuard.ReadInactive(()=>throw new FileNotFoundException(),true),"verified absent minimal loader allowed");
 Check(!RaidHudGuard.ReadInactive(()=>throw new UnauthorizedAccessException(),true),"permissions fail closed");
 Check(!RaidHudGuard.ReadInactive(()=>throw new IOException(),true),"IO failure not absent");
-var blockedClock=new PreviewClock(0,300);blockedClock.Tick(0,2,true,true,"tags");
-Check(blockedClock.Tick(1,2,RaidHudGuard.InactiveJson("{\"enabled\":true}"),true,"tags")=="","active transition owned clear");
+var blockedClock=new PreviewClock(0,300);blockedClock.Tick(0,2,true,true);
+Check(blockedClock.Tick(1,2,RaidHudGuard.InactiveJson("{\"enabled\":true}"),true)=="","active transition owned clear");
 Check(blockedClock.Clear(true)==null,"transition clear idempotent");
-var menuClock=new PreviewClock(0,300);menuClock.Tick(0,2,true,true,"tags");
-Check(menuClock.Tick(1,2,false,false,"css")==null,"active transition cannot clear menu");
-
+var menuClock=new PreviewClock(0,300);menuClock.Tick(0,2,true,true);
+Check(menuClock.Tick(1,2,false,false)==null,"active transition cannot clear menu");
 var lifecycle=new PreviewNativeLifecycle();int nativeCalls=0,managedCalls=0;
 lifecycle.Clear(()=>nativeCalls++,()=>managedCalls++);
 Check(nativeCalls==0&&managedCalls==1,"initial Load no globals/native cleanup");
@@ -273,21 +276,6 @@ try{cancelFirst.Clear(()=>{Check(detachedFirst,"cancellation before throwing nat
 Check(detachedFirst,"failure preserves cancellation");
 
 Check(!cancelFirst.Available,"native cleanup failure invalidates availability before rethrow");
-
-var dedupe=new PreviewClock(0,15);
-Check(dedupe.Tick(0,2,true,true,"classes")!=null,"first render");
-for(int ms=1;ms<200;ms++)Check(dedupe.Tick(ms,2,true,true,"classes")==null,"before HTML keepalive deadline");
-Check(dedupe.Tick(200,2,true,true,"classes")!=null,"same content required HTML keepalive");
-Check(dedupe.Tick(1000,2,true,true,"classes")!=null,"next second render");
-Check(dedupe.Tick(1050,1,true,true,"classes")!.Contains("#FF0000"),"immediate red");
-Check(dedupe.Tick(1100,1,true,true,"tags")!=null,"immediate style");
-Check(dedupe.Tick(1101,0,true,true,"tags")=="","exit immediate clear");
-Check(dedupe.Tick(1102,0,true,true,"tags")==null,"exit clear once");
-Check(dedupe.Tick(1150,2,true,true,"tags")!=null,"reenter immediate");
-Check(dedupe.Tick(5000,2,true,true,"classes")!.Contains("[ 10 ]"),"shape boundary");
-foreach(var variant in new[]{"plain","tags","classes"})Check(PreviewArgs.Parse(["15",variant])!.Style==variant,"bounded matrix parser");
-Check(!PreviewClock.Markup(15,false,"classes").Contains("style="),"matrix no browser css");
-
 foreach(var z in new[]{double.MinValue,-1e100,0,1e100,double.MaxValue}){
  foreach(var x in new[]{943.874,1374.076})foreach(var y in new[]{-6816.610,-5143.672}){
   Check(PreviewClock.Zone(x,y,z)==2,"exact real corner precedence finiteZ");
@@ -307,63 +295,6 @@ foreach(var z in new[]{double.MinValue,-1e100,0,1e100,double.MaxValue}){
  Check(PreviewClock.Zone(1158.975,Math.BitDecrement(-8489.547),z)==0,"bottom warning epsilon");
  Check(PreviewClock.Zone(1158.975,Math.BitIncrement(-3470.735),z)==0,"top warning epsilon");
 }
-
-Check(PreviewDismiss.ProbeDuration("clearblank")==1,"explicit blank Duration1 comparison");
-Check(PreviewDismiss.ProbeDuration("clearttl")==0,"explicit TTL0 comparison not hide promise");
-Check(PreviewDismiss.ProbeDuration("globalclear")==null,"no arbitrary dismiss event");
-Check(!PreviewDismiss.ShouldRender(null)&&!PreviewDismiss.ShouldRender(""),"automatic clear never reopens empty panel");
-Check(PreviewDismiss.ShouldRender("[ 10 ]"),"nonempty render retained");
-var dismissClock=new PreviewClock(0,15);dismissClock.Tick(0,2,true,true,"classes");
-Check(dismissClock.Clear(true)==""&&dismissClock.Clear(true)==null,"owned clear once");
-Check(!PreviewDismiss.ShouldRender(dismissClock.Tick(1,0,true,true,"classes")),"outside no repeated blank event");
-
-Check(PreviewArgs.Parse(["15","alert"])!.Style=="alert","alert parser");
-Check(!PreviewDispatch.IsHtml("alert")&&PreviewDispatch.IsHtml("classes"),"clear probes HTML ownership only");
-int htmlCalls=0,alertCalls=0;string? alertText=null;
-var alertClock=new PreviewClock(0,15);
-void SendAlert(long now,int zone)=>PreviewDispatch.Send("alert",alertClock.Tick(now,zone,true,true,"alert"),_=>htmlCalls++,s=>{alertCalls++;alertText=s;});
-SendAlert(0,2);for(int ms=1;ms<1000;ms++)SendAlert(ms,2);
-Check(alertCalls==1&&htmlCalls==0,"alert exactly once same displayed second zero HTML");
-Check(alertText=="EXTRACT 00:15 Extracting","alert plain no color markup");
-SendAlert(1000,2);Check(alertCalls==2,"alert next integer");
-SendAlert(1001,1);Check(alertCalls==3&&alertText!.StartsWith("WARNING "),"alert zone change immediate");
-SendAlert(1002,0);SendAlert(1003,0);Check(alertCalls==3&&htmlCalls==0,"alert exit no empty/native reopen");
-alertClock.Clear(false);Check(!alertClock.Owned,"alert managed cancellation");
-PreviewDispatch.Send("classes","test",_=>htmlCalls++,_=>alertCalls++);
-Check(htmlCalls==1&&alertCalls==3,"HTML path never alert");
-PreviewDispatch.Send("alert","",_=>htmlCalls++,_=>alertCalls++);
-Check(htmlCalls==1&&alertCalls==3,"empty dispatch no foreign surface");
-
-Check(PreviewArgs.Parse(["15","world"])!.Style=="world","actual world parser");
-Check(WorldProbeGeometry.Text(15,false)=="00:15\nExtracting","world clock");
-Check(WorldProbeGeometry.Text(10,true)=="[ 10 ]\nWARNING","world final warning");
-var eye=WorldProbeGeometry.Place(0,0,64,0,0);
-Check(Math.Abs(eye.X-48)<0.001&&Math.Abs(eye.Z-76)<0.001,"eye forward48 upper12");
-bool worldBad=false;try{WorldProbeGeometry.Place(float.NaN,0,0,0,0);}catch(ArgumentException){worldBad=true;}
-Check(worldBad,"world nonfinite fail closed");
-var worldTimer=new PreviewClock(0,15);
-worldTimer.Tick(0,2,true,true,"world");worldTimer.Tick(4000,0,true,true,"world");
-Check(worldTimer.Remaining(6000)==9,"world outside timer continues");
-Check(WorldProbeGeometry.Text(worldTimer.Remaining(6000),false)=="[ 9 ]\nExtracting","world reentry actual remaining");
-worldTimer.Clear(false);Check(!worldTimer.Owned,"world clock managed cancellation");
-
-foreach(var mode in new[]{"plain","tags","classes"}){
- var renewClock=new PreviewClock(0,300,200);
- Check(renewClock.Tick(0,2,true,true,mode)!=null,"HTML first "+mode);
- Check(renewClock.Tick(199,2,true,true,mode)==null,"HTML deadline before "+mode);
- Check(renewClock.Tick(200,2,true,true,mode)!=null,"HTML same content keepalive "+mode);
- Check(renewClock.Tick(200,1,true,true,mode)==null,"HTML aggregate cap "+mode);
- Check((renewClock.Tick(250,1,true,true,mode)!=null)==(mode!="plain"),"HTML pending latest color "+mode);
- Check(renewClock.Tick(9000,1,true,true,mode)!=null,"HTML delayed tick single current send "+mode);
- Check(renewClock.Tick(9000,1,true,true,mode)==null,"HTML no burst "+mode);
- Check(!PreviewDismiss.ShouldRender(renewClock.Tick(9001,0,true,true,mode)),"HTML outside no reopen "+mode);
- Check(!PreviewDismiss.ShouldRender(renewClock.Tick(9500,0,true,true,mode)),"HTML outside no renew "+mode);
-}
-var minRenew=new PreviewClock(0,300,1);minRenew.Tick(0,2,true,true,"tags");
-Check(minRenew.Tick(99,2,true,true,"tags")==null&&minRenew.Tick(100,2,true,true,"tags")!=null,"HTML minimum100ms clamp");
-var maxRenew=new PreviewClock(0,300,9999);maxRenew.Tick(0,2,true,true,"tags");
-Check(maxRenew.Tick(499,2,true,true,"tags")==null&&maxRenew.Tick(500,2,true,true,"tags")!=null,"HTML maximum500ms clamp");
-
 Check(LootCatalog.Entries.Count==247,"loot active247 only");
 Check(LootCatalog.Entries.Select(e=>e.Id).Distinct().Count()==247,"loot unique ids");
 Check(LootCatalog.Entries.All(e=>e.Model==null),"loot unresolved paths never guessed");
@@ -372,43 +303,4 @@ Check(LootCatalog.Entries[0].X==544.23495&&LootCatalog.Entries[0].Y==41.55400000
 Check(LootCatalog.MapAllowed("df_spaceport_player_scale_raytrace","default-20261105"),"loot exact binding");
 Check(!LootCatalog.MapAllowed("de_dust2","default-20261105")&&!LootCatalog.MapAllowed(LootCatalog.Map,"old"),"loot map release denied");
 Check(!LootCatalog.SafeModel("models/../bad.vmdl")&&!LootCatalog.SafeModel("models/bad.vmdl;quit")&&LootCatalog.SafeModel("models/test.vmdl"),"loot model path validation");
-
-// Actual cleanup policy used by WorldHud, exercised without unsafe native calls.
-{
-    var faults=0;var removes=0;
-    Check(WorldCleanup.Attempt(()=>true,()=>throw new Exception(),()=>removes++,()=>faults++)&&removes==1&&faults==1,"WORLD disable failure still removes");
-    removes=0;faults=0;
-    Check(!WorldCleanup.Attempt(()=>true,()=>{},()=>{removes++;throw new Exception();},()=>faults++),"WORLD removal failure retained");
-    Check(WorldCleanup.Attempt(()=>true,()=>{},()=>removes++,()=>faults++)&&removes==2,"WORLD retained removal next attempt succeeds");
-    removes=0;
-    Check(WorldCleanup.Attempt(()=>false,()=>throw new Exception(),()=>removes++,()=>{})&&removes==0,"WORLD stale generation untouched");
-    Check(!WorldCleanup.Attempt(()=>throw new Exception(),()=>{},()=>removes++,()=>{}),"WORLD validity exception retains generation");
-    var pending=1;var passes=0;var residual=0;
-    WorldCleanup.FinalDrain(()=>{passes++;if(passes==2)pending=0;},()=>pending,n=>residual=n);
-    Check(passes==2&&pending==0&&residual==0,"WORLD unload synchronous retry succeeds without ticks");
-    pending=1;passes=0;
-    WorldCleanup.FinalDrain(()=>passes++,()=>pending,n=>residual=n);
-    Check(passes==3&&residual==1,"WORLD unload persistent failure bounded and reported no callbacks");
-    var active=true;var worldTestOwned=1;var cleanup=0;
-    WorldCleanup.Guard(()=>throw new Exception("native gate"),()=>{active=false;worldTestOwned=0;cleanup++;});
-    Check(!active&&worldTestOwned==0&&cleanup==1,"WORLD gate exception cancels managed refresh and attempts cleanup");
-    var otherRemoved=0;
-    foreach(var fail in new[]{true,false})WorldCleanup.Attempt(()=>true,()=>{if(fail)throw new Exception();},()=>otherRemoved++,()=>{});
-    Check(otherRemoved==2,"WORLD disable failure continues other entities");
-}
-
-foreach(var unsupported in new[]{"css","png","unknown"}){
-    var rejected=false;try{PreviewClock.Markup(180,false,unsupported);}catch(ArgumentException){rejected=true;}
-    Check(rejected,"unsupported markup cannot fallback to white rectangle");
-    Check(!PreviewDispatch.IsHtml(unsupported),"unsupported HTML dispatch rejected");
-}
-foreach(var textStyle in new[]{"plain","tags","classes"}){
-    var markup=PreviewClock.Markup(180,false,textStyle);
-    Check(!markup.Contains("<img")&&!markup.Contains("<div")&&!markup.Contains("background")&&!markup.Contains("data:"),"text-only no images/background");
-}
-
-Check(PreviewArgs.Parse(["15"])==new PreviewArgs(15,"alert",false),"final fallback duration-only selects alert");
-Check(PreviewArgs.Parse(["15","alert"])!.Style=="alert","final fallback explicit alert supported");
-Check(PreviewArgs.Parse(["15","world"])!.Style=="world","legacy world explicit only no silent selection");
-Check(PreviewArgs.Parse(["15","css"])==null&&PreviewArgs.Parse(["15","png"])==null,"final fallback never retired backgrounds");
-Check(PreviewClock.Markup(15,false,"alert")=="EXTRACT 00:15 Extracting"&&PreviewClock.Markup(15,true,"alert")=="WARNING 00:15 Extracting","alert state expressed in words not colors");
+Console.WriteLine($"ALL {checks} CHECKS PASSED");
