@@ -16,9 +16,20 @@ public sealed partial class RaidPlugin : BasePlugin
     private ShopItem[] catalog = [];
     private readonly HttpClient http = new(new MoneyOffHandler()) { Timeout = TimeSpan.FromSeconds(15) };
     private Guid mapGeneration = Guid.NewGuid();
-    private readonly HashSet<string> linking = [];
+    private readonly HashSet<string> linking = []; // Retained for frozen fixture preflight.
+    private PrivateLink? privateLinks;
+    private readonly HttpClient linkHttp=new(new LinkOnlyHandler()) {Timeout=Timeout.InfiniteTimeSpan};
     public override void Load(bool hotReload)
     {
+        privateLinks=new PrivateLink(linkHttp,(session,message)=>Server.NextFrame(()=>{
+            if(privateLinks?.Current(session)!=true||session.Generation!=mapGeneration||testUnloaded)return;
+            var current=Utilities.GetPlayers().FirstOrDefault(p=>p.IsValid&&p.EntityHandle.Raw==session.Raw);
+            if(current is {IsValid:true,IsBot:false}&&current.AuthorizedSteamID!=null&&current.SteamID.ToString()==session.Steam)
+                current.PrintToChat(message);
+        }));
+        RegisterEventHandler<EventPlayerConnectFull>((e,i)=>{
+            BeginLink(e.Userid,true);return HookResult.Continue;
+        });
         LoadGameplay();
         RegisterTestMode();
         catalog = JsonSerializer.Deserialize<ShopItem[]>(File.ReadAllText(Path.Combine(ModuleDirectory, "prices.json")),
@@ -32,7 +43,7 @@ public sealed partial class RaidPlugin : BasePlugin
         AddCommand("css_buy", "Pre-raid buy (fail closed scaffold)", (p,c) =>
             c.ReplyToCommand("No charge made. Native delivery/session bridge not implemented."));
         AddCommand("css_link", "SSG account linking (private)", (p,c) => BeginLink(p, false));
-        AddCommand("css_linkpoll", "Check SSG link approval (private)", (p,c) => BeginLink(p, true));
+        AddCommand("css_linkpoll", "Check SSG link approval (private)", (p,c) => BeginLink(p, false));
         AddCommand("css_raid_status", "Raid status", (p,c) =>
             c.ReplyToCommand($"{raid.Phase}; {raid.Players.Count}/7; ends {raid.EndsAt}; extraction {raid.ExtractionAt}"));
         // Server console ONLY. No client can trigger levers, extraction or start by spoofing chat.
@@ -65,62 +76,21 @@ public sealed partial class RaidPlugin : BasePlugin
         });
         RegisterEventHandler<EventPlayerDisconnect>((e, info) => {
             var p = e.Userid;
+            if(p is {IsValid:true})privateLinks?.Disconnect(p.EntityHandle.Raw);
             if (p is { IsValid: true } && raid.Players.TryGetValue(p.SteamID.ToString(), out var s) && s.Alive && !s.Extracted)
                 raid.Die(p.SteamID.ToString());
             return HookResult.Continue;
         });
-        RegisterListener<Listeners.OnMapStart>(_ => { raid = new RaidState(); mapGeneration = Guid.NewGuid(); linking.Clear(); });
+        RegisterListener<Listeners.OnMapStart>(_ => { raid = new RaidState(); mapGeneration = Guid.NewGuid(); linking.Clear(); privateLinks?.Reset(); });
         AddTimer(1.0f, () => raid.Tick(DateTimeOffset.UtcNow), TimerFlags.REPEAT);
     }
-    private void BeginLink(CCSPlayerController? p, bool poll)
+    private void BeginLink(CCSPlayerController? p, bool join)
     {
-        if(TestServer)return;
-        if (p is not { IsValid: true, IsBot: false } || p.AuthorizedSteamID == null || p.UserId is not { } userId) return;
-        var steam = p.SteamID.ToString();
-        if (!linking.Add(steam)) { p.PrintToChat("A link request is already in progress."); return; }
-        var generation = mapGeneration;
-        _ = LinkAsync(steam, userId, generation, poll);
-    }
-    private async Task LinkAsync(string steam, int userId, Guid generation, bool poll)
-    {
-        if(TestServer)return;
-        string message;
-        try {
-            var origin = Environment.GetEnvironmentVariable("RAID_BACKEND_URL");
-            var token = Environment.GetEnvironmentVariable("BRIDGE_TOKEN") ?? "";
-            if (origin != "http://backend:3000" || token.Length < 32) throw new InvalidOperationException("Bridge configuration");
-            using var req = new HttpRequestMessage(HttpMethod.Post, origin + (poll ? "/link/poll" : "/link"));
-            req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
-            req.Content = JsonContent.Create(new { steamId64 = steam });
-            using var response = await http.SendAsync(req);
-            if (!response.IsSuccessStatusCode) {
-                message = response.StatusCode == System.Net.HttpStatusCode.TooManyRequests
-                    ? "Wait before polling again. Use !linkpoll after the required interval."
-                    : "Link unavailable. Check approval/configuration with the server owner.";
-            } else {
-                using var doc = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
-                if (poll) message = "SSG link state: " + doc.RootElement.GetProperty("state").GetString();
-                else {
-                    var words = doc.RootElement.GetProperty("user_code").GetString() ?? "";
-                    var uri = doc.RootElement.GetProperty("verification_uri").GetString() ?? "";
-                    // Never display upstream control sequences, markup or arbitrary URLs in chat.
-                    if (!System.Text.RegularExpressions.Regex.IsMatch(words, @"^[a-z]+ [a-z]+ [a-z]+ [a-z]+$") ||
-                        !Uri.TryCreate(uri, UriKind.Absolute, out var url) || url.Scheme != "https" || uri.Any(char.IsControl))
-                        throw new InvalidOperationException("Invalid link response");
-                    message = $"Your SSG code: {words}. Open {uri}, confirm, then !linkpoll (wait at least 5 seconds). Never share this code.";
-                }
-            }
-        } catch { message = "Link request unavailable. No purchase or charge was made."; }
-        // Reacquire controller on game thread. Never carry controller/event handles over await.
-        Server.NextFrame(() => {
-            if (generation != mapGeneration) return;
-            linking.Remove(steam);
-            var current = Utilities.GetPlayerFromUserid(userId);
-            if (current is { IsValid: true, IsBot: false } && current.AuthorizedSteamID != null && current.SteamID.ToString() == steam)
-                current.PrintToChat(message);
-        });
+        if(testUnloaded || p is not {IsValid:true,IsBot:false} || p.AuthorizedSteamID==null)return;
+        privateLinks?.Start(p.SteamID.ToString(),p.EntityHandle.Raw,mapGeneration,join);
     }
     public override void Unload(bool hotReload) {
+        privateLinks?.Dispose();linkHttp.Dispose();
         ResetFixtureDeltaOps();StopFixtureDeltaOpsBridge();
         testUnloaded=true;mapGeneration=Guid.NewGuid();
         TestModeState.FinalizeAll(TestCleanupError,StopTestMode,StopDeltaOpsBridge,UnhookGameplay,StopGameplay,()=>settlementRecovery?.Dispose(),http.Dispose);

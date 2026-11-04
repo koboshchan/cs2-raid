@@ -31,3 +31,5 @@ SettlementRecoveryChecks.Run();
 NativeBuyPolicyTests.Run();
 
 ReloadPolicyTests.Run();
+
+PrivateLinkTests.Run();
