@@ -4,6 +4,8 @@ using CounterStrikeSharp.API.Modules.Commands;
 using CounterStrikeSharp.API.Modules.Cvars;
 using CounterStrikeSharp.API.Modules.Utils;
 using System.Drawing;
+using CounterStrikeSharp.API.Modules.Timers;
+using CounterStrikeSharp.API.Modules.Memory;
 using System.Net.Http;
 using System.Text.Json;
 
@@ -14,6 +16,11 @@ public sealed partial class RaidPlugin
     private static bool TestServer => Environment.GetEnvironmentVariable("RAID_TEST_SERVER")=="1";
     private readonly TestModeState testMode=new();
     private bool testUnloaded;
+    private TestFlow testFlow=new();
+    private readonly List<Position> testSpawns=[];
+    private readonly HashSet<uint> testWeapons=[];
+    private int testLastCount=-1;
+    private DateTimeOffset testNextWaiting;
     private readonly Dictionary<string,uint> testControllers=[];
     private readonly Dictionary<string,Position> testDeaths=[];
     private readonly Dictionary<string,uint> testRoamed=[];
@@ -61,31 +68,35 @@ public sealed partial class RaidPlugin
                                     c.ReplyToCommand($"NATIVE gun={gun.DesignerName} mode={mode} baseline=[{string.Join(",",original.Modes[mode])}] current=[{string.Join(",",current[mode].Values.ToArray())}] expected=[{string.Join(",",original.Modes[mode].Select(TonightRules.Half))}]");
                             }else c.ReplyToCommand("No held gun with saved current-map baseline; spread ratio NOT verified.");
                             break;
+                        case "capture":
+                            var captured=Participant(2);
+                            if(testMode.Phase!=TestModeState.Stage.Lobby || !TestParticipant(captured) || !captured.PawnIsAlive || Location(captured) is not {Valid:true} point)
+                                throw new InvalidOperationException("Capture requires living enrolled Lobby player.");
+                            if(!testSpawns.Any(x=>x.Within(point,64)))testSpawns.Add(point);
+                            c.ReplyToCommand($"Captured actual position {point}; spawn-count={testSpawns.Count}");break;
                         case "join":
-                            var a=Participant(2);testMode.Join(Id(a),Human(a));testControllers[Id(a)]=a.EntityHandle.Raw;
-                            if(a.PawnIsAlive)TestHealth(a);else c.ReplyToCommand("Enrolled but dead/spectator. Use css_raid_test spawn <userid> <2|3> in Lobby; then verify 200HP before next.");break;
+                            var a=Participant(2);testMode.Join(Id(a),Human(a));testControllers[Id(a)]=a.EntityHandle.Raw;testFlow.Join(Id(a));
+                            if(a.PawnIsAlive)PrepareTestLobby(a);else c.ReplyToCommand("Enrolled but dead/spectator. Use css_raid_test spawn <userid> <2|3> in Lobby; then verify 200HP before next.");break;
                         case "spawn":
                             var spawning=Participant(2);
                             if(!testMode.CanRespawn(TestParticipant(spawning))||c.ArgCount!=4||!int.TryParse(c.GetArg(3),out var team)||team is not (2 or 3))
                                 throw new InvalidOperationException("Lobby-only enrolled spawn userid 2|3.");
                             if(spawning.PawnIsAlive)throw new InvalidOperationException("Already alive; no respawn performed.");
                             spawning.SwitchTeam((CsTeam)team);spawning.Respawn();break;
-                        case "duo":testMode.Duo(Id(Participant(2)),Id(Participant(3)));break;
+                        case "duo":
+                            var first=Id(Participant(2));var second=Id(Participant(3));testMode.Duo(first,second);
+                            testFlow.Teams.ShootRequest(first,second);testFlow.Teams.ShootRequest(second,first);break;
                         case "character":
                             var who=Participant(2);
                             if(c.ArgCount!=4||!int.TryParse(c.GetArg(3),out var label))throw new InvalidOperationException("character userid label(1-6)");
-                            testMode.Select(Id(who),label);break;
+                            testMode.Select(Id(who),label);testFlow.Teams.SelectCharacter(Id(who),label);break;
                         case "give":
-                            var receiver=Participant(2);
-                            if(!TestParticipant(receiver)||testMode.Phase!=TestModeState.Stage.Buy||c.ArgCount!=4 ||
-                               PriceItem(c.GetArg(3)) is not {IsGun:true} item)
-                                throw new InvalidOperationException("Buy-phase free gun fixture only: give userid weapon_entity");
-                            receiver.GiveNamedItem(item.Entity);break;
+                            throw new InvalidOperationException("Free give removed. Use native buy <allowlisted gun> during automatic Buy; finite fixture credits.");
                         case "next":
                             if(testMode.Phase==TestModeState.Stage.Lobby && testMode.Participants.Keys.Any(id=>Find(id) is not {} live || !TestParticipant(live)||!live.PawnIsAlive))
                                 throw new InvalidOperationException("All enrolled players must be alive. Use spawn userid 2|3 in Lobby.");
-                            testMode.Advance();ApplyTestPhase();break;
-                        default:throw new InvalidOperationException("on/off/status/join userid/spawn userid 2|3/duo userid userid/character userid 1-6/give userid weapon_entity/next");
+                            testFlow.Manual=true;testMode.Advance();ApplyTestPhase();break;
+                        default:throw new InvalidOperationException("on/off/status/join userid/spawn userid 2|3/capture userid/duo userid userid/character userid 1-6/next (manual QA disables auto)");
                     }
                 }
                 c.ReplyToCommand(TestStatus());
@@ -93,14 +104,46 @@ public sealed partial class RaidPlugin
         });
         AddCommandListener("jointeam",(p,c)=>{
             if(!testMode.NativeActive || !TestParticipant(p))return HookResult.Continue;
-            if(c.ArgCount==2 && int.TryParse(c.GetArg(1),out var side)&&side is 2 or 3)p!.SwitchTeam((CsTeam)side);
+            if(testMode.Phase==TestModeState.Stage.Lobby && c.ArgCount==2 && int.TryParse(c.GetArg(1),out var side)&&side is 2 or 3)p!.SwitchTeam((CsTeam)side);
             return HookResult.Handled;
         },HookMode.Pre);
-        foreach(var cmd in new[]{"buy","autobuy","rebuy"})
-            AddCommandListener(cmd,(p,c)=>testMode.NativeActive?HookResult.Handled:HookResult.Continue,HookMode.Pre);
+        if(TestServer){
+            AddCommand("css_team","Fixture solo readiness: !team single",(p,c)=>{
+                if(!TestPlayerCommand(p,c))return;
+                if(c.ArgString.Trim()=="single" && testFlow.Teams.Solo(Id(p!)))p!.PrintToChat("TEST solo ready. !cancelteam to cancel before Buy.");
+            });
+            AddCommand("css_cancelteam","Cancel fixture solo/duo before Buy",(p,c)=>{
+                if(!TestPlayerCommand(p,c))return;
+                var changed=testFlow.Teams.Cancel(Id(p!));
+                if(changed.Length>0){SyncTestTeams();testMode.Sync(TestModeState.Stage.Lobby);ApplyTestPhase();TestAnnounce("Team cancelled. Shoot each other or !team single.");}
+            });
+            AddCommand("css_characterselect","Fixture character state 1..6, no DeltaOps abilities",(p,c)=>{
+                if(!TestPlayerCommand(p,c))return;
+                if(c.ArgCount==2&&int.TryParse(c.GetArg(1),out var n)&&testFlow.Teams.SelectCharacter(Id(p!),n))
+                    p!.PrintToChat("TEST selected "+GameplayState.Characters[n-1]+"; KIT STUB, NO DeltaOps abilities.");
+                else p!.PrintToChat("Select during Selection with !characterselect 1..6.");
+            });
+            AddCommand("css_testshop","Fixture credits and strict gun prices",(p,c)=>{
+                if(!TestPlayerCommand(p,c))return;
+                p!.PrintToChat($"TEST credits {testFlow.Wallet.GetValueOrDefault(Id(p))}; NO SSG/real cash. Native console buy <gun> or !testbuy <gun>.");
+                foreach(var (name,price) in TestFlow.Prices)p.PrintToChat($"{name} {price} fixture credits");
+            });
+            AddCommand("css_testbuy","Native gun fixture purchase",(p,c)=>{
+                if(TestPlayerCommand(p,c))TestPurchase(p!,c.ArgCount==2?c.GetArg(1):"");
+            });
+        }
+        AddCommandListener("buy",(p,c)=>{
+            if(!TestServer||!testMode.NativeActive)return HookResult.Continue;
+            if(TestParticipant(p))TestPurchase(p!,c.ArgCount==2?c.GetArg(1):"");
+            return HookResult.Handled;
+        },HookMode.Pre);
+        foreach(var cmd in new[]{"autobuy","rebuy","drop"})
+            AddCommandListener(cmd,(p,c)=>TestServer&&testMode.NativeActive?HookResult.Handled:HookResult.Continue,HookMode.Pre);
+        RegisterListener<Listeners.OnEntityTakeDamagePre>(TestDamage);
+        AddTimer(1,TestSecond,TimerFlags.REPEAT);
         RegisterListener<Listeners.OnTick>(TestTick);
-        RegisterListener<Listeners.OnMapEnd>(()=>{try{StopTestMode();}finally{spreadMapEnded=true;AbandonExpiredSpread();}});
-        RegisterListener<Listeners.OnMapStart>(_=>{AbandonExpiredSpread();spreadMapEnded=false;StopTestMode();});
+        RegisterListener<Listeners.OnMapEnd>(()=>{try{StopTestMode();}finally{spreadMapEnded=true;testWeapons.Clear();AbandonExpiredSpread();}});
+        RegisterListener<Listeners.OnMapStart>(_=>{testWeapons.Clear();AbandonExpiredSpread();spreadMapEnded=false;StopTestMode();});
         RegisterListener<Listeners.OnEntitySpawned>(e=>{
             if(!testMode.NativeActive || !e.DesignerName.StartsWith("weapon_",StringComparison.Ordinal))return;
             var raw=e.EntityHandle.Raw;var generation=testMode.Generation;
@@ -116,34 +159,43 @@ public sealed partial class RaidPlugin
                 Server.NextFrame(()=>{
                     if(!testMode.NativeActive||!testMode.CallbackAllowed(generation,testUnloaded))return;
                     var p=Find(id);if(!TestParticipant(p))return;
-                    testDeaths.Remove(id);testRoamed.Remove(id);TestHealth(p!);ApplyTestPresentation(p!);
+                    testDeaths.Remove(id);testRoamed.Remove(id);if(testMode.Phase==TestModeState.Stage.Lobby)PrepareTestLobby(p!);
+                    else {
+                        if(!testFlow.Manual&&!testFlow.Teams.Living(id)){p!.ChangeTeam(CsTeam.Spectator);return;}
+                        TestHealth(p!);ApplyTestPresentation(p!);
+                    }
+
                 });
             }return HookResult.Continue;
         });
         RegisterEventHandler<EventPlayerDeath>((e,i)=>{
             if(testMode.NativeActive&&TestParticipant(e.Userid)){
-                var p=e.Userid!;if(Location(p) is {} pos)testDeaths[Id(p)]=pos;testRoamed.Remove(Id(p));
+                var p=e.Userid!;testFlow.Teams.Kill(Id(p),null);if(Location(p) is {} pos)testDeaths[Id(p)]=pos;testRoamed.Remove(Id(p));
             }return HookResult.Continue;
         },HookMode.Pre);
         RegisterEventHandler<EventPlayerDisconnect>((e,i)=>{
-            if(TestParticipant(e.Userid)){var id=Id(e.Userid!);try{RestoreTestPlayer(e.Userid!);}finally{testMode.Leave(id);testControllers.Remove(id);testDeaths.Remove(id);testRoamed.Remove(id);}}
+            if(TestParticipant(e.Userid)){var id=Id(e.Userid!);try{RestoreTestPlayer(e.Userid!);}finally{testMode.Leave(id);testFlow.Leave(id);testControllers.Remove(id);testDeaths.Remove(id);testRoamed.Remove(id);}}
             return HookResult.Continue;
         },HookMode.Pre);
     }
     private void StartTestMode(){
-        if(testUnloaded || spreadMapEnded || testPawns.Count!=0 || testObservers.Count!=0 || testCvars.Count!=0 || TestServer&&spreadOriginals.Count!=0)
+        if(testUnloaded || spreadMapEnded || testPawns.Count!=0 || testObservers.Count!=0 || testCvars.Count!=0 || testWeapons.Count!=0 || TestServer&&spreadOriginals.Count!=0)
             throw new InvalidOperationException("Unloaded or pending native cleanup. Retry off; inspect saved baseline counters.");
         if(sessionLoaded || PendingSettlement || linking.Count!=0 || gameplayConfig.Enabled)
             throw new InvalidOperationException("Production config/session or pending bridge conflicts. Disable production gameplay first.");
-        testMode.Start(TestScope());
+        testMode.Start(TestServer&&TestScope());testFlow=new();testSpawns.Clear();testLastCount=-1;ReadTestSpawns();
         try {
             TestCvar("mp_autoteambalance",false);TestCvar("mp_limitteams",0);
             TestCvar("mp_ignore_round_win_conditions",true);
+            TestCvar("mp_teammates_are_enemies",true);TestCvar("mp_friendlyfire",true);
+            TestCvar("ff_damage_reduction_bullets",1f);TestCvar("ff_damage_reduction_other",1f);
+            TestCvar("ff_damage_reduction_grenade",1f);
+            TestCvar("mp_playercashawards",false);TestCvar("mp_teamcashawards",false);
             TestCvar("mp_respawn_on_death_t",false);TestCvar("mp_respawn_on_death_ct",false);
             PatchExistingSpread();
         }catch{StopTestMode();throw;}
     }
-    private string TestStatus()=>$"TEST {(testMode.Enabled?"ON":"OFF")} | MONEY {(TestServer?"HARD OFF":"production gates")} | phase {testMode.Phase} | {testMode.Participants.Count} opted-in | 200HP saved-pawns={testPawns.Count} / spread 0.5 baselines={spreadOriginals.Count} shared SERVER-WIDE / CHASE living duo else ROAMING death+64 observers={testObservers.Count} | KIT STUB labels only, NO DeltaOps | native T/CT damage rules (NOT duo combat acceptance) | no teleport insertion, no loot/economy/session | pending-cvars={testCvars.Count} | generation {testMode.Generation}";
+    private string TestStatus()=>$"TEST {(testMode.Enabled?"ON":"OFF")} | MONEY {(TestServer?"HARD OFF":"production gates")} | phase {testMode.Phase} | {testMode.Participants.Count} opted-in | 200HP saved-pawns={testPawns.Count} / spread 0.5 baselines={spreadOriginals.Count} shared SERVER-WIDE / CHASE living duo else ROAMING death+64 observers={testObservers.Count} | KIT STUB labels only, NO DeltaOps | custom duo immunity / same-side FFA (native QA pending) | native-map/captured insertion, finite TEST credits only; no loot/SSG/session | flow={(testFlow.Manual?"MANUAL QA":"AUTO")} / spawns={testSpawns.Count} / ledger={testFlow.Ledger.Count} pending-cvars={testCvars.Count} | generation {testMode.Generation}";
     private void TestCvar<T>(string name,T value){
         var cv=ConVar<T>.Find(name)??throw new InvalidOperationException("Missing "+name);
         TestModeState.SetCaptured(testCvars,name,()=>cv.Value,
@@ -170,7 +222,7 @@ public sealed partial class RaidPlugin
         if(!TestScope() || sessionLoaded){StopTestMode();return;}
         if(testMode.Phase==TestModeState.Stage.Closed)return;
         foreach(var id in testMode.Participants.Keys.ToArray()){
-            var p=Find(id);if(!TestParticipant(p)){testMode.Leave(id);testControllers.Remove(id);continue;}
+            var p=Find(id);if(!TestParticipant(p)){testMode.Leave(id);testFlow.Leave(id);testControllers.Remove(id);continue;}
             if(!testDeaths.TryGetValue(id,out var death)||p!.PawnIsAlive)continue;
             var pawn=p.ObserverPawn.Value;if(pawn is not {IsValid:true}||pawn.ObserverServices is not {} obs)continue;
             var mate=testMode.Participants[id];var target=mate==null?null:Find(mate);
@@ -182,6 +234,120 @@ public sealed partial class RaidPlugin
             if(target==null&&testRoamed.GetValueOrDefault(id)!=pawn.EntityHandle.Raw){
                 pawn.Teleport(new Vector(death.X,death.Y,death.Z+64),new QAngle(0,death.Yaw,0),new Vector(0,0,0));testRoamed[id]=pawn.EntityHandle.Raw;
             }
+        }
+    }
+    private bool TestPlayerCommand(CCSPlayerController? p,CommandInfo c){
+        if(!testMode.NativeActive||!TestParticipant(p)){c.ReplyToCommand("TEST only: ask console owner to enable and enroll you with css_raid_test join <userid>.");return false;}
+        if(!TestScope()){StopTestMode();return false;}return true;
+    }
+    private void TestAnnounce(string message){
+        foreach(var p in Utilities.GetPlayers().Where(TestParticipant))p.PrintToChat("TEST MONEY HARD OFF | "+message);
+    }
+    private void PrepareTestLobby(CCSPlayerController p){
+        TestHealth(p);ApplyTestPresentation(p);
+        // Explicit enrollment/respawn resets inventory for a bounded fixture loadout.
+        // Inventory is not an economic snapshot and is never restored/refunded on OFF.
+        p.RemoveWeapons();
+        GrantTestGun(p,"glock");
+        p.PrintToChat("TEST lobby: shoot each other to duo; !team single; !cancelteam. Then !characterselect 1..6. !testshop lists finite-credit guns. NO DeltaOps abilities / SSG.");
+    }
+    private bool GrantTestGun(CCSPlayerController p,string name){
+        var gun=p.GiveNamedItem<CCSWeaponBase>("weapon_"+name);
+        if(gun is not {IsValid:true})return false;
+        testWeapons.Add(gun.EntityHandle.Raw);PatchSpread(gun);return true;
+    }
+    private void TestPurchase(CCSPlayerController p,string name){
+        // Native buy INPUT, explicit custom native grant. No engine purchase event/debit is trusted.
+        if(!TestParticipant(p)||!TestScope()||!testMode.NativeActive||testFlow.Manual || testMode.Phase!=TestModeState.Stage.Buy||!p.PawnIsAlive ||
+            !testFlow.Spend(Id(p),name)){
+            p.PrintToChat("TEST purchase rejected. Buy phase only, strict gun names, finite credits; !testshop.");return;
+        }
+        bool delivered=false;
+        try{delivered=GrantTestGun(p,name);}
+        catch(Exception ex){Server.PrintToConsole("TEST grant failed/unknown: "+ex.Message);}
+        finally{testFlow.Delivery(Id(p),name,delivered);}
+        p.PrintToChat($"TEST {name}: {(delivered?"native grant OK":"failed/unknown; no automatic refund")}; credits {testFlow.Wallet[Id(p)]}. NO SSG.");
+    }
+    private void ReadTestSpawns(){
+        foreach(var name in new[]{"info_player_terrorist","info_player_counterterrorist"})
+            foreach(var entity in Utilities.FindAllEntitiesByDesignerName<CBaseEntity>(name)){
+                if(!entity.IsValid || entity.AbsOrigin is not {} v)continue;
+                var point=new Position(v.X,v.Y,v.Z,entity.AbsRotation?.Y??0);
+                if(point.Valid&&!testSpawns.Any(x=>x.Within(point,64)))testSpawns.Add(point);
+            }
+    }
+    private void SyncTestTeams(){
+        foreach(var id in testMode.Participants.Keys.ToArray()){
+            testMode.Participants[id]=testFlow.Teams.Players.TryGetValue(id,out var member)&&member.Team is {} team
+                ?testFlow.Teams.Players.Values.FirstOrDefault(x=>x.Id!=id&&x.Team==team)?.Id:null;
+        }
+        testMode.Characters.Clear();
+        foreach(var member in testFlow.Teams.Players.Values)if(member.Character is {} character)testMode.Characters[member.Id]=character;
+    }
+    private HookResult TestDamage(CBaseEntity entity,CTakeDamageInfo info){
+        if(!TestServer||!testMode.NativeActive)return HookResult.Continue;
+        if(!TestScope()){StopTestMode();return HookResult.Continue;}
+        var victim=Controller(entity);var attacker=Controller(info.Attacker.Value);
+        var enrolledVictim=TestParticipant(victim);var enrolledAttacker=TestParticipant(attacker);
+        if(!enrolledVictim&&!enrolledAttacker)return HookResult.Continue;
+        // No cross-fixture damage (including bots/unenrolled humans). World damage only in Active.
+        if(!enrolledVictim || attacker!=null&&!enrolledAttacker)return HookResult.Handled;
+        if(testMode.Phase==TestModeState.Stage.Lobby){
+            if(enrolledAttacker&&info.Damage>0&&(info.BitsDamageType&DamageTypes_t.DMG_BULLET)!=0){
+                if(testFlow.Teams.ShootRequest(Id(attacker!),Id(victim!))){
+                    SyncTestTeams();TestAnnounce(SafeName(attacker!.PlayerName)+" and "+SafeName(victim!.PlayerName)+" duo ready.");
+                }else attacker!.PrintToChat("TEST team request sent if both unpaired; the other player must shoot back.");
+            }return HookResult.Handled;
+        }
+        if(testMode.Phase!=TestModeState.Stage.Active)return HookResult.Handled;
+        if(enrolledAttacker&&!testFlow.Teams.CanDamage(Id(attacker!),Id(victim!)))return HookResult.Handled;
+        return testFlow.Teams.Living(Id(victim!))?HookResult.Continue:HookResult.Handled;
+    }
+    private void TestSecond(){
+        if(!testMode.NativeActive||testUnloaded)return;
+        try{
+            if(!TestScope()||sessionLoaded){StopTestMode();return;}
+            if(testFlow.Manual)return;
+            var live=testMode.Participants.Keys.All(id=>Find(id) is {} p&&TestParticipant(p)&&p.PawnIsAlive);
+            // Do not let readiness/selection clocks start while an enrolled player cannot spawn.
+            var phase=testFlow.Teams.Phase;
+            var ready=phase is GamePhase.Active or GamePhase.Closed ||
+                live&&testSpawns.Count>=testMode.Participants.Count;
+            var before=testFlow.Teams.Phase;
+            var count=testFlow.Tick(DateTimeOffset.UtcNow,ready);
+            SyncTestTeams();
+            var after=testFlow.Teams.Phase;
+            var stage=after==GamePhase.CharacterSelect?TestModeState.Stage.Selection:(TestModeState.Stage)(int)after;
+            testMode.Sync(stage);
+            if(before!=after){
+                if(after==GamePhase.Freeze){
+                    // Real current-map positions only, unique per participant. No production coordinates.
+                    var members=testFlow.Teams.Players.Values.OrderBy(x=>x.Team).ThenBy(x=>x.Id).ToArray();
+                    if(testSpawns.Count<members.Length)throw new InvalidOperationException("Insufficient real spawn positions.");
+                    for(int index=0;index<members.Length;index++){
+                        var p=Find(members[index].Id)??throw new InvalidOperationException("Insertion participant left.");
+                        if(!TestParticipant(p)||!p.PawnIsAlive)throw new InvalidOperationException("Insertion participant not alive.");
+                        Place(p,testSpawns[index]);TestHealth(p);
+                    }
+                }
+                ApplyTestPhase();testLastCount=-1;
+                TestAnnounce(after switch{
+                    GamePhase.CharacterSelect=>"Selection: !characterselect 1..6 (state complete, KIT STUB only, no DeltaOps). !cancelteam allowed.",
+                    GamePhase.Buy=>"Buy 30s: native console buy <gun> or !testbuy <gun>; !testshop. Free 15000 fixture credits; no SSG or projected cash.",
+                    GamePhase.Countdown=>"Countdown 5s, then real-map insertion.",
+                    GamePhase.Freeze=>"Inserted, frozen 10s at actual native/captured map positions.",
+                    GamePhase.Active=>"ACTIVE: 200HP, half spread; custom duo immunity / native same-side FFA. No loot/extraction/economy.",
+                    GamePhase.Closed=>"CLOSED, native baselines restored; console off/on for next fixture.",
+                    _=>"Lobby: mutual bullets to duo or !team single."
+                });
+            }
+            if(count is {} n&&n!=testLastCount){testLastCount=n;TestAnnounce(after+" "+n+"s");}
+            if(!ready&&(after is GamePhase.Lobby or GamePhase.CharacterSelect) && DateTimeOffset.UtcNow>=testNextWaiting){
+                testNextWaiting=DateTimeOffset.UtcNow.AddSeconds(10);
+                TestAnnounce($"Waiting for alive enrolled players / enough real map spawn positions ({testSpawns.Count}/{testMode.Participants.Count}). Console capture <userid> adds an actual current position.");
+            }
+        }catch(Exception ex){
+            try{TestAnnounce("Flow failed closed: "+ex.Message);}finally{StopTestMode();}
         }
     }
     private void TestCleanupError(Exception ex)=>Server.PrintToConsole("TEST cleanup pending: "+ex.Message);
@@ -217,6 +383,7 @@ public sealed partial class RaidPlugin
     private void CleanupTestNative(){
         TestModeState.FinalizeAll(TestCleanupError,
             ()=>RestoreTestPawns(),()=>RestoreTestObservers(),
+            ()=>{foreach(var raw in testWeapons.ToArray())try{if(new CHandle<CCSWeaponBase>(raw).Value is {IsValid:true} gun)gun.Remove();testWeapons.Remove(raw);}catch(Exception ex){try{TestCleanupError(ex);}catch{}}},
             ()=>{if(TestServer)TestModeState.RestoreEntries(spreadOriginals,(_,baseline)=>{
                 var modes=SpreadModes(baseline.Data);
                 for(var i=0;i<modes.Length;i++)baseline.Modes[i].AsSpan().CopyTo(modes[i].Values);
@@ -229,6 +396,6 @@ public sealed partial class RaidPlugin
     private void StopTestMode(){
         testMode.Stop(); // Fence all callbacks before touching native resources.
         try{CleanupTestNative();}
-        finally{testControllers.Clear();testDeaths.Clear();testRoamed.Clear();}
+        finally{testControllers.Clear();testDeaths.Clear();testRoamed.Clear();testSpawns.Clear();}
     }
 }

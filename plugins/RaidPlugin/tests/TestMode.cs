@@ -79,6 +79,47 @@ static class TestModeTests
         foreach(var map in new[]{"de_dust2","unknown/custom-map","Ocean-future-map"}){
             state.Start(TestModeState.Scope("1",true,27016,"192.168.1.162"));Check(state.Enabled);state.Stop();
         }
+        // Exact isolated production teaming/timer/damage helper used by native adapter.
+        var full=new TestFlow();var now=DateTimeOffset.UnixEpoch;
+        Check(full.Join("a")&&full.Join("b")&&full.Join("c"));
+        Check(!full.Join("a")&&full.Wallet["a"]==15000);
+        Check(!full.Teams.ShootRequest("a","b")&&!full.Teams.SameTeam("a","b"));
+        Check(full.Teams.ShootRequest("b","a")&&full.Teams.SameTeam("a","b"));
+        Check(full.Teams.Solo("c"));
+        full.Tick(now,false);Check(full.Teams.Phase==GamePhase.Lobby);
+        full.Tick(now,true);Check(full.Teams.Phase==GamePhase.CharacterSelect);
+        Check(!full.Teams.SelectCharacter("a",0)&&!full.Teams.SelectCharacter("a",7));
+        Check(full.Teams.SelectCharacter("a",1)&&full.Teams.SelectCharacter("b",6));
+        Check(!full.Spend("a","glock")&&!full.Teams.CanDamage("a","c"));
+        Check(full.Teams.Cancel("a").Length==2&&full.Teams.Phase==GamePhase.Lobby);
+        Check(!full.Teams.SameTeam("a","b")&&full.Teams.Players["a"].Character==null);
+        Check(full.Teams.Solo("a")&&full.Teams.Solo("b"));full.Tick(now,true);
+        foreach(var id in new[]{"a","b","c"})Check(full.Teams.SelectCharacter(id,3));
+        full.Tick(now,true);Check(full.Teams.Phase==GamePhase.Buy);
+        foreach(var invalid in new[]{"","weapon_awp","AWP","awp;quit","hegrenade","c4","not-a-gun"})
+            Check(!full.Spend("a",invalid)&&full.Wallet["a"]==15000);
+        Check(full.Spend("a","awp")&&full.Wallet["a"]==10250);
+        full.Delivery("a","awp",false);Check(full.Wallet["a"]==10250&&full.Ledger.Last().Contains("NO_REFUND"));
+        Check(full.Spend("a","awp")&&full.Spend("a","awp")&&!full.Spend("a","awp")&&full.Wallet["a"]==750);
+        Check(full.Teams.Cancel("a").Length==0);
+        full.Tick(now.AddSeconds(29),true);Check(full.Teams.Phase==GamePhase.Buy);
+        full.Tick(now.AddSeconds(30),true);Check(full.Teams.Phase==GamePhase.Countdown&&!full.Spend("b","glock"));
+        full.Tick(now.AddSeconds(34),true);Check(full.Teams.Phase==GamePhase.Countdown);
+        full.Tick(now.AddSeconds(35),true);Check(full.Teams.Phase==GamePhase.Freeze);
+        full.Tick(now.AddSeconds(44),true);Check(full.Teams.Phase==GamePhase.Freeze);
+        full.Tick(now.AddSeconds(45),true);Check(full.Teams.Phase==GamePhase.Active&&full.Teams.CanDamage("a","b"));
+        full.Teams.Kill("a",null);Check(!full.Teams.CanDamage("a","b"));
+        full.Leave("b");Check(!full.Wallet.ContainsKey("b")&&!full.Teams.Living("b"));
+        full.Teams.Kill("c",null);full.Tick(now.AddSeconds(46),true);Check(full.Teams.Phase==GamePhase.Closed);
+        Check(!full.Join("late")&&!full.Spend("c","glock"));
+        var duoFlow=new TestFlow();duoFlow.Join("x");duoFlow.Join("y");duoFlow.Join("z");
+        duoFlow.Teams.ShootRequest("x","y");Check(duoFlow.Teams.ShootRequest("y","x"));
+        duoFlow.Teams.Solo("z");duoFlow.Tick(now,true);
+        foreach(var id in new[]{"x","y","z"})duoFlow.Teams.SelectCharacter(id,1);
+        duoFlow.Tick(now,true);duoFlow.Tick(now.AddSeconds(30),true);duoFlow.Tick(now.AddSeconds(35),true);duoFlow.Tick(now.AddSeconds(45),true);
+        Check(!duoFlow.Teams.CanDamage("x","y")&&duoFlow.Teams.CanDamage("x","z")&&duoFlow.Teams.Spectate("x")=="y");
+        duoFlow.Teams.Kill("y",null);Check(duoFlow.Teams.Spectate("x")==null);
+        duoFlow.Tick(now.AddMinutes(31),true);Check(duoFlow.Teams.Phase==GamePhase.Closed);
         var oldServer=Environment.GetEnvironmentVariable("RAID_TEST_SERVER");
         var oldMoney=Environment.GetEnvironmentVariable("RAID_FINANCIAL_ENABLED");
         var oldScaffold=Environment.GetEnvironmentVariable("RAID_ENABLE_SCAFFOLD");
