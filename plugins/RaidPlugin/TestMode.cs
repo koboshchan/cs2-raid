@@ -12,15 +12,6 @@ public sealed partial class RaidPlugin
 {
     // A dedicated test server remains money-hard-off even when the fixture is OFF.
     private static bool TestServer => Environment.GetEnvironmentVariable("RAID_TEST_SERVER")=="1";
-    private sealed class MoneyOffHandler : DelegatingHandler
-    {
-        public MoneyOffHandler():base(new HttpClientHandler()){}
-        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request,CancellationToken cancellationToken)
-        {
-            if(TestServer)throw new InvalidOperationException("TEST SERVER: all bridge HTTP is hard OFF.");
-            return base.SendAsync(request,cancellationToken);
-        }
-    }
     private readonly TestModeState testMode=new();
     private readonly Dictionary<string,uint> testControllers=[];
     private readonly Dictionary<string,Position> testDeaths=[];
@@ -65,8 +56,14 @@ public sealed partial class RaidPlugin
                             var who=Participant(2);
                             if(c.ArgCount!=4||!int.TryParse(c.GetArg(3),out var label))throw new InvalidOperationException("character userid label(1-6)");
                             testMode.Select(Id(who),label);break;
+                        case "give":
+                            var receiver=Participant(2);
+                            if(!TestParticipant(receiver)||testMode.Phase!=TestModeState.Stage.Buy||c.ArgCount!=4 ||
+                               PriceItem(c.GetArg(3)) is not {IsGun:true} item)
+                                throw new InvalidOperationException("Buy-phase free gun fixture only: give userid weapon_entity");
+                            receiver.GiveNamedItem(item.Entity);break;
                         case "next":testMode.Advance();ApplyTestPhase();break;
-                        default:throw new InvalidOperationException("on/off/status/join userid/duo userid userid/character userid 1-6/next");
+                        default:throw new InvalidOperationException("on/off/status/join userid/duo userid userid/character userid 1-6/give userid weapon_entity/next");
                     }
                 }
                 c.ReplyToCommand(TestStatus());
@@ -122,7 +119,7 @@ public sealed partial class RaidPlugin
             PatchExistingSpread();
         }catch{StopTestMode();throw;}
     }
-    private string TestStatus()=>$"TEST {(testMode.Enabled?"ON":"OFF")} | MONEY {(TestServer?"HARD OFF":"production gates")} | phase {testMode.Phase} | {testMode.Participants.Count} opted-in | 200HP / spread 0.5 shared SERVER-WIDE / CHASE living duo else ROAMING death+64 | KIT STUB labels only, NO DeltaOps | no teleport insertion, no loot/economy/session | generation {testMode.Generation}";
+    private string TestStatus()=>$"TEST {(testMode.Enabled?"ON":"OFF")} | MONEY {(TestServer?"HARD OFF":"production gates")} | phase {testMode.Phase} | {testMode.Participants.Count} opted-in | 200HP saved-pawns={testPawns.Count} / spread 0.5 baselines={spreadOriginals.Count} shared SERVER-WIDE / CHASE living duo else ROAMING death+64 observers={testObservers.Count} | KIT STUB labels only, NO DeltaOps | no teleport insertion, no loot/economy/session | generation {testMode.Generation}";
     private void TestCvar(string name,int value){
         var cv=ConVar<int>.Find(name)??throw new InvalidOperationException("Missing "+name);
         testCvars.TryAdd(name,cv.Value);cv.Value=value;
