@@ -4,7 +4,7 @@ Authoritative requirements remain in [SPEC.md](SPEC.md). Implementation status b
 
 ## Flow v2 implemented offline
 
-- [x] Pure phase model: lobby, six-character selection, buy 30s, countdown 5s, spawn freeze 10s, active 30min, close.
+- [x] Pure phase model: lobby, six-character selection, native buy 45s, countdown 5s, spawn freeze 10s, active 30min, close.
 - [x] Pure duo request/cancel guards, seven-player cap and damage eligibility.
 - [x] Fixed-value instant E item/equipment/bag claiming. No inventory pickup award or shoot-to-loot.
 - [x] Safe hold timer, release/range reset, configured money range and single-consumer award.
@@ -58,3 +58,6 @@ Typed captured mp_do_warmup_period=false, mp_freezetime=0, roundtime/defuse/host
 Console inspect now accepts bots and shows native HP, max, team, alive, move/actualmove/flags, bot/enrollment/solo-id and phase. trace 0..32 prints damage policy decisions console-only, reset on OFF/round. No health-delta acceptance implied.
 Lobby now allows enrolled living human-bot and bot-bot damage; human-human retains no-damage mutual-shot pairing. Selection/Buy/Countdown/Freeze remain protected; Active custom-duo immunity/FFA unchanged. No silent advance after !team single: selection still required; use !characterselect 1..6 and normal automatic phases. Live real health deltas BOTH directions, bot AI target behavior, freeze flags and cvar types still owner-native QA.
 Stage3 utility from proven ability-kit provenance remains allowed as future scope; only BUY-menu utility prohibited. Stage2 inactive policy has no runtime integration.
+
+- [x] Offline 45-second Buy model, deadline admission, fixed engine clock anchor, typed scoped mp_buytime capture/restore; current-engine seconds receipt documented.
+- [ ] Native45 HUD/menu runtime acceptance on both T/CT, exact boundary, phase transitions and lifecycle restoration on an explicitly approved isolated runtime. Keep every existing native/financial proof gate OFF.

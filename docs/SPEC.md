@@ -7,7 +7,7 @@ Rules: one root multi-stage Dockerfile, plugins/ (RaidPlugin, DeltaOps excluded 
 1. Lobby box: native T/CT freely chosen, Glock only, no damage. Shoot player = request, shoot back = duo (max 2). Broadcast names. Moved to ready platform. !cancel team -> both back to box; !team single -> solo. Avoid chat commands otherwise.
 2. After team select: frozen + invisible; keep all 6 DeltaOps characters (D-Wolf, Stinger, Luna, Vyron, Hackclaw, Shepherd). Replace the DeltaOps display box with a numbered list printed in chat; choose using `!characterselect <number>`. DeltaOps API via CSS PluginCapability so raid assigns characters; abilities must respect duos.
 3. Cash-in !cashout from SSG: max $15,000 into game per raid. Start $0 otherwise.
-4. Buy phase 30s: weapons, armor, helmet. Vanilla prices (client menu can't show custom prices; custom pricing flag off). Chat shows charge.
+4. Native CS2 Buy phase 45s: weapons, armor, helmet. Vanilla prices (client menu can't show custom prices; custom pricing flag off). Chat shows charge.
 5. Ammo: mag price = weapon price/20 (Deagle 700 -> 35, G3SG1 -> 250). Reload deducts money.
 6. 5s countdown -> teleport teams to random spawn coords (Lucas sends), frozen 10s, then go.
 7. Teams: native T/CT freely chosen before buying (weapon/buy choices), custom duos independent of native sides + teammates-are-enemies; plugin zeroes duo damage; vanilla wallbangs. Partner-only glow + name + HP tags.
@@ -48,3 +48,5 @@ All guns use half their baseline server VData spread and ballistic inaccuracy fi
 Result banners are private synthetic round_end plus cs_win_panel_round events sent only to that player, not a native round termination. Death/time-out is loss. Successful extraction is win only after a trusted durable backend receipt, never when merely entering a zone or issuing an intent. Client rendering is not accepted until live tested.
 
 Financial bridge source is intentionally disabled and unfinished. Both FinancialNativeVerified and RAID_FINANCIAL_ENABLED are required. Native paid partial completion remains quarantined and requires a durable manual-reconciliation design before enablement. No automatic refund or native regrant is authorized. Full-price extraction follows current section 12; historical 90% sellback wording is not applied to extraction. Compiler/model tests are not financial or native runtime acceptance.
+
+Native Buy timing is 45 seconds using mp_buytime45 in current CS2 seconds units. The engine HUD owns the Buy countdown; no custom 30-second timer is authoritative. See [native Buy timing and unit proof](native-buy45.md). Offline timing work does not enable or certify native menu purchases, reloads, kits, coordinates or financial proof gates.

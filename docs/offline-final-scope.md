@@ -43,3 +43,7 @@ https://github.com/roflmuffin/CounterStrikeSharp/issues/377
 Obtain independently verified catalog and purchase/reload adapters before runtime wiring. Prove native ownership/revocation and safe damage ABI separately for each operator, movement/effect lifecycle and delayed callbacks. Run authorized native matrix for T/CT GUI, failure/cancel/phase changes, insufficient balance, repeated input, partial magazines, reserve behavior, real reconnect, bots, two round cycles, OFF/unload restore, banners, HUD/clock and knife. No fake reconnect or native acceptance from compiler success. Read the exact ability worker handoff at /home/kit/out/raid-fixture-abilities-v2-handoff.md for all six BLOCKED operator rows.
 
 Reproduce with root Docker targets raid-artifacts and deltaops-artifacts. Dependency image/CSS archive are pinned; compile/test RUN steps have network=none. Each target compiles twice and compares DLL/PDB/deps. Raid model tests and separate FixtureAbilitiesV2 policy tests are included. Build receipts under /home/kit/out/raid-final-offline-combined record no server start/deploy.
+
+## 45-second Buy follow-up
+
+The automatic Buy duration is now45 seconds, not the earlier custom30. Current-engine help confirms mp_buytime uses seconds. Fixed GameRules clock anchoring, deadline-based purchase admission and typed scoped cvar restoration are implemented offline. See native-buy45.md. Native B-menu rendering/purchasing and runtime lifecycle acceptance are still unverified; no production/native/financial proof gate is enabled.
