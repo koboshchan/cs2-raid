@@ -19,7 +19,7 @@ const purchaseSchema = z.object({
 });
 export type Purchase = z.infer<typeof purchaseSchema>;
 export type Receipt = {
-  transaction_id: string; app_user_id: string; direction: "debit" | "credit";
+  transaction_id: string; app_user_id: string; grant_id?: string; direction: "debit" | "credit";
   status: "committed"; amount_cents: number; external_reference: string;
   credit_reason?: "refund" | "mint"; original_transaction_id?: string;
 };

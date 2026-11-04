@@ -173,7 +173,7 @@ test("link uses four random words and server-controlled Steam identity string", 
   const link = await client.createLink(session.steamId64, "trusted-server");
   assert.equal(link.user_code.split(" ").length, 4);
   assert.equal(body.external_subject, "cs2:trusted-server:" + session.steamId64);
-  assert.deepEqual(body.scopes, ["balance:debit"]);
+  assert.deepEqual(body.scopes, ["balance:debit", "balance:credit"]);
 });
 
 test("adapter revalidates all session generations inside scheduled synchronous callback", async () => {

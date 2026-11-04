@@ -1,10 +1,11 @@
+import type { RaidMoney } from "./raid-ledger";
 import { randomInt } from "node:crypto";
 import { wordlist } from "@scure/bip39/wordlists/english.js";
 import { z } from "zod";
 import { debitBody, debitKey, refundBody, refundKey, type MoneyApi, type Purchase } from "./outbox";
 
 const receiptSchema = z.object({
-  transaction_id: z.string().uuid(), app_user_id: z.string().uuid(),
+  transaction_id: z.string().uuid(), app_user_id: z.string().uuid(), grant_id: z.string().uuid().optional(),
   direction: z.enum(["debit", "credit"]), status: z.literal("committed"),
   amount_cents: z.number().int().positive().safe(), external_reference: z.string(),
   credit_reason: z.enum(["refund", "mint"]).optional(), original_transaction_id: z.string().uuid().optional(),
@@ -70,13 +71,20 @@ export class SsgClient implements MoneyApi {
   async refund(p: Purchase) {
     return receiptSchema.parse(await this.request("users/" + encodeURIComponent(p.appUserId) + "/credits", refundBody(p), refundKey(p)));
   }
+  async moveRaidMoney(operation: RaidMoney) {
+    const body = { amount_cents: operation.amountCents, external_reference: operation.key,
+      description: operation.operation === "cashin" ? "CS2 raid cash-in" : "CS2 raid extraction",
+      ...(operation.operation === "extract" ? { credit_reason: "mint" } : {}) };
+    return receiptSchema.parse(await this.request("users/" + encodeURIComponent(operation.appUserId) +
+      (operation.operation === "cashin" ? "/debits" : "/credits"), body, operation.key));
+  }
   async createLink(steamId64: string, serverId: string): Promise<PendingLink> {
     z.string().regex(/^[0-9]{17}$/).parse(steamId64);
     z.string().regex(/^[a-zA-Z0-9_-]{1,32}$/).parse(serverId);
     // 4 independent uniform CSPRNG words, 44 bits. Device token is separate.
     const user_code = Array.from({ length: 4 }, () => wordlist[randomInt(wordlist.length)]).join(" ");
     return pendingSchema.parse(await this.request("link-requests", {
-      user_code, scopes: ["balance:debit"], external_subject: "cs2:" + serverId + ":" + steamId64,
+      user_code, scopes: ["balance:debit", "balance:credit"], external_subject: "cs2:" + serverId + ":" + steamId64,
     }));
   }
   async pollLink(link: PendingLink) {

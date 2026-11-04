@@ -2,8 +2,8 @@ import { createHash } from "node:crypto";
 import { z } from "zod";
 import { steamSchema } from "./links";
 
-// Offline wire contract only. Nothing here authorizes, journals, charges or pays.
-// Never expose these schemas as a public/client-controlled money interface.
+// Strict trusted-native wire contract. Schema validity is not authorization.
+// RaidLedger additionally requires a real authenticated native freeze adapter.
 export const MAX_RAID_CASH_IN_CENTS = 1_500_000;
 const generation = z.string().min(1).max(128);
 const session = z.object({
