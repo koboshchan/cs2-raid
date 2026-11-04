@@ -49,8 +49,20 @@ public static class RaidOutcomeTests
         Check(!result.Single(x=>x.Recipient=="b").Won);Check(result.Single(x=>x.Recipient=="a").Won);
         state=Active();state.Players["a"].Cash=499;state.Players["c"].Cash=500;
         state.PullLever("a",1,clock);state.PullLever("a",2,clock);
-        foreach(var i in state.ExtractionCandidates(clock.AddMinutes(5),new[]{"a","c"}))Check(state.ConfirmVerifiedExtraction(i));
-        outcomes=new();outcomes.Close(clock);Check(outcomes.Finish(state,clock.AddSeconds(5)).All(x=>x.GlobalMvp=="c"));
+        foreach(var i in state.ExtractionCandidates(clock.AddMinutes(5),new[]{"a","c"}))Check(state.ConfirmVerifiedExtraction(i,i.Player=="a"?100000:50000));
+        outcomes=new();outcomes.Close(clock);Check(outcomes.Finish(state,clock.AddSeconds(5)).All(x=>x.GlobalMvp=="a"));
+        // Trusted FINAL money, not cash alone or native team, controls ranking.
+        Check(state.Players["a"].MoneyExtractedCents==100000);
+        state=Active();state.PullLever("a",1,clock);state.PullLever("a",2,clock);
+        var rejected=state.ExtractionCandidates(clock.AddMinutes(5),new[]{"a"})[0];
+        Check(!state.ConfirmVerifiedExtraction(rejected,-1));Check(state.Living("a"));
+        state.Kill("a",null);Check(!state.ConfirmVerifiedExtraction(rejected,100));
+        // Match-end overlap never moves an existing outcome deadline or duplicates it.
+        outcomes=new();Check(outcomes.Record("a",false,clock));outcomes.Close(clock.AddSeconds(1));
+        outcomes.Close(clock.AddSeconds(3));Check(outcomes.ClosedAt==clock.AddSeconds(1));
+        Check(!outcomes.Record("a",false,clock.AddSeconds(4)));Check(outcomes.CanObserve("a",clock.AddSeconds(5)));
+        Check(!outcomes.ReadyToFinish(clock.AddSeconds(6).AddTicks(-1)));Check(outcomes.ReadyToFinish(clock.AddSeconds(6)));
+        var cleaned=new RaidOutcomes();Check(!cleaned.CanObserve("a",clock.AddSeconds(100)));Check(!cleaned.TakeCamera("a",clock.AddSeconds(100)));
         state=Active();state.Tick(now.AddSeconds(1860),true);Check(state.Phase==GamePhase.Closed);Check(state.Players.Values.All(p=>!state.Living(p.Id)));
         Console.WriteLine($"{checks} raid outcome checks passed");
     }

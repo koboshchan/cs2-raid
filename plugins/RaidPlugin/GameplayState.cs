@@ -39,7 +39,7 @@ public sealed class GameplayState
     }
     internal bool IsIssuedExtraction(ExtractionIntent intent) => extractionIntents.TryGetValue(intent.Player,out var issued) && issued==intent;
     internal bool ConfirmVerifiedExtraction(ExtractionIntent intent,long? verifiedMoneyCents=null) {
-        if(verifiedMoneyCents is <0 || Phase!=GamePhase.Active || !IsIssuedExtraction(intent) || !Living(intent.Player) || Players[intent.Player].Cash!=intent.Cash || ExtractionAt==null)return false;
+        if(verifiedMoneyCents is <0 || (verifiedMoneyCents==null && intent.Cash>long.MaxValue/100) || Phase!=GamePhase.Active || !IsIssuedExtraction(intent) || !Living(intent.Player) || Players[intent.Player].Cash!=intent.Cash || ExtractionAt==null)return false;
         var p=Players[intent.Player];p.MoneyExtractedCents=verifiedMoneyCents??checked(intent.Cash*100);p.ExtractedOrder=++extractionOrder;p.Extracted=true;p.Cash=0;holds.Remove(p.Id);extractionIntents.Remove(p.Id);return true;
     }
     public GamePhase Phase { get; private set; }

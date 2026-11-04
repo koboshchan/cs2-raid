@@ -71,7 +71,8 @@ public sealed partial class RaidPlugin
                 ObserveNativeSpend(e.Userid);
                 var pos=Location(e.Userid);
                 if(sessionLoaded && game.Living(Id(e.Userid)))RememberDeath(e.Userid,pos);
-                var killed=pos!=null ? game.DieWithBag(Id(e.Userid),pos) : game.Kill(Id(e.Userid),null);
+                var killed=pos!=null && game.DieWithBag(Id(e.Userid),pos);
+                if(!killed)killed=game.Kill(Id(e.Userid),null);
                 if(killed)BeginRaidOutcome(e.Userid,false);
             }
             return HookResult.Continue;
