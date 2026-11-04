@@ -43,3 +43,5 @@ foreach(var order in Enumerable.Range(0,100)) {
  for(int i=0;i<100;i++){var a=ids[rng.Next(ids.Length)];var b=ids[rng.Next(ids.Length)];if(rng.Next(4)==0)sim.Cancel(a);else sim.ShootRequest(a,b);Check(sim.Players.Values.Where(x=>x.Team!=null).GroupBy(x=>x.Team).All(x=>x.Count()<=2));}
 }
 Console.WriteLine($"{checks-before} gameplay checks passed; {checks} total");
+
+var shop=Active();Check(!shop.TryPurchase("a",1));Check(!shop.TryPurchase("ghost",0));Check(!shop.TryPurchase("a",-1));Check(shop.Claim("funds","a",100,100,new Random()));Check(shop.TryPurchase("a",30));Check(shop.Players["a"].Cash==70);Check(shop.TryPurchase("a",70));Check(shop.Players["a"].Cash==0);Check(!shop.TryPurchase("a",1));Check(shop.Kill("a",null));Check(!shop.TryPurchase("a",0));Check(!Lobby("a").TryPurchase("a",0));Console.WriteLine("12 purchase checks passed");

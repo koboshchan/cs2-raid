@@ -67,6 +67,11 @@ public sealed class GameplayState
         if (Phase==GamePhase.Active && (now>=EndsAt || Players.Values.All(x=>!x.Alive))) Phase=GamePhase.Closed;
         return null;
     }
+    public bool TryPurchase(string id,int price)
+    {
+        if(Phase!=GamePhase.Active || !Living(id) || price<0 || Players[id].Cash<price)return false;
+        Players[id].Cash-=price;return true;
+    }
     public bool SameTeam(string a,string b) => Players.TryGetValue(a,out var x) && Players.TryGetValue(b,out var y) && x.Team!=null && x.Team==y.Team;
     public bool CanSeePartner(string viewer,string owner) => viewer!=owner && Phase!=GamePhase.Closed && Living(viewer) && Living(owner) && SameTeam(viewer,owner);
     public bool CanDamage(string a,string b) => Phase==GamePhase.Active && Living(a) && Living(b) && !SameTeam(a,b);

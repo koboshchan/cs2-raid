@@ -28,7 +28,8 @@ public sealed partial class RaidPlugin
         if(!gameplayConfig.Enabled) return;
         RegisterListener<Listeners.OnServerPrecacheResources>(manifest=>manifest.AddResource(gameplayConfig.LootModel));
         RegisterPartnerVisuals();
-        foreach(var command in new[]{"jointeam","joinclass","buy","autobuy","rebuy"})
+        RegisterPricing();
+        foreach(var command in new[]{"jointeam","joinclass","autobuy","rebuy"})
             AddCommandListener(command,(p,c)=>Human(p)&&sessionLoaded?HookResult.Handled:HookResult.Continue);
         AddCommand("css_cancelteam","Cancel your lobby team",(p,c)=>CancelTeam(p));
         AddCommand("css_cancel","Cancel team",(p,c)=>{if(c.ArgString.Trim().Equals("team",StringComparison.OrdinalIgnoreCase))CancelTeam(p);});
@@ -197,6 +198,7 @@ public sealed partial class RaidPlugin
     private static void RestoreCvar(string name,int value) { var cv=ConVar<int>.Find(name);if(cv!=null)cv.Value=value; }
     private void StopGameplay()
     {
+        ClearPricing();
         sessionLoaded=false;ClearPartnerVisuals();ClearLoot();observedWeapons.Clear();
         foreach(var (name,value) in savedCvars)RestoreCvar(name,value);
         savedCvars.Clear();

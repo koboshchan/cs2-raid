@@ -1,4 +1,5 @@
 # syntax=docker/dockerfile:1
+ARG INCLUDE_DELTAOPS=disabled
 FROM mcr.microsoft.com/dotnet/sdk:10.0.403-noble@sha256:de4fe90a98845d75910b9769662465c84de1a934665c431279d1382b2bddc02b AS dependencies
 ENV DOTNET_CLI_TELEMETRY_OPTOUT=1 DOTNET_SKIP_FIRST_TIME_EXPERIENCE=1 DOTNET_NOLOGO=1
 WORKDIR /deps
@@ -71,7 +72,7 @@ COPY --from=deltaops-build /work/artifacts/ /
 FROM dependencies AS raid-build
 ENV HOME=/work/home DOTNET_CLI_HOME=/work/home NUGET_PACKAGES=/work/nuget
 RUN --network=none mkdir /work && chown 1000:1000 /work
-COPY --chown=1000:1000 plugins/RaidPlugin/RaidPlugin.csproj plugins/RaidPlugin/RaidPlugin.cs plugins/RaidPlugin/RaidState.cs plugins/RaidPlugin/GameplayState.cs plugins/RaidPlugin/GameplayAdapter.cs plugins/RaidPlugin/PartnerVisuals.cs plugins/RaidPlugin/source.sha256 /input/
+COPY --chown=1000:1000 plugins/RaidPlugin/RaidPlugin.csproj plugins/RaidPlugin/RaidPlugin.cs plugins/RaidPlugin/RaidState.cs plugins/RaidPlugin/GameplayState.cs plugins/RaidPlugin/GameplayAdapter.cs plugins/RaidPlugin/PartnerVisuals.cs plugins/RaidPlugin/PurchasePricing.cs plugins/RaidPlugin/source.sha256 /input/
 COPY --chown=1000:1000 plugins/RaidPlugin/tests/ /input/tests/
 USER 1000:1000
 WORKDIR /work
@@ -86,7 +87,7 @@ cat > /work/NuGet.Config <<'EOF'
 EOF
 for n in 1 2; do
   mkdir -p /work/run$n/src /work/artifacts/build-$n
-  cp /input/RaidPlugin.csproj /input/RaidPlugin.cs /input/RaidState.cs /input/GameplayState.cs /input/GameplayAdapter.cs /input/PartnerVisuals.cs /work/run$n/src/; cp -R /input/tests /work/run$n/src/
+  cp /input/RaidPlugin.csproj /input/RaidPlugin.cs /input/RaidState.cs /input/GameplayState.cs /input/GameplayAdapter.cs /input/PartnerVisuals.cs /input/PurchasePricing.cs /work/run$n/src/; cp -R /input/tests /work/run$n/src/
   dotnet build /work/run$n/src/RaidPlugin.csproj -c Release --configfile /work/NuGet.Config \
     -o /work/artifacts/build-$n -p:CSS_API_DIR=/deps/css/addons/counterstrikesharp/api \
     -p:Deterministic=true -p:ContinuousIntegrationBuild=true -p:PathMap=/work/run$n/src=/_/raidplugin \
@@ -99,6 +100,7 @@ for n in 1 2; do
   dotnet /work/run$n/src/tests/bin/Release/net10.0/RaidState.Tests.dll >> /work/artifacts/build-$n.log 2>&1
   grep '19 raid rule checks passed' /work/artifacts/build-$n.log
   grep 'gameplay checks passed' /work/artifacts/build-$n.log
+  grep '12 purchase checks passed' /work/artifacts/build-$n.log
 done
 for ext in dll deps.json pdb; do
   cmp /work/artifacts/build-1/RaidPlugin.$ext /work/artifacts/build-2/RaidPlugin.$ext
@@ -121,6 +123,7 @@ cat > receipt.json <<EOF
   "deterministic_match": true,
   "raid_rule_checks_per_build": 19,
   "gameplay_checks_per_build": 10072,
+  "purchase_checks_per_build": 12,
   "archive_sha256": "$(sha256sum RaidPlugin-build.tar.gz | cut -d ' ' -f1)",
   "dll_sha256": "$(sha256sum build-1/RaidPlugin.dll | cut -d ' ' -f1)",
   "deps_json_sha256": "$(sha256sum build-1/RaidPlugin.deps.json | cut -d ' ' -f1)",
@@ -393,6 +396,15 @@ EXPOSE 3000
 CMD ["node","dist/server.js"]
 HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 CMD node -e 'fetch("http://127.0.0.1:"+(process.env.PORT||3000)+"/health",{headers:{authorization:"Bearer "+process.env.BRIDGE_TOKEN}}).then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))'
 
+# Selecting disabled creates no dependency on deltaops-build.
+FROM scratch AS deltaops-disabled
+COPY <<'EMPTY' /optional/.disabled
+DeltaOps excluded
+EMPTY
+FROM scratch AS deltaops-enabled
+COPY --from=deltaops-build /work/artifacts/build-1/DeltaOps.dll /work/artifacts/build-1/DeltaOps.deps.json /optional/
+FROM deltaops-${INCLUDE_DELTAOPS} AS deltaops-selected
+
 FROM ubuntu:24.04@sha256:fe81560990fae86dc4743202b2cb4d3df98d0bcf949173cecef15ce1127ef852 AS server
 ENV DEBIAN_FRONTEND=noninteractive HOME=/home/steam
 RUN dpkg --add-architecture i386 \
@@ -412,9 +424,8 @@ RUN chown -R steam:steam /opt/steamcmd
 COPY --from=dependencies /deps/css/ /opt/deltaops/css/
 COPY --from=server-dependencies /deps/metamod/ /opt/deltaops/metamod/
 COPY --from=raid-build /work/artifacts/build-1/RaidPlugin.dll /work/artifacts/build-1/RaidPlugin.deps.json /opt/deltaops/plugins/RaidPlugin/
-COPY --from=deltaops-build /work/artifacts/build-1/DeltaOps.dll /work/artifacts/build-1/DeltaOps.deps.json /opt/deltaops/plugins/DeltaOps/
+COPY --from=deltaops-selected /optional/ /opt/deltaops/optional/
 COPY --from=debug-build /work/artifacts/plugin/Debug.dll /work/artifacts/plugin/Debug.deps.json /opt/deltaops/plugins/Debug/
-COPY plugins/DeltaOps/config.example.json /opt/deltaops/config/DeltaOps.example.json
 COPY config/ /opt/deltaops/config/
 COPY <<'ENTRY' /opt/deltaops/entrypoint
 #!/bin/bash
@@ -450,7 +461,11 @@ cp /opt/deltaops/config/prices.json "$plugin/prices.json"
 [[ -f "$plugin/gameplay.json" ]] || cp /opt/deltaops/config/gameplay.example.json "$plugin/gameplay.json"
 operator="$root/game/csgo/addons/counterstrikesharp/plugins/DeltaOps"
 mkdir -p "$operator"
-cp /opt/deltaops/plugins/DeltaOps/* "$operator/"
+if [[ -f /opt/deltaops/optional/DeltaOps.dll ]]; then
+  cp /opt/deltaops/optional/DeltaOps.* "$operator/"
+else
+  rm -f "$operator/DeltaOps.dll" "$operator/DeltaOps.deps.json"
+fi
 debug="$root/game/csgo/addons/counterstrikesharp/plugins/Debug"
 mkdir -p "$debug"
 cp /opt/deltaops/plugins/Debug/* "$debug/"
@@ -550,10 +565,14 @@ set -eu
 root=/home/steam/cs2
 cp -a /opt/deltaops/metamod/. "$root/game/csgo/"
 cp -a /opt/deltaops/css/. "$root/game/csgo/"
-for name in RaidPlugin DeltaOps Debug; do
+for name in RaidPlugin Debug; do
   mkdir -p "$root/game/csgo/addons/counterstrikesharp/plugins/$name"
   cp /opt/deltaops/plugins/$name/* "$root/game/csgo/addons/counterstrikesharp/plugins/$name/"
 done
+if [ -f /opt/deltaops/optional/DeltaOps.dll ]; then
+  mkdir -p "$root/game/csgo/addons/counterstrikesharp/plugins/DeltaOps"
+  cp /opt/deltaops/optional/DeltaOps.* "$root/game/csgo/addons/counterstrikesharp/plugins/DeltaOps/"
+fi
 INSTALL
 EXPOSE 27015/udp 27015/tcp
 STOPSIGNAL SIGINT
