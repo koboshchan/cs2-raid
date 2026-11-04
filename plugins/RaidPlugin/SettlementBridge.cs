@@ -18,8 +18,15 @@ public sealed partial class RaidPlugin
         public long Cash=cash;
         public NativeInventory[] Inventory=inventory;
         public ExtractionIntent? Intent=intent;
-        public bool Tombstoned,Applying,Submitted;
+        public bool Tombstoned,Applying,Submitted,BackendReady,JournalBusy,Isolated;
+        public DateTimeOffset IssuedAt=DateTimeOffset.UtcNow;
     }
+    private SettlementRecovery? settlementRecovery;
+    private bool recoveryUnavailable;
+    private bool manualRecoveryPollBusy,cleanupEvidenceBusy;
+    private int manualRecoveryCursor;
+    private readonly HashSet<string> cleanupEvidenceAcknowledged=[];
+    private readonly HashSet<string> blockedFinancialActors=[];
     private readonly SettlementFence settlementFence=new();
     private readonly Dictionary<string,NativeSettlement> nativeSettlements=[];
     private readonly Dictionary<string,string> connectionIds=[];
@@ -29,9 +36,9 @@ public sealed partial class RaidPlugin
     private bool nativeBridgeStopped=true;
     private string nativeConsumer=Guid.NewGuid().ToString("N");
     private static bool FinancialEnvironment => Environment.GetEnvironmentVariable("RAID_FINANCIAL_ENABLED")=="1";
-    private bool FinancialReady => sessionLoaded && gameplayConfig.FinancialNativeVerified && FinancialEnvironment && !nativeBridgeStopped;
+    private bool FinancialReady => sessionLoaded && gameplayConfig.FinancialNativeVerified && FinancialEnvironment && !nativeBridgeStopped && !recoveryUnavailable && settlementRecovery!=null;
     private bool PendingSettlement => nativeSettlements.Values.Any(s=>settlementFence.Find(s.Key)?.Completed==null);
-    private bool FinancialFrozen(string steam)=>nativeSettlements.Values.Any(s=>s.Steam==steam && (s.Tombstoned || settlementFence.Find(s.Key)?.Completed==null));
+    private bool FinancialFrozen(string steam)=>recoveryUnavailable || blockedFinancialActors.Contains(steam) || nativeSettlements.Values.Any(s=>s.Steam==steam && (s.Tombstoned || settlementFence.Find(s.Key)?.Completed==null));
     private RaidSession CurrentSession(CCSPlayerController p)
     {
         var steam=Id(p);
@@ -40,6 +47,10 @@ public sealed partial class RaidPlugin
     }
     private void RegisterSettlementBridge()
     {
+        try {
+            settlementRecovery=new SettlementRecovery(Path.Combine(ModuleDirectory,"settlement-recovery.jsonl"));
+            foreach(var r in settlementRecovery.Records.Values.Where(r=>r.Phase is RecoveryPhase.Quarantined or RecoveryPhase.ManualTerminal))blockedFinancialActors.Add(r.Session.SteamId64);
+        }catch{recoveryUnavailable=true;}
         nativeBridgeStopped=false;
         foreach(var command in new[]{"drop","kill","explode","jointeam","joinclass","buy","autobuy","rebuy","+attack","+attack2","+reload"})
             AddCommandListener(command,(p,c)=>Human(p)&&FinancialFrozen(Id(p))?HookResult.Handled:HookResult.Continue);
@@ -68,15 +79,57 @@ public sealed partial class RaidPlugin
             w.NextPrimaryAttackTick=Server.TickCount+1;w.NextSecondaryAttackTick=Server.TickCount+1;
         }
     }
+    private bool IsFinancialActorBlocked(string steam)=>recoveryUnavailable || blockedFinancialActors.Contains(steam);
+    private bool PendingExtractionSettlement(string windowId)=>nativeSettlements.Values.Any(s=>s.Operation=="extract" && s.Request is ExtractRequest r && r.ExtractionWindowId==windowId && !s.Tombstoned && settlementFence.Find(s.Key)?.Completed==null);
+    private bool TryIsolateFinancialActor(CCSPlayerController p)
+    {
+        try {
+            p.RemoveWeapons();SetMoney(p,0);p.ChangeTeam(CsTeam.Spectator);
+            return p.TeamNum==(int)CsTeam.Spectator && !p.PawnIsAlive && p.InGameMoneyServices is {} money && money.Account==0 && p.PlayerPawn.Value?.WeaponServices is {} ws && ws.MyWeapons.Count==0;
+        }catch{return false;}
+    }
+    private bool IsQuarantinedHandle(uint handle)
+    {
+        if(recoveryUnavailable)return true;
+        return settlementRecovery!=null && settlementRecovery.Records.Values.Any(r=>r.Session.MapGeneration==mapGeneration.ToString("N") && r.Phase is RecoveryPhase.Quarantined or RecoveryPhase.ManualTerminal && (JsonSerializer.Deserialize<NativeInventory[]>(r.NativeSnapshot,SettlementProtocol.Json)??[]).Any(i=>i.Handle==handle));
+    }
+    private bool OriginalHandlesAbsent(string snapshot,bool remove)
+    {
+        try {
+            foreach(var item in JsonSerializer.Deserialize<NativeInventory[]>(snapshot,SettlementProtocol.Json)??throw new InvalidOperationException("Snapshot")) {
+                if(new CHandle<CBasePlayerWeapon>(item.Handle).Value is not {IsValid:true} w)continue;
+                if(remove)w.Remove();
+                if(new CHandle<CBasePlayerWeapon>(item.Handle).Value is {IsValid:true})return false;
+            }
+            return true;
+        }catch{return false;}
+    }
+    private void TickSettlementRecovery()
+    {
+        // Retained original evidence enforces handle-specific quarantine even after disconnect/reset.
+        if(settlementRecovery!=null)foreach(var r in settlementRecovery.Records.Values.Where(r=>r.Phase is RecoveryPhase.Quarantined or RecoveryPhase.ManualTerminal))if(r.Session.MapGeneration==mapGeneration.ToString("N"))OriginalHandlesAbsent(r.NativeSnapshot,true);
+        if(settlementRecovery!=null && !recoveryUnavailable && !manualRecoveryPollBusy) {
+            var unresolved=settlementRecovery.Records.Values.Where(r=>r.Phase!=RecoveryPhase.ManualTerminal).ToArray();
+            if(unresolved.Length>0){var r=unresolved[(int)((uint)manualRecoveryCursor++%(uint)unresolved.Length)];manualRecoveryPollBusy=true;_ = ObserveManualTerminal(r);}
+        }
+        if(settlementRecovery!=null && !recoveryUnavailable && !cleanupEvidenceBusy) {
+            var done=settlementRecovery.Records.Values.FirstOrDefault(r=>r.Phase==RecoveryPhase.CleanupComplete && !cleanupEvidenceAcknowledged.Contains(r.Key));
+            if(done?.Proof!=null){cleanupEvidenceBusy=true;_ = PersistCleanupEvidence(done);}
+        }
+        foreach(var s in nativeSettlements.Values.ToArray()) {
+            if(s.Tombstoned){var p=Find(s.Steam);if(p!=null)s.Isolated=TryIsolateFinancialActor(p);continue;}
+            if(settlementFence.Find(s.Key)?.Completed!=null)continue;
+            if(DateTimeOffset.UtcNow-s.IssuedAt>TimeSpan.FromSeconds(20) || (s.Operation=="cashin" && game.Phase!=GamePhase.Buy))InvalidateFinancialPlayer(s.Steam);
+        }
+    }
     private void InvalidateFinancialPlayer(string steam)
     {
         foreach(var s in nativeSettlements.Values.Where(s=>s.Steam==steam && settlementFence.Find(s.Key)?.Completed==null)) {
-            s.Tombstoned=true;
-            // A pending paid inventory must never become a loot source in this match.
-            foreach(var item in s.Inventory) {
-                try{var entity=new CHandle<CBasePlayerWeapon>(item.Handle).Value;if(entity is {IsValid:true})entity.Remove();}catch{ /* Cleanup failure remains quarantined; never abort lifecycle invalidation. */ }
-            }
+            blockedFinancialActors.Add(steam);s.Tombstoned=true;
+            try{settlementRecovery?.Quarantine(s.Key,"Actor invalidated; preserve original key, receipt and value; no refund or regrant");}catch{recoveryUnavailable=true;}
+            foreach(var item in s.Inventory)try{var entity=new CHandle<CBasePlayerWeapon>(item.Handle).Value;if(entity is {IsValid:true})entity.Remove();}catch{}
             if(game.Players.TryGetValue(steam,out var m)){m.Cash=0;m.Alive=false;}
+            if(Find(steam) is {} p)s.Isolated=TryIsolateFinancialActor(p);
         }
     }
     private void InvalidateFinancialMatch()
@@ -154,12 +207,15 @@ public sealed partial class RaidPlugin
             foreach(var i in request.Inventory)cents=checked(cents+SettlementProtocol.Cents(catalog.Single(x=>x.Id==i.CatalogId).PriceDollars));
             if(cents>SettlementProtocol.MaxSafeCents)throw new InvalidOperationException("Precision");
             IssueSettlement(p,SettlementProtocol.Key(ServerIdentity(),"extract",game.MatchId,Id(p)),"extract",request,cents,SettlementProtocol.Fingerprint(request),intent,inventory);
-        }catch{p.PrintToChat("Extraction snapshot unavailable. No new payout request issued.");}
+        }catch{p.PrintToChat("Extraction snapshot unavailable. No payout this window; no economic consumption requested. Retry at the next extraction window.");}
     }
     private static string ServerIdentity()=>Environment.GetEnvironmentVariable("SERVER_ID")??"raid-friends";
     private void IssueSettlement(CCSPlayerController p,string key,string operation,object request,long cents,string fingerprint,ExtractionIntent? intent,NativeInventory[]? inventory=null)
     {
         var snapshot=inventory??SnapshotInventory(p);
+        if(settlementRecovery==null || recoveryUnavailable)throw new InvalidOperationException("Durable journal unavailable");
+        try{settlementRecovery.Issue(new RecoveryRecord(key,operation,fingerprint,JsonSerializer.Serialize(request,request.GetType(),SettlementProtocol.Json),CurrentSession(p),NativeSnapshot(snapshot),cents,RecoveryPhase.Issued));}
+        catch{recoveryUnavailable=true;throw;}
         settlementFence.Issue(key,operation,fingerprint,cents,NativeSnapshot(snapshot));
         var s=new NativeSettlement(key,operation,request,Id(p),CurrentSession(p),game.Players[Id(p)].Cash,snapshot,intent);
         nativeSettlements.Add(key,s);HoldFinancialInventory(p);
@@ -223,27 +279,121 @@ public sealed partial class RaidPlugin
         if(method=="freeze")return entry.Completed==null && Find(s.Steam) is {} p && NativeSnapshotMatches(s,p);
         if(method!="finalize")return false;
         var proof=job.GetProperty("proof").Deserialize<SettlementProof>(SettlementProtocol.Json);if(proof==null||!entry.Accepted(proof))return false;
-        if(entry.Completed!=null)return true; // ack-loss replay, no native mutations
+        if(entry.Completed!=null)return true; // ack loss never repeats economics
+        if(s.Tombstoned || settlementRecovery==null || recoveryUnavailable)return false;
         var current=Find(s.Steam);
-        if(current==null || s.Applying || !NativeSnapshotMatches(s,current))return false;
+        if(current==null || s.Applying)return false;
+        if(CurrentSession(current)!=s.Session || game.MatchId!=(s.Request is CashInRequest cashRequest?cashRequest.RaidId:((ExtractRequest)s.Request).RaidId)){InvalidateFinancialPlayer(s.Steam);return false;}
+        var recovery=settlementRecovery.Records[key];
+        if(recovery.Phase==RecoveryPhase.Issued) {
+            if(!NativeSnapshotMatches(s,current))return false;
+            try{settlementRecovery.RecordProof(key,proof);}catch{recoveryUnavailable=true;InvalidateFinancialPlayer(s.Steam);return false;}
+        }
+        if(!s.BackendReady){if(!s.JournalBusy){s.JournalBusy=true;_ = PersistConsumptionBarrier(s,proof,nativeConsumer);}return false;}
         s.Applying=true;
         try {
-            return entry.Complete(proof,()=>{
-                if(s.Operation=="cashin") {
-                    if(!game.ApplyCashIn(s.Steam,SettlementProtocol.Dollars(proof.AmountCents)))return false;
-                    SetMoney(current,game.Players[s.Steam].Cash);
-                    ReleaseFinancialInventory(s);SetPresentation(current,false,false);return true;
-                }
-                // Mark consumed first on single game thread; any native failure below
-                // quarantines remaining inventory and never returns actor to gameplay.
-                if(s.Intent==null || !game.ConfirmVerifiedExtraction(s.Intent))return false;
-                foreach(var item in s.Inventory){var w=new CHandle<CBasePlayerWeapon>(item.Handle).Value;if(w is not {IsValid:true})throw new InvalidOperationException("Missing frozen item");w.Remove();}
-                current.RemoveWeapons();SetMoney(current,0);
-                current.ChangeTeam(CounterStrikeSharp.API.Modules.Utils.CsTeam.Spectator);
-                try{ShowRaidResult(current,true);}catch{ /* rendering is not financial acceptance */ }
-                return true;
-            });
-        }catch{InvalidateFinancialPlayer(s.Steam);return false;}
+            recovery=settlementRecovery.Records[key];
+            if(recovery.Phase==RecoveryPhase.ProofRecorded) {
+                if(!NativeSnapshotMatches(s,current)){InvalidateFinancialPlayer(s.Steam);return false;}
+                settlementRecovery.StartConsumption(key); // fsync BEFORE economic mutation, never replay after restart
+                var consumed=s.Operation=="cashin" ? game.ApplyCashIn(s.Steam,SettlementProtocol.Dollars(proof.AmountCents)) : s.Intent!=null && game.ConfirmVerifiedExtraction(s.Intent);
+                if(!consumed){InvalidateFinancialPlayer(s.Steam);return false;}
+                settlementRecovery.MarkConsumed(key); // economic commit is separate from fallible presentation
+            }
+            if(settlementRecovery.Records[key].Phase!=RecoveryPhase.Consumed)return false;
+            // Cleanup is idempotent. No debit, mint, model grant or consumption is repeated here.
+            if(s.Operation=="cashin") {
+                SetMoney(current,game.Players[s.Steam].Cash);
+                if(current.InGameMoneyServices is not {} money || money.Account!=TonightRules.Hud(game.Players[s.Steam].Cash))throw new InvalidOperationException("Projection not verified");
+                ReleaseFinancialInventory(s);SetPresentation(current,false,false);
+            } else {
+                foreach(var item in s.Inventory)if(new CHandle<CBasePlayerWeapon>(item.Handle).Value is {IsValid:true} w)w.Remove();
+                if(!OriginalHandlesAbsent(recovery.NativeSnapshot,true) || !TryIsolateFinancialActor(current))throw new InvalidOperationException("Extraction physical isolation not verified");
+            }
+            settlementRecovery.MarkCleanupComplete(key);
+            var complete=entry.Complete(proof,()=>true);
+            // Durable outbox in TickSettlementRecovery mirrors cleanup until acknowledged, including after restart.
+            if(s.Operation=="extract")try{ShowRaidResult(current,true);}catch{}
+            return complete;
+        }catch {
+            // A failed fsync at the consumption boundary is ambiguous. Never replay it.
+            try{HoldFinancialInventory(current);}catch{TryIsolateFinancialActor(current);}
+            if(!settlementRecovery.IsAvailable){recoveryUnavailable=true;InvalidateFinancialPlayer(s.Steam);}
+            else if(settlementRecovery.Records[key].Phase==RecoveryPhase.ConsumptionStarted)InvalidateFinancialPlayer(s.Steam);
+            return false; // consumed cleanup is retried by identical proof, not reapplied economically
+        }
         finally{s.Applying=false;}
+    }
+    private async Task ObserveManualTerminal(RecoveryRecord record)
+    {
+        JsonElement? evidence=null;
+        try {
+            using var req=BridgeRequest("/native/journal/read",new{operationKey=record.Key,requestFingerprint=record.Fingerprint});
+            using var response=await http.SendAsync(req);response.EnsureSuccessStatusCode();
+            using var doc=JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+            evidence=doc.RootElement.Clone();
+        }catch{}
+        Server.NextFrame(()=>{
+            try {
+                if(evidence is not {} result || settlementRecovery==null)return;
+                if(!result.TryGetProperty("journal",out var journal) || journal.ValueKind!=JsonValueKind.Object || !journal.TryGetProperty("terminal",out var terminal))return;
+                var status=terminal.GetString();
+                if(status is not ("quarantine_requested" or "quarantined"))return;
+                // The revocation gate runs on exactly the same game thread as every finalize.
+                // Persist tombstone before fallible physical isolation or sending backend acknowledgement.
+                if(nativeSettlements.TryGetValue(record.Key,out var live))live.Tombstoned=true;
+                blockedFinancialActors.Add(record.Session.SteamId64);
+                if(settlementRecovery.Records[record.Key].Phase is not (RecoveryPhase.Quarantined or RecoveryPhase.ManualTerminal))
+                    settlementRecovery.Quarantine(record.Key,"Authenticated backend revocation requested; no later native consumption permitted");
+                var actor=Find(record.Session.SteamId64);
+                // Persisted raw handles are generation-local, never remove unrelated new-map entities.
+                // Unknown old-world isolation remains unresolved for a verified operator workflow.
+                if(record.Session.MapGeneration!=mapGeneration.ToString("N"))return;
+                if(!OriginalHandlesAbsent(record.NativeSnapshot,true))return;
+                if(actor!=null && !TryIsolateFinancialActor(actor))return;
+                if(status=="quarantine_requested") {
+                    var epoch=journal.GetProperty("revocationEpoch").GetString()??throw new InvalidOperationException("Revocation epoch");
+                    _ = AcknowledgeNativeRevocation(record,epoch);
+                    return;
+                }
+                if(settlementRecovery.Records[record.Key].Phase==RecoveryPhase.Quarantined)
+                    settlementRecovery.MarkManualTerminal(record.Key,"Original handles absent; connected actor verified spectator without weapons",result.GetRawText());
+                // Actor remains blocked across reconnect/reset. Terminal audit never grants or refunds.
+            }catch{if(settlementRecovery?.IsAvailable!=true)recoveryUnavailable=true; /* Missing isolation remains unresolved, never ack. */ }
+            finally{manualRecoveryPollBusy=false;}
+        });
+    }
+    private async Task AcknowledgeNativeRevocation(RecoveryRecord record,string epoch)
+    {
+        try {
+            using var req=BridgeRequest("/native/quarantine/ack",new{operationKey=record.Key,requestFingerprint=record.Fingerprint,revocationEpoch=epoch,session=record.Session,nativePhase="quarantined",isolationEvidence="Local fsynced tombstone on sole game thread; original handles absent; connected actor verified isolated; no economic replay"});
+            using var response=await http.SendAsync(req);response.EnsureSuccessStatusCode();
+        }catch{ /* Retained durable tombstone polls original epoch again; no terminal-by-absence. */ }
+    }
+    private async Task PersistConsumptionBarrier(NativeSettlement s,SettlementProof proof,string epoch)
+    {
+        bool accepted=false;
+        try {
+            foreach(var phase in new[]{"snapshot","consumption_intent"}) {
+                var payload=new Dictionary<string,object>{["operationKey"]=s.Key,["requestFingerprint"]=proof.RequestFingerprint,["nativeSnapshot"]=NativeSnapshot(s.Inventory),["phase"]=phase,["evidence"]="Original native generation frozen; local durable proof recorded"};
+                if(phase!="snapshot")payload["proof"]=proof;
+                using var req=BridgeRequest("/native/recovery",payload);
+                using var response=await http.SendAsync(req);response.EnsureSuccessStatusCode();
+            }
+            accepted=true;
+        }catch{}
+        Server.NextFrame(()=>{if(epoch!=nativeConsumer || s.Tombstoned)return;s.JournalBusy=false;s.BackendReady=accepted;});
+    }
+    private async Task PersistCleanupEvidence(RecoveryRecord record)
+    {
+        bool accepted=false;
+        try {
+            foreach(var phase in new[]{"consumed","cleanup_complete"}) {
+                using var req=BridgeRequest("/native/recovery",new{operationKey=record.Key,requestFingerprint=record.Fingerprint,nativeSnapshot=record.NativeSnapshot,phase,proof=record.Proof,evidence="Local fsynced native journal phase; no economic replay"});
+                using var response=await http.SendAsync(req);response.EnsureSuccessStatusCode();
+            }
+            accepted=true;
+        }catch{ /* Retain durable outbox and retry evidence only, never economic consumption. */ }
+        Server.NextFrame(()=>{cleanupEvidenceBusy=false;if(accepted)cleanupEvidenceAcknowledged.Add(record.Key);});
     }
 }

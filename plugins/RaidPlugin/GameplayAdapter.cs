@@ -23,6 +23,7 @@ public sealed partial class RaidPlugin
     private readonly HashSet<string> useDown = [];
     private uint? extractionTrigger;
     private int lastCountdown = -1;
+    private string latchedExtractionWindowId = "";
     private bool sessionLoaded;
     // Set by the DeltaOps capability integration only after assignment succeeds.
     // No local imitation of character kits or utility grants.
@@ -45,10 +46,10 @@ public sealed partial class RaidPlugin
         AddCommand("css_cancelteam","Cancel your lobby team",(p,c)=>CancelTeam(p));
         AddCommand("css_cancel","Cancel team",(p,c)=>{if(c.ArgString.Trim().Equals("team",StringComparison.OrdinalIgnoreCase))CancelTeam(p);});
         AddCommand("css_team","Ready as solo",(p,c)=>{
-            if(Human(p)&&c.ArgString.Trim().Equals("single",StringComparison.OrdinalIgnoreCase)&&game.Solo(Id(p))) Place(p,gameplayConfig.ReadyPlatform);
+            if(Human(p)&&!FinancialFrozen(Id(p))&&c.ArgString.Trim().Equals("single",StringComparison.OrdinalIgnoreCase)&&game.Solo(Id(p))) Place(p,gameplayConfig.ReadyPlatform);
         });
         AddCommand("css_characterselect","Select character 1-6",(p,c)=>{
-            if(!Human(p) || game.Phase!=GamePhase.CharacterSelect || c.ArgCount!=2 || !int.TryParse(c.GetArg(1),out var number) || number<1 || number>6)return;
+            if(!Human(p) || FinancialFrozen(Id(p)) || game.Phase!=GamePhase.CharacterSelect || c.ArgCount!=2 || !int.TryParse(c.GetArg(1),out var number) || number<1 || number>6)return;
             if(!deltaOpsCharactersReady || assignCharacter==null || !assignCharacter(p,number)) {p.PrintToChat("Character bridge unavailable. Selection not confirmed; raid stays in selection.");return;}
             if(game.SelectCharacter(Id(p),number))p.PrintToChat("Selected "+GameplayState.Characters[number-1]);
         });
@@ -61,6 +62,7 @@ public sealed partial class RaidPlugin
         RegisterEventHandler<EventPlayerDisconnect>((e,i)=>{if(Human(e.Userid))game.Leave(Id(e.Userid));return HookResult.Continue;},HookMode.Pre);
         RegisterEventHandler<EventPlayerDeath>((e,i)=>{
             if(Human(e.Userid)) {
+                if(FinancialFrozen(Id(e.Userid))) {InvalidateFinancialPlayer(Id(e.Userid));if(IsFinancialActorBlocked(Id(e.Userid)))TryIsolateFinancialActor(e.Userid);return HookResult.Continue;}
                 ObserveNativeSpend(e.Userid);
                 var pos=Location(e.Userid);
                 if(sessionLoaded && game.Living(Id(e.Userid)))RememberDeath(e.Userid,pos);
@@ -73,6 +75,7 @@ public sealed partial class RaidPlugin
             if(Human(e.Userid)) {
                 var id=Id(e.Userid);var generation=mapGeneration;
                 Server.NextFrame(()=>{if(generation!=mapGeneration)return;var p=Find(id);if(p==null)return;
+                    if(FinancialFrozen(id)){InvalidateFinancialPlayer(id);if(IsFinancialActorBlocked(id))TryIsolateFinancialActor(p);return;}
                     if(sessionLoaded && game.Living(id))SpawnHealth(p);
                     if(game.Phase==GamePhase.Lobby)PrepareLobby(p);
                     else if(!game.Players.ContainsKey(id)||!game.Living(id)){p.RemoveWeapons();p.ChangeTeam(CsTeam.Spectator);}
@@ -84,8 +87,9 @@ public sealed partial class RaidPlugin
     }
     private HookResult BlockGroundPickup(DynamicHook hook)
     {
-        if(!sessionLoaded || game.Phase!=GamePhase.Active)return HookResult.Continue;
         var weapon=hook.GetParam<CBasePlayerWeapon>(1);
+        if(weapon is {IsValid:true} && IsQuarantinedHandle(weapon.EntityHandle.Raw)){hook.SetReturn(false);return HookResult.Handled;}
+        if(!sessionLoaded || game.Phase!=GamePhase.Active)return HookResult.Continue;
         if(weapon is {IsValid:true} && !weapon.OwnerEntity.IsValid) {hook.SetReturn(false);return HookResult.Handled;}
         return HookResult.Continue;
     }
@@ -117,10 +121,12 @@ public sealed partial class RaidPlugin
         SetCvar("mp_maxmoney",TonightRules.HudLimit);SetCvar("mp_buy_anywhere",0);
         PatchExistingSpread();
         deltaOpsCharactersReady=ResetDeltaOpsCharacters();
-        foreach(var p in Utilities.GetPlayers().Where(Human)) {if(game.Join(Id(p)))PrepareLobby(p);else p.ChangeTeam(CsTeam.Spectator);}
+        foreach(var p in Utilities.GetPlayers().Where(Human)) {if(IsFinancialActorBlocked(Id(p))){TryIsolateFinancialActor(p);continue;}if(FinancialFrozen(Id(p))){HoldFinancialInventory(p);continue;}if(game.Join(Id(p)))PrepareLobby(p);else p.ChangeTeam(CsTeam.Spectator);}
     }
     private void PrepareLobby(CCSPlayerController p)
     {
+        if(IsFinancialActorBlocked(Id(p))){TryIsolateFinancialActor(p);return;}
+        if(FinancialFrozen(Id(p))){HoldFinancialInventory(p);return;}
         if(!sessionLoaded)return;
         game.Join(Id(p));if(p.TeamNum is not (2 or 3))p.SwitchTeam(CsTeam.Terrorist);
         if(!p.PawnIsAlive)p.Respawn();
@@ -143,8 +149,8 @@ public sealed partial class RaidPlugin
     }
     private void CancelTeam(CCSPlayerController? p)
     {
-        if(!Human(p))return;
-        foreach(var id in game.Cancel(Id(p))) {var other=Find(id);if(other!=null){Place(other,gameplayConfig.Lobby);SetPresentation(other,false,false);}}
+        if(!Human(p) || FinancialFrozen(Id(p)))return;
+        foreach(var id in game.Cancel(Id(p))) {var other=Find(id);if(other!=null && !FinancialFrozen(id)){Place(other,gameplayConfig.Lobby);SetPresentation(other,false,false);}}
         lastCountdown=-1;
     }
     private CCSPlayerController? Controller(CBaseEntity? pawn) => pawn==null?null:Utilities.GetPlayers().FirstOrDefault(p=>Human(p)&&p.PlayerPawn.Raw==pawn.EntityHandle.Raw);
@@ -168,29 +174,65 @@ public sealed partial class RaidPlugin
     private static string SafeName(string s) => new(s.Where(c=>!char.IsControl(c)).Take(64).ToArray());
     private void GameplaySecond()
     {
+        TickSettlementRecovery();
         if(!sessionLoaded)return;
+        var now=DateTimeOffset.UtcNow;
+        // Eligibility is sampled once at the first game-thread second at/after the
+        // deadline, before phase advancement or unrelated financial work can delay it.
+        ProcessExtractionDeadline(now);
         foreach(var p in Utilities.GetPlayers().Where(Human)) {
+            if(IsFinancialActorBlocked(Id(p))){TryIsolateFinancialActor(p);continue;}if(FinancialFrozen(Id(p))){HoldFinancialInventory(p);continue;}
             if(game.Phase==GamePhase.Lobby) {if(game.Join(Id(p)))PrepareLobby(p);}
             else if(!game.Players.ContainsKey(Id(p))&&p.TeamNum!=(int)CsTeam.Spectator)p.ChangeTeam(CsTeam.Spectator);
         }
         if(game.Phase==GamePhase.Lobby && !deltaOpsCharactersReady)deltaOpsCharactersReady=ResetDeltaOpsCharacters();
-        if(PendingSettlement)return; // Await durable/manual reconciliation before advancing phase or closing window.
         var previous=game.Phase;
-        var count=game.Tick(DateTimeOffset.UtcNow,deltaOpsCharactersReady && gameplayConfig.Ready(game.Players.Values.Select(x=>x.Team).Distinct().Count()));
+        var count=game.Tick(now,deltaOpsCharactersReady && gameplayConfig.Ready(game.Players.Values.Select(x=>x.Team).Distinct().Count()));
         if(game.Phase!=previous)OnPhaseChanged();
         if(count is int n && n!=lastCountdown){lastCountdown=n;Server.PrintToChatAll(game.Phase+" "+n+"s");}
-        if(game.Phase==GamePhase.Active && game.ExtractionAt is {} at && DateTimeOffset.UtcNow>=at) {
-            if(extractionAdmissionClosed) {game.FinishExtractionWindow(DateTimeOffset.UtcNow);extractionAdmissionClosed=false;return;}
-            extractionAdmissionClosed=true;
-            var inZone=game.Players.Keys.Where(InExtractionZone).ToArray();
-            var candidates=game.ExtractionCandidates(DateTimeOffset.UtcNow,inZone);
-            if(FinancialReady)foreach(var intent in candidates){var p=Find(intent.Player);if(p!=null)BeginExtraction(p,intent);}
-            else if(candidates.Length>0)Server.PrintToChatAll("Extraction settlement disabled pending financial native QA. No SSG funds paid.");
-            if(!PendingSettlement){game.FinishExtractionWindow(DateTimeOffset.UtcNow);extractionAdmissionClosed=false;}
-        }
         if(game.Phase==GamePhase.Closed) {
-            foreach(var m in game.Players.Values.Where(x=>!x.Extracted)){var p=Find(m.Id);if(p!=null) {try {ShowRaidResult(p,false);} catch(Exception) { /* UI must not prevent closing a raid. */ } if(p.PawnIsAlive)p.CommitSuicide(false,true);}}
+            foreach(var m in game.Players.Values.Where(x=>!x.Extracted)){
+                var p=Find(m.Id);if(p==null)continue;
+                if(IsFinancialActorBlocked(m.Id)){TryIsolateFinancialActor(p);continue;}
+                if(FinancialFrozen(m.Id)){HoldFinancialInventory(p);continue;}
+                try {ShowRaidResult(p,false);} catch(Exception) { /* UI must not prevent closing a raid. */ }
+                if(p.PawnIsAlive)p.CommitSuicide(false,true);
+            }
             ResetLobby();
+        }
+    }
+    private void ProcessExtractionDeadline(DateTimeOffset now)
+    {
+        if(game.Phase!=GamePhase.Active || game.ExtractionAt is not {} at || now<at)return;
+        var window=game.ExtractionWindowId;
+        if(!extractionAdmissionClosed || latchedExtractionWindowId!=window) {
+            // Close admission BEFORE any fallible entity lookup, snapshot or issuance.
+            extractionAdmissionClosed=true;latchedExtractionWindowId=window;
+            string[] inZone;
+            try {inZone=game.Players.Keys.Where(id=>!FinancialFrozen(id)&&InExtractionZone(id)).ToArray();}
+            catch(Exception) {
+                inZone=[];
+                Server.PrintToChatAll("Extraction eligibility snapshot unavailable. No new payouts this window; cash and inventory are not consumed. Retry the next extraction window.");
+            }
+            var candidates=game.ExtractionCandidates(now,inZone);
+            if(FinancialReady)foreach(var intent in candidates) {
+                try {
+                    var p=Find(intent.Player);if(p==null)continue;
+                    p.PrintToChat("Extraction eligibility locked. If your snapshot is unavailable, no payout or consumption this window; retry the next extraction window.");
+                    BeginExtraction(p,intent);
+                }
+                catch(Exception) {
+                    // Never re-admit this or a late player after a partial issuance.
+                    // Other members of the already-latched cohort still get processed.
+                    Server.PrintToConsole("Raid extraction cohort member unavailable; no automatic refund or regrant. Check reconciliation before retrying an issued request.");
+                }
+            }
+            else if(candidates.Length>0)Server.PrintToChatAll("Extraction settlement disabled pending financial native QA. No SSG funds paid; cash and inventory retained. Retry the next extraction window.");
+        }
+        // ConfirmVerifiedExtraction still needs its issued intent and ExtractionAt.
+        // Only this window's matching issued extraction work may retain that state.
+        if(!PendingExtractionSettlement(window)) {
+            game.FinishExtractionWindow(now);extractionAdmissionClosed=false;latchedExtractionWindowId="";
         }
     }
     private void OnPhaseChanged()
@@ -198,6 +240,8 @@ public sealed partial class RaidPlugin
         lastCountdown=-1;
         foreach(var m in game.Players.Values) {
             var p=Find(m.Id);if(p==null)continue;
+            if(IsFinancialActorBlocked(m.Id)){TryIsolateFinancialActor(p);continue;}
+                if(FinancialFrozen(m.Id)){HoldFinancialInventory(p);continue;}
             SetPresentation(p,game.Phase is GamePhase.CharacterSelect or GamePhase.Countdown or GamePhase.Freeze,game.Phase==GamePhase.CharacterSelect);
             if(game.Phase==GamePhase.CharacterSelect) {
                 for(var i=0;i<GameplayState.Characters.Length;i++)p.PrintToChat((i+1)+". "+GameplayState.Characters[i]);
@@ -207,11 +251,11 @@ public sealed partial class RaidPlugin
         if(game.Phase==GamePhase.Buy){SetCvar("mp_buy_anywhere",1);Server.PrintToChatAll("Buy guns and armor for 30s. Utility comes from character kits, not the shop.");}
         if(game.Phase==GamePhase.Countdown)SetCvar("mp_buy_anywhere",0);
         if(game.Phase==GamePhase.Freeze) {
-            foreach(var player in Utilities.GetPlayers().Where(Human).Where(p=>game.Living(Id(p))))SpawnHealth(player);
+            foreach(var player in Utilities.GetPlayers().Where(Human).Where(p=>!FinancialFrozen(Id(p))&&game.Living(Id(p))))SpawnHealth(player);
             var spawns=gameplayConfig.Spawns.OrderBy(_=>random.Next()).ToArray();int index=0;
             foreach(var team in game.Players.Values.GroupBy(x=>x.Team)){
                 var pos=spawns[index++];int member=0;
-                foreach(var m in team){var p=Find(m.Id);if(p!=null)Place(p,pos with {X=pos.X+member++*48});}
+                foreach(var m in team){var p=Find(m.Id);if(p!=null && !FinancialFrozen(m.Id))Place(p,pos with {X=pos.X+member++*48});}
             }
         }
         if(game.Phase==GamePhase.Active){SpawnLoot();Server.PrintToChatAll("Raid started. 30 minutes. Press E for loot; hold E for safes.");}
@@ -257,6 +301,7 @@ public sealed partial class RaidPlugin
         if(!sessionLoaded)return;
         UpdatePartnerVisuals();
         foreach(var p in Utilities.GetPlayers().Where(Human)) {
+            if(IsFinancialActorBlocked(Id(p))){TryIsolateFinancialActor(p);continue;}
             if(FinancialFrozen(Id(p))) {HoldFinancialInventory(p);continue;}
             if(!game.Living(Id(p)))continue;
             ObserveNativeSpend(p);SetMoney(p,game.Players[Id(p)].Cash);
@@ -333,7 +378,7 @@ public sealed partial class RaidPlugin
     private void ClearLoot()
     {
         // Map-authored props belong to the map. Round/map reset restores removed ones.
-        lootEntities.Clear();leverEntities.Clear();extractionTrigger=null;extractionTouching.Clear();useDown.Clear();
+        latchedExtractionWindowId="";lootEntities.Clear();leverEntities.Clear();extractionTrigger=null;extractionTouching.Clear();useDown.Clear();
     }
     private static void RestoreCvar(string name,int value) {var cv=ConVar<int>.Find(name);if(cv!=null)cv.Value=value;}
     private void UnhookGameplay()
@@ -346,7 +391,7 @@ public sealed partial class RaidPlugin
     private void StopGameplay()
     {
         InvalidateFinancialMatch();
-        if(sessionLoaded)foreach(var p in Utilities.GetPlayers().Where(Human))SetPresentation(p,false,false);
+        if(sessionLoaded)foreach(var p in Utilities.GetPlayers().Where(Human)){if(IsFinancialActorBlocked(Id(p)))TryIsolateFinancialActor(p);else if(FinancialFrozen(Id(p)))HoldFinancialInventory(p);else SetPresentation(p,false,false);}
         RestoreSpread();ClearTonightMatch();ClearPricing();sessionLoaded=false;ClearPartnerVisuals();ClearLoot();observedWeapons.Clear();
         foreach(var (name,value) in savedCvars)RestoreCvar(name,value);
         savedCvars.Clear();
