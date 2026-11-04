@@ -198,3 +198,30 @@ try
 }
 finally { Directory.Delete(root, true); }
 Console.WriteLine($"ALL {checks} CHECKS PASSED");
+Check(PreviewArgs.Parse([])==new PreviewArgs(300,"css",false),"preview default");
+foreach(var bad in new[]{new[]{"red"},new[]{"15","red"},new[]{"css","png"},new[]{"15","16"},new[]{"0"},new[]{"3601"},new[]{"stop","css"}})
+ Check(PreviewArgs.Parse(bad)==null,"invalid preview args rejected");
+Check(PreviewArgs.Parse(["15","png"])==new PreviewArgs(15,"png",false),"canonical png");
+Check(PreviewArgs.Parse(["stop"])!.Stop,"canonical stop");
+var clock=new PreviewClock(0,15);
+Check(clock.Tick(0,0,true,true,"css")==null,"outside invisible");
+Check(clock.Remaining(4000)==11,"outside clock advances");
+Check(clock.Tick(4000,1,true,true,"css")!.Contains("00:11"),"reentry shortened box");
+Check(clock.Tick(4001,2,true,true,"css")!.Contains("#00FFAA"),"real immediately green");
+Check(clock.Tick(5000,1,true,true,"css")!.Contains("[ 10 ]"),"ten bracket");
+Check(clock.Tick(14000,2,true,true,"css")!.Contains("[ 1 ]"),"one bracket");
+Check(clock.Tick(15000,2,true,true,"css")=="","zero clear");
+Check(clock.Tick(15001,2,true,true,"css")==null,"idempotent clear");
+foreach(var z in new[]{-1e200,0,1e200}){
+ Check(PreviewClock.Zone(1051.424683,-6000,z)==2,"real edge priority");
+ Check(PreviewClock.Zone(997.650,-6000,z)==1,"warning edge");
+}
+Check(PreviewClock.Zone(1100,-6000,double.NaN)==0,"nonfinite reject");
+foreach(var style in new[]{"css","png"}){
+ Check(PreviewClock.Markup(300,false,style).Contains("05:00"),"five minute format");
+ Check(PreviewClock.Markup(264,false,style).Contains("04:24"),"reference format");
+ var h=new PreviewClock(0,15);h.Tick(0,2,true,true,style);
+ Check(h.Tick(1,2,false,true,style)=="","invalid/dead/spec clears");
+ Check(h.Clear(true)==null,"clear ownership revoked");
+ h=new(0,15);h.Tick(0,2,true,true,style);Check(h.Tick(1,2,true,false,style)==null,"menu no unowned clear");
+}

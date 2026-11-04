@@ -11,12 +11,16 @@ namespace Cs2Debug;
 public sealed class DebugConfig : BasePluginConfig
 {
     public bool Enabled { get; set; } = true;
+    // Operator asset attestation and exclusive center-channel approval, never inferred from map filename.
+    public string ExtractHudRelease {get;set;}="";
+    public bool ExtractHudExclusive {get;set;}
+
     // Opt-in only for isolated LAN map tests. Never enable on a public server.
     public bool EveryoneIsAdmin { get; set; } = false;
     public string ReportDirectory { get; set; } = "/data/map-reports";
 }
 
-public sealed class DebugPlugin : BasePlugin, IPluginConfig<DebugConfig>
+public sealed partial class DebugPlugin : BasePlugin, IPluginConfig<DebugConfig>
 {
     public override string ModuleName => "Map Debug";
     public override string ModuleVersion => "0.1.4";
@@ -47,6 +51,7 @@ public sealed class DebugPlugin : BasePlugin, IPluginConfig<DebugConfig>
     public override void Load(bool hotReload)
     {
         loaded = true;
+        AddCommand("css_extracthud", "Private probe: !extracthud [seconds] [css|png] or stop", ExtractHudCommand);
         AddCommand("css_banner", "Private native banner: win|lose|tie gold|blue|red|gray", ColoredBannerCommand);
         AddCommand("css_testwin", "Preview a private native round-win banner", (p, c) => BannerCommand(p, c, BannerResult.Win));
         AddCommand("css_testlose", "Preview a private native round-loss banner", (p, c) => BannerCommand(p, c, BannerResult.Lose));
@@ -142,6 +147,7 @@ public sealed class DebugPlugin : BasePlugin, IPluginConfig<DebugConfig>
     }
     private void ClearState()
     {
+        ClearPreviews();
         shots.Clear(); reportLimiter.Clear(); textureLimiter.Clear(); listLimiter.Clear(); resetLimiter.Clear(); bannerLimiter.Clear();
     }
     private static bool Human(CCSPlayerController? p) => p is { IsValid: true, IsBot: false } && p.SteamID != 0;
@@ -152,6 +158,7 @@ public sealed class DebugPlugin : BasePlugin, IPluginConfig<DebugConfig>
     }
     private void Forget(CCSPlayerController? p)
     {
+        if(p is {IsValid:true})StopPreview(p);
         if (p is not { IsValid: true }) return;
         ForgetId(p.SteamID);
     }
@@ -324,6 +331,7 @@ public sealed class DebugPlugin : BasePlugin, IPluginConfig<DebugConfig>
     }
     private void Tick()
     {
+        TickPreviews();
         if (!active) return;
         ApplyCvars(); // also defeats a late +exec config on the very next tick
         if (!active || maxMoney == null) return;
