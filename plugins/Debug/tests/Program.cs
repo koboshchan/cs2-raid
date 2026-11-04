@@ -7,6 +7,22 @@ void Check(bool condition, string label)
     if (!condition) throw new InvalidOperationException(label);
     ++checks; Console.WriteLine("PASS " + label);
 }
+foreach (var team in new[] { 2, 3 })
+{
+    Check(RoundBanner.TryCreate(team, BannerResult.Win, out var win) && win.Winner == team, $"team {team} win uses own native team");
+    Check(RoundBanner.TryCreate(team, BannerResult.Lose, out var lose) && lose.Winner == 5 - team, $"team {team} loss uses opposite native team");
+    Check(RoundBanner.TryCreate(team, BannerResult.Draw, out var draw) && draw == new RoundBanner(0, 10, "#SFUI_Notice_Round_Draw"), $"team {team} draw has no winner");
+    foreach (var result in new[] { BannerResult.Win, BannerResult.Lose })
+    {
+        RoundBanner.TryCreate(team, result, out var banner);
+        Check(banner.Reason == (banner.Winner == 2 ? 9 : 8), $"team {team} {result} reason matches winner");
+        Check(banner.Message == (banner.Winner == 2 ? "#SFUI_Notice_Terrorists_Win" : "#SFUI_Notice_CTs_Win"), $"team {team} {result} localization matches winner");
+    }
+}
+foreach (var team in new[] { -1, 0, 1, 4, 255 })
+    foreach (var result in new[] { BannerResult.Win, BannerResult.Lose, BannerResult.Draw })
+        Check(!RoundBanner.TryCreate(team, result, out _), $"team {team} {result} rejected");
+Check(!RoundBanner.TryCreate(2, (BannerResult)99, out _), "undefined banner result rejected");
 var a = new Point(1, 2, 3);
 var b = new Point(4, 5, 6);
 var tracker = new ShotTracker();
