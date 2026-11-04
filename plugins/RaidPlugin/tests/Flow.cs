@@ -11,7 +11,7 @@ public static class FlowTests
             var s=Lobby("a","b","c");s.ShootRequest("a","b");s.ShootRequest("b","a");s.Solo("c");return s;
         }
         GameplayState Buy(){var s=Ready();s.Tick(now,true);foreach(var id in s.Players.Keys)s.SelectCharacter(id,1);s.Tick(now,true);return s;}
-        GameplayState Active(){var s=Buy();s.Tick(now.AddSeconds(30),true);s.Tick(now.AddSeconds(35),true);s.Tick(now.AddSeconds(45),true);return s;}
+        GameplayState Active(){var s=Buy();s.Tick(now.AddSeconds(45),true);s.Tick(now.AddSeconds(50),true);s.Tick(now.AddSeconds(60),true);return s;}
         var g=Lobby("a","b","c");
         Check(!g.ShootRequest("a","a"));Check(!g.ShootRequest("ghost","a"));Check(!g.ShootRequest("a","b"));Check(g.ShootRequest("b","a"));
         Check(g.SameTeam("a","b"));Check(!g.ShootRequest("a","c"));Check(!g.Solo("a"));Check(g.Solo("c"));
@@ -24,18 +24,40 @@ public static class FlowTests
         Check(!g.ShootRequest("b","a"));Check(g.ShootRequest("a","b"));g.Tick(now,true);
         Check(g.Join("d"));Check(g.Phase==GamePhase.Lobby);Check(g.Solo("d"));g.Tick(now,true);
         g.Leave("b");Check(g.Players["a"].Team==null);Check(!g.Players.ContainsKey("b"));
-        g=Buy();Check(g.Phase==GamePhase.Buy);Check(g.StartsAt==now.AddSeconds(30));Check(!g.Join("late"));Check(g.Cancel("a").Length==0);
+        // Buy is half-open [0,45), independent of one-second Tick jitter.
+        var boundary=Buy();
+        Check(GameplayState.BuySeconds==45);
+        Check(!boundary.BuyOpen(now.AddTicks(-1)));
+        Check(boundary.BuyOpen(now));
+        Check(boundary.BuyOpen(now.AddSeconds(30)));
+        Check(boundary.BuyOpen(now.AddSeconds(45).AddTicks(-1)));
+        Check(!boundary.BuyOpen(now.AddSeconds(45)));
+        Check(!boundary.BuyOpen(now.AddSeconds(46)));
+        var end=boundary.StartsAt!.Value;
+        var anchor=TonightRules.BuyRoundStart(100,now,end);
+        Check(anchor==100);
+        Check(TonightRules.BuyRoundStart(130,now.AddSeconds(30),end)==anchor);
+        Check(TonightRules.BuyRoundStart(145,now.AddSeconds(45),end)==anchor);
+        Reject(()=>TonightRules.BuyRoundStart(146,now.AddSeconds(46),end));
+        boundary.Tick(now.AddSeconds(45),false); // lost readiness/disconnect cannot extend native Buy
+        Check(boundary.Phase==GamePhase.Countdown&&!boundary.BuyOpen(now.AddSeconds(45)));
+        var cutoff=boundary.StartsAt;
+        boundary.Tick(now.AddSeconds(45),true);
+        Check(boundary.StartsAt==cutoff&&boundary.Phase==GamePhase.Countdown);
+        var resetBuy=new GameplayState();
+        Check(!resetBuy.BuyOpen(now)&&resetBuy.MatchId!=boundary.MatchId);
+        g=Buy();Check(g.Phase==GamePhase.Buy);Check(g.StartsAt==now.AddSeconds(45));Check(!g.Join("late"));Check(g.Cancel("a").Length==0);
         Check(!g.TryPurchase("a",1));Check(!g.TryPurchase("ghost",0));Check(!g.TryPurchase("a",-1));g.Players["a"].Cash=100;
         Check(g.TryPurchase("a",30));Check(g.Players["a"].Cash==70);Check(g.TryPurchase("a",70));Check(g.Players["a"].Cash==0);
         Check(!g.TryPurchase("a",1));Check(!Lobby("a").TryPurchase("a",0));Check(!g.CanDamage("a","c"));
-        g.Players["a"].Cash=50;g.Tick(now.AddSeconds(29),true);Check(g.Phase==GamePhase.Buy);
-        g.Tick(now.AddSeconds(30),true);Check(g.Phase==GamePhase.Countdown);Check(g.StartsAt==now.AddSeconds(35));Check(!g.TryPurchase("a",1));
-        g.Tick(now.AddSeconds(34),true);Check(g.Phase==GamePhase.Countdown);
-        g.Tick(now.AddSeconds(35),true);Check(g.Phase==GamePhase.Freeze);Check(g.StartsAt==now.AddSeconds(45));Check(!g.CanDamage("a","c"));
-        g.Tick(now.AddSeconds(44),true);Check(g.Phase==GamePhase.Freeze);
-        g.Tick(now.AddSeconds(45),true);Check(g.Phase==GamePhase.Active);Check(g.EndsAt==now.AddSeconds(1845));Check(g.Players["a"].Cash==50);
+        g.Players["a"].Cash=50;g.Tick(now.AddSeconds(44),true);Check(g.Phase==GamePhase.Buy);
+        g.Tick(now.AddSeconds(45),true);Check(g.Phase==GamePhase.Countdown);Check(g.StartsAt==now.AddSeconds(50));Check(!g.TryPurchase("a",1));
+        g.Tick(now.AddSeconds(49),true);Check(g.Phase==GamePhase.Countdown);
+        g.Tick(now.AddSeconds(50),true);Check(g.Phase==GamePhase.Freeze);Check(g.StartsAt==now.AddSeconds(60));Check(!g.CanDamage("a","c"));
+        g.Tick(now.AddSeconds(59),true);Check(g.Phase==GamePhase.Freeze);
+        g.Tick(now.AddSeconds(60),true);Check(g.Phase==GamePhase.Active);Check(g.EndsAt==now.AddSeconds(1860));Check(g.Players["a"].Cash==50);
         Check(!g.CanDamage("a","b"));Check(g.CanDamage("a","c"));Check(!g.CanDamage("ghost","a"));Check(!g.TryPurchase("a",1));
-        var origin=new Position(0,0,0);var rng=new Random(42);var t=now.AddSeconds(45);
+        var origin=new Position(0,0,0);var rng=new Random(42);var t=now.AddSeconds(60);
         Check(g.AddLoot(new("item",origin,LootKind.Item,100,100)));Check(!g.AddLoot(new("item",origin,LootKind.Item,100,100)));
         Check(!g.UseLoot("a","item",new(1000,0,0),true,t,rng));Check(!g.UseLoot("a","item",origin,false,t,rng));
         Check(!g.UseLoot("ghost","item",origin,true,t,rng));Check(g.UseLoot("a","item",origin,true,t,rng));Check(g.Players["a"].Cash==150);

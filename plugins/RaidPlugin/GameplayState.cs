@@ -16,6 +16,8 @@ public sealed record ExtractionIntent(string Id, string Player, long Cash);
 // Single game-thread owner. No external currency, native handles or persistent inventory.
 public sealed class GameplayState
 {
+    public const int BuySeconds = 45;
+    public bool BuyOpen(DateTimeOffset now) => Phase==GamePhase.Buy && StartsAt is {} end && now<end && now>=end.AddSeconds(-BuySeconds);
     public static readonly string[] Characters = ["D-Wolf", "Stinger", "Luna", "Vyron", "Hackclaw", "Shepherd"];
     public string MatchId { get; } = Guid.NewGuid().ToString("N");
     public Dictionary<string, Member> Players { get; } = [];
@@ -81,10 +83,10 @@ public sealed class GameplayState
     }
     public int? Tick(DateTimeOffset now, bool configured)
     {
-        if (!configured && Phase is not (GamePhase.Lobby or GamePhase.Closed)) return null; // adapter must halt on lost configuration
+        if (!configured && Phase is not (GamePhase.Lobby or GamePhase.Closed or GamePhase.Buy)) return null; // adapter must halt on lost configuration
         if (Phase==GamePhase.Lobby && configured && Players.Count>0 && Players.Values.All(x=>x.Team!=null))
             Phase=GamePhase.CharacterSelect;
-        if (Phase==GamePhase.CharacterSelect && Players.Values.All(x=>x.Character!=null)) { Phase=GamePhase.Buy; StartsAt=now.AddSeconds(30); }
+        if (Phase==GamePhase.CharacterSelect && Players.Values.All(x=>x.Character!=null)) { Phase=GamePhase.Buy; StartsAt=now.AddSeconds(BuySeconds); }
         else if (Phase==GamePhase.Buy && now>=StartsAt) { Phase=GamePhase.Countdown; StartsAt=now.AddSeconds(5); }
         else if (Phase==GamePhase.Countdown && now>=StartsAt) { Phase=GamePhase.Freeze; StartsAt=now.AddSeconds(10); }
         else if (Phase==GamePhase.Freeze && now>=StartsAt) { Phase=GamePhase.Active; StartsAt=null; EndsAt=now.AddMinutes(30); }

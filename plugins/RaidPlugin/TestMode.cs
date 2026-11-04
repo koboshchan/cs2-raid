@@ -290,6 +290,7 @@ try{
             if(ConVar<bool>.Find("mp_do_warmup_period")!=null)TestCvar("mp_do_warmup_period",false);
             else Server.PrintToConsole("TEST optional mp_do_warmup_period absent; using mp_warmup_end only.");
             TestCvar("mp_freezetime",0);
+            SetNativeBuyTime(testCvars,0);testBuyClockMatch="";
             TestCvar("mp_roundtime",30f);TestCvar("mp_roundtime_defuse",30f);TestCvar("mp_roundtime_hostage",30f);
             TestCvar("mp_teammates_are_enemies",true);TestCvar("mp_friendlyfire",true);
             TestCvar("ff_damage_reduction_bullets",1f);TestCvar("ff_damage_reduction_other",1f);
@@ -398,7 +399,7 @@ try{
     }
     private void TestPurchase(CCSPlayerController p,string name){
         // Native buy INPUT, explicit custom native grant. No engine purchase event/debit is trusted.
-        if(!TestParticipant(p)||!TestScope()||!testMode.NativeActive||testFlow.Manual || testMode.Phase!=TestModeState.Stage.Buy||!p.PawnIsAlive ||
+        if(!TestParticipant(p)||!TestScope()||!testMode.NativeActive||testFlow.Manual || testMode.Phase!=TestModeState.Stage.Buy||!testFlow.Teams.BuyOpen(DateTimeOffset.UtcNow)||!p.PawnIsAlive ||
             !testFlow.Spend(Id(p),name)){
             p.PrintToChat("TEST purchase rejected. Buy phase only, strict gun names, finite credits; !testshop.");return;
         }
@@ -505,9 +506,10 @@ try{
                     }
                 }
                 ApplyTestPhase();testLastCount=-1;
+                if(testMode.NativeActive)UpdateTestNativeClock(count??1800);
                 TestAnnounce(after switch{
                     GamePhase.CharacterSelect=>"Selection: !characterselect 1..6 (state complete, KIT STUB only, no DeltaOps). !cancelteam allowed.",
-                    GamePhase.Buy=>"Buy 30s: native console buy <gun> or !testbuy <gun>; !testshop. Free 15000 fixture credits; no SSG or projected cash.",
+                    GamePhase.Buy=>"Buy 45s: native console buy <gun> or !testbuy <gun>; !testshop. Free 15000 fixture credits; no SSG or projected cash.",
                     GamePhase.Countdown=>"Countdown 5s, then real-map insertion.",
                     GamePhase.Freeze=>"Inserted, frozen 10s at actual native/captured map positions.",
                     GamePhase.Active=>"ACTIVE: 200HP, half spread; custom duo immunity / native same-side FFA. No loot/extraction/economy.",
@@ -574,7 +576,7 @@ try{
     }
     private void StopTestMode(){
         ResetFixtureDeltaOps(); // Notify old published generation before fencing. Provider has no native grants.
-        testTraceRemaining=0;
+        testTraceRemaining=0;testBuyClockMatch="";
         testMode.Stop(); // Fence all callbacks before touching native resources.
         try{CleanupTestNative();}
         finally{testFlow.Bots.Clear();testControllers.Clear();testDeaths.Clear();testRoamed.Clear();testSpawns.Clear();}

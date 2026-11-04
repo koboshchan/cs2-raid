@@ -1,6 +1,7 @@
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Commands;
+using CounterStrikeSharp.API.Modules.Cvars;
 using CounterStrikeSharp.API.Modules.Utils;
 namespace Cs2Raid;
 public sealed partial class RaidPlugin
@@ -98,7 +99,7 @@ public sealed partial class RaidPlugin
             // Yield to round banners; no centerHTML spam fighting their display.
             if(now>=testBannerUntil)p.PrintToCenterAlert(
                 $"TEST $"+balance.ToString("N0",System.Globalization.CultureInfo.InvariantCulture)+
-                " | "+FixturePrompt(testFlow.Teams.Phase)+(deadline!=null?$" | {remaining/60}:{remaining%60:00}":""));
+                " | "+FixturePrompt(testFlow.Teams.Phase)+(deadline!=null&&testFlow.Teams.Phase!=GamePhase.Buy?$" | {remaining/60}:{remaining%60:00}":""));
         }
     }
     private void UpdateTestNativeClock(int seconds){
@@ -115,7 +116,59 @@ public sealed partial class RaidPlugin
             });
         }
         // Never use warmup or round termination as a clock. Plugin phase owns expiry.
-        rules.RoundTime=Math.Clamp(seconds,0,1800);rules.RoundStartTime=Server.CurrentTime;
+        if(testFlow.Teams.Phase==GamePhase.Buy){
+            // Anchor once per match/phase; never slide the engine buy window each second.
+            if(testBuyClockMatch!=testFlow.Teams.MatchId){
+                var end=testFlow.Teams.StartsAt??throw new InvalidOperationException("Missing buy deadline.");
+                testBuyClockStart=TonightRules.BuyRoundStart(Server.CurrentTime,DateTimeOffset.UtcNow,end);
+                testBuyClockMatch=testFlow.Teams.MatchId;
+            }
+            rules.RoundTime=GameplayState.BuySeconds;rules.RoundStartTime=testBuyClockStart;
+            SetNativeBuyTime(testCvars,testFlow.Teams.BuyOpen(DateTimeOffset.UtcNow)?GameplayState.BuySeconds:0);
+        }else{
+            SetNativeBuyTime(testCvars,0);
+            rules.RoundTime=Math.Clamp(seconds,0,1800);rules.RoundStartTime=Server.CurrentTime;
+        }
         Utilities.SetStateChanged(proxy,"CCSGameRulesProxy","m_pGameRules");
     }
+    private string testBuyClockMatch="";
+    private float testBuyClockStart;
+    private static void SetNativeBuyTime(Dictionary<string,Action> baselines,int seconds){
+        const string name="mp_buytime";
+        // CSS 1.0.379 generic access validates the native type. Probe only Type.
+#pragma warning disable CS0618
+        var type=(ConVar.Find(name)??throw new InvalidOperationException("Missing "+name)).Type;
+#pragma warning restore CS0618
+        if(type==ConVarType.Float32)CaptureBuyValue(baselines,name,(float)seconds);
+        else if(type==ConVarType.Int32)CaptureBuyValue(baselines,name,seconds);
+        else throw new InvalidOperationException("Unsupported mp_buytime type "+type);
+    }
+    private static void CaptureBuyValue<T>(Dictionary<string,Action> baselines,string name,T value){
+        var cv=ConVar<T>.Find(name)??throw new InvalidOperationException("Missing "+name);
+        TestModeState.SetCaptured(baselines,name,()=>cv.Value,
+            saved=>(ConVar<T>.Find(name)??throw new InvalidOperationException("Missing restore "+name)).Value=saved,value);
+    }
+    private void SyncRaidBuyClock(){
+        if(!sessionLoaded||TestServer||game.Phase!=GamePhase.Buy)return;
+        var proxy=Utilities.FindAllEntitiesByDesignerName<CCSGameRulesProxy>("cs_gamerules").FirstOrDefault(x=>x.IsValid);
+        var rules=proxy?.GameRules;
+        if(proxy==null||rules==null||rules.Handle==IntPtr.Zero)throw new InvalidOperationException("Raid buy clock unavailable.");
+        var raw=proxy.EntityHandle.Raw;var handle=rules.Handle;var time=rules.RoundTime;var start=rules.RoundStartTime;
+        raidBuyBaselines.TryAdd("raid-buy-clock",()=>{
+            var current=new CHandle<CCSGameRulesProxy>(raw).Value;
+            if(current is not {IsValid:true}||current.GameRules is not {} old||old.Handle!=handle)return;
+            old.RoundTime=time;old.RoundStartTime=start;
+            Utilities.SetStateChanged(current,"CCSGameRulesProxy","m_pGameRules");
+        });
+        var end=game.StartsAt??throw new InvalidOperationException("Missing raid buy deadline.");
+        rules.RoundTime=GameplayState.BuySeconds;
+        rules.RoundStartTime=TonightRules.BuyRoundStart(Server.CurrentTime,DateTimeOffset.UtcNow,end);
+        Utilities.SetStateChanged(proxy,"CCSGameRulesProxy","m_pGameRules");
+        SetNativeBuyTime(raidBuyBaselines,GameplayState.BuySeconds);
+    }
+    private void RestoreRaidBuyClock(){
+        TestModeState.RestoreEntries(raidBuyBaselines,(_,restore)=>restore(),
+            ex=>Server.PrintToConsole("Raid buy baseline cleanup pending: "+ex.Message));
+    }
+
 }

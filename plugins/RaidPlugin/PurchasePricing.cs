@@ -31,14 +31,14 @@ public sealed partial class RaidPlugin
             if(!sessionLoaded)return HookResult.Continue;
             if(TestServer || FinancialFrozen(Id(p)))return HookResult.Handled;
             var requested=c.ArgCount==2?PriceItem(c.GetArg(1)):null;
-            if(game.Phase!=GamePhase.Buy || !game.Living(Id(p)) || requested==null || GameplayConfig.Utility(requested.Entity)) {
-                p.PrintToChat("Buying is limited to guns/armor in the 30s buy phase. Utility comes from character kits.");return HookResult.Handled;
+            if(!game.BuyOpen(DateTimeOffset.UtcNow) || !game.Living(Id(p)) || requested==null || GameplayConfig.Utility(requested.Entity)) {
+                p.PrintToChat("Buying is limited to guns/armor in the 45s buy phase. Utility comes from character kits.");return HookResult.Handled;
             }
             ObserveNativeSpend(p);
             if(!gameplayConfig.CustomPricingEnabled)return HookResult.Continue;
             buySnapshots.Remove(p.Slot);
             var item=c.ArgCount==2?PriceItem(c.GetArg(1)):null;
-            if(!sessionLoaded || game.Phase!=GamePhase.Buy || !game.Living(Id(p)) || item==null || item.PriceDollars<0) {
+            if(!sessionLoaded || !game.BuyOpen(DateTimeOffset.UtcNow) || !game.Living(Id(p)) || item==null || item.PriceDollars<0) {
                 p.PrintToChat("Purchase unavailable.");return HookResult.Handled;
             }
             var balance=game.Players[Id(p)].Cash;

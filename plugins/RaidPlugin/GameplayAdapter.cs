@@ -19,6 +19,7 @@ public sealed partial class RaidPlugin
     private readonly Dictionary<string,uint> lootEntities = [];
     private readonly Dictionary<int,uint> leverEntities = [];
     private readonly Dictionary<string,int> savedCvars = [];
+    private readonly Dictionary<string,Action> raidBuyBaselines = [];
     private readonly HashSet<string> extractionTouching = [];
     private readonly HashSet<string> useDown = [];
     private uint? extractionTrigger;
@@ -112,7 +113,7 @@ public sealed partial class RaidPlugin
     private void ResetLobby()
     {
         if(TestServer)return;
-        InvalidateFinancialMatch();ClearPartnerVisuals();ClearLoot();ClearTonightMatch();game=new();observedWeapons.Clear();nativeProjections.Clear();lastCountdown=-1;
+        RestoreRaidBuyClock();InvalidateFinancialMatch();ClearPartnerVisuals();ClearLoot();ClearTonightMatch();game=new();observedWeapons.Clear();nativeProjections.Clear();lastCountdown=-1;
         sessionLoaded=gameplayConfig.Ready(0);
         if(!sessionLoaded){Server.PrintToChatAll("Raid disabled until map coordinates and native flow QA are confirmed.");return;}
         SetCvar("mp_autoteambalance",0);SetCvar("mp_limitteams",0);SetCvar("mp_ignore_round_win_conditions",1);
@@ -120,6 +121,7 @@ public sealed partial class RaidPlugin
         SetCvar("mp_respawn_on_death_t",0);SetCvar("mp_respawn_on_death_ct",0);
         SetCvar("mp_startmoney",0);SetCvar("mp_playercashawards",0);SetCvar("mp_teamcashawards",0);
         SetCvar("mp_maxmoney",TonightRules.HudLimit);SetCvar("mp_buy_anywhere",0);
+        SetNativeBuyTime(raidBuyBaselines,0);
         PatchExistingSpread();
         deltaOpsCharactersReady=ResetDeltaOpsCharacters();
         foreach(var p in Utilities.GetPlayers().Where(Human)) {if(IsFinancialActorBlocked(Id(p))){TryIsolateFinancialActor(p);continue;}if(FinancialFrozen(Id(p))){HoldFinancialInventory(p);continue;}if(game.Join(Id(p)))PrepareLobby(p);else p.ChangeTeam(CsTeam.Spectator);}
@@ -249,8 +251,8 @@ public sealed partial class RaidPlugin
                 p.PrintToChat("Choose with !characterselect <number>.");
             }
         }
-        if(game.Phase==GamePhase.Buy){SetCvar("mp_buy_anywhere",1);Server.PrintToChatAll("Buy guns and armor for 30s. Utility comes from character kits, not the shop.");}
-        if(game.Phase==GamePhase.Countdown)SetCvar("mp_buy_anywhere",0);
+        if(game.Phase==GamePhase.Buy){SyncRaidBuyClock();SetCvar("mp_buy_anywhere",1);Server.PrintToChatAll("Buy guns and armor for 45s. Utility comes from character kits, not the shop.");}
+        if(game.Phase==GamePhase.Countdown){SetNativeBuyTime(raidBuyBaselines,0);SetCvar("mp_buy_anywhere",0);}
         if(game.Phase==GamePhase.Freeze) {
             foreach(var player in Utilities.GetPlayers().Where(Human).Where(p=>!FinancialFrozen(Id(p))&&game.Living(Id(p))))SpawnHealth(player);
             var spawns=gameplayConfig.Spawns.OrderBy(_=>random.Next()).ToArray();int index=0;
@@ -306,7 +308,7 @@ public sealed partial class RaidPlugin
             if(FinancialFrozen(Id(p))) {HoldFinancialInventory(p);continue;}
             if(!game.Living(Id(p)))continue;
             ObserveNativeSpend(p);SetMoney(p,game.Players[Id(p)].Cash);
-            if(p.PlayerPawn.Value is {} pawn)pawn.InBuyZone=game.Phase==GamePhase.Buy;
+            if(p.PlayerPawn.Value is {} pawn)pawn.InBuyZone=game.BuyOpen(DateTimeOffset.UtcNow);
         }
         if(game.Phase!=GamePhase.Active)return;
         var current=new Dictionary<uint,(string Owner,string Entity)>();
@@ -393,7 +395,7 @@ public sealed partial class RaidPlugin
     {
         InvalidateFinancialMatch();
         if(sessionLoaded)foreach(var p in Utilities.GetPlayers().Where(Human)){if(IsFinancialActorBlocked(Id(p)))TryIsolateFinancialActor(p);else if(FinancialFrozen(Id(p)))HoldFinancialInventory(p);else SetPresentation(p,false,false);}
-        RestoreSpread();ClearTonightMatch();ClearPricing();sessionLoaded=false;ClearPartnerVisuals();ClearLoot();observedWeapons.Clear();
+        RestoreRaidBuyClock();RestoreSpread();ClearTonightMatch();ClearPricing();sessionLoaded=false;ClearPartnerVisuals();ClearLoot();observedWeapons.Clear();
         foreach(var (name,value) in savedCvars)RestoreCvar(name,value);
         savedCvars.Clear();
     }
