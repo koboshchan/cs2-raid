@@ -19,3 +19,66 @@ New account link requests ask for balance:debit AND balance:credit. User consent
 Lucas explicitly approved raid mint and unlimited mint/payout budgets and per-operation policy on Nov4. This is not proof those policies are deployed/configured, credentials approved, or accounts consented. The separate SSG source owner implements -1 semantics. No config or grants were enabled by this backend work. SSG debits decrease player wallet and room issuance; there is no app wallet/escrow. Extraction credits use mint, not mislabelled original-debit refunds. The dormant shop outbox retains its separate $1000 purchase safety gate and bounded undelivered-original-payer refund implementation.
 
 The full integration contract and acceptance conditions are in the handoff /home/kit/out/raid-native-interface.md. Unit tests cover crash/reopen, response loss, immutable replay, duplicate workers, session rejection, failed scope/budget/auth, item reuse, server pricing and authenticated persistent proof lookup. Native live end-to-end QA has not happened.
+
+Durable native recovery is available even with financial enablement off. The
+backend opens its SQLite operation journal without injecting the money execution
+or native callback gateway. Recovery does not create operations. The trusted
+native host mirrors an already-issued original operation with POST
+/native/recovery (alias /native/journal/phase). Body fields are operationKey,
+requestFingerprint, nativeSnapshot (immutable serialized string, up to 131072
+characters), phase, evidence, and proof for every phase after snapshot. The
+sequential phases are snapshot, consumption_intent, consumed, cleanup_complete.
+Proof is the exact structured settlement proof, excluding the lookup's state.
+Snapshots and each phase's first accepted evidence are retained; earlier phase
+replay acknowledges the current journal without replacing evidence or regressing.
+The HTTP byte cap is 196608, including JSON escaping. Use local fsync durability
+before submitting the initial financial request and before each economic action.
+
+POST /native/journal/read accepts only operationKey and requestFingerprint. It
+returns original request/session, durable canonical proof when available, phase
+and audit evidence, and disposition (quarantined or unresolved). The native bearer
+credential can read this even when no admin credential is installed in the game
+container. Snapshot content is native-authored evidence, not backend proof of
+physical isolation or inventory correctness.
+
+POST /admin/reconciliation/quarantine requires the separate configured
+RAID_RECONCILIATION_ADMIN_TOKEN (at least 32 characters, different from
+BRIDGE_TOKEN). Never install this admin credential in the game container. Its
+strict body contains operationKey, requestFingerprint, operator, reason,
+evidence, isolationEvidence. This action queries the original upstream key,
+verifies any canonical receipt, preserves evidence and records terminal
+quarantine. Failed lookups do not terminalize. Absent lookups are not authority
+to refund, release claims, or regrant. No financial movement is performed.
+Terminal quarantine never means economic consumption or cleanup completed;
+native phase updates and execute are then rejected, while audit reads remain
+available. The operator is responsible for establishing physical isolation,
+and the native adapter must observe the disposition before allowing unaffected
+lifecycle progression. A token holder's asserted isolation is not runtime QA.
+
+Run one backend process and one RaidLedger owner per database. Per-operation
+execution and manual quarantine are serialized within that owner; this is not a
+distributed lock. SQLite FULL/WAL transactions durably couple phase updates and
+audit records, but multiple independently executing backend owners are not an
+accepted topology. Backup the database with its WAL safely. Do not enable money
+until native failure-path, disconnect/map/unload and physical quarantine QA pass.
+
+
+Revocation handshake supersedes immediate admin terminal quarantine above.
+Admin first atomically records quarantine_requested with a stable UUID
+revocationEpoch and audit BEFORE any await or original-key lookup. Failed or
+mismatched lookup retains revocation requested; it cannot silently resume.
+Phase advancement and execute are blocked immediately. After each native/network
+await, execution rechecks revocation before new financial/native actions or
+settled acknowledgement. An already in-flight financial receipt is preserved.
+
+Native reads disposition quarantine_requested and journal.revocationEpoch.
+On the game thread it must fsync a local Quarantine/tombstone, prevent delayed
+callback consumption, isolate original handle and connected actor, then POST
+/native/quarantine/ack with original operationKey, requestFingerprint,
+revocationEpoch, exact original session, nativePhase (snapshot,
+consumption_intent, consumed, cleanup_complete or quarantined), isolationEvidence.
+Native BRIDGE_TOKEN authentication applies; Origin is rejected. Exact epoch and
+session are required. This acknowledgement alone transitions disposition to
+quarantined. Identical ack replay does not replace evidence. Different ack
+rejects. Backend trusts native evidence, not an independently measured isolation
+test. Admin repeat preserves epoch. No native ack means no terminal disposition.

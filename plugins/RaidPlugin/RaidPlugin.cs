@@ -122,7 +122,7 @@ public sealed partial class RaidPlugin : BasePlugin
     }
     public override void Unload(bool hotReload) {
         testUnloaded=true;mapGeneration=Guid.NewGuid();
-        TestModeState.FinalizeAll(TestCleanupError,StopTestMode,StopDeltaOpsBridge,UnhookGameplay,StopGameplay,http.Dispose);
+        TestModeState.FinalizeAll(TestCleanupError,StopTestMode,StopDeltaOpsBridge,UnhookGameplay,StopGameplay,()=>settlementRecovery?.Dispose(),http.Dispose);
     }
     // TODO trusted map hooks call PullLever only on use within range, and Extract only
     // on living authorized player's zone entry. Persist bag + settlement outbox first.

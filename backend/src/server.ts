@@ -8,13 +8,19 @@ import { SsgClient, ApiError } from "./client";
 import { loadCatalog, type Catalog } from "./catalog";
 import { LinkStore, steamSchema } from "./links";
 export function createServer(token: string, catalog: Catalog, links: Pick<LinkStore, "create" | "poll">,
-  raid?: { ledger: RaidLedger; api: RaidMoneyApi; native: RaidNativeBridge }) {
+  raid?: { ledger: RaidLedger; api: RaidMoneyApi; native: RaidNativeBridge },
+  recovery?: {ledger: RaidLedger; api: RaidMoneyApi; adminToken?: string}) {
   if (token.length < 32) throw new Error("BRIDGE_TOKEN must contain at least 32 random characters");
-  const app = Fastify({ logger: false, bodyLimit: 32768 });
+  const recoveryStore = recovery ?? raid;
+  const adminToken = recovery?.adminToken;
+  if (adminToken !== undefined && (adminToken.length < 32 || adminToken === token))
+    throw new Error("Recovery admin credential must be separate and at least 32 characters");
+  const app = Fastify({ logger: false, bodyLimit: 196608 });
   app.addHook("onRequest", async (req, reply) => {
     reply.header("Cache-Control", "no-store");
-    const expected = Buffer.from("Bearer " + token), actual = Buffer.from(req.headers.authorization ?? "");
-    if (req.headers.origin !== undefined || actual.length !== expected.length || !timingSafeEqual(actual, expected))
+    const admin = req.routeOptions.url === "/admin/reconciliation/quarantine";
+    const expected = Buffer.from("Bearer " + (admin ? (adminToken ?? "") : token)), actual = Buffer.from(req.headers.authorization ?? "");
+    if ((admin && !adminToken) || req.headers.origin !== undefined || actual.length !== expected.length || !timingSafeEqual(actual, expected))
       return reply.code(401).send({ error: "unauthorized" });
   });
   app.setErrorHandler((error, _req, reply) => {
@@ -38,10 +44,26 @@ export function createServer(token: string, catalog: Catalog, links: Pick<LinkSt
     app.post("/native/reply", async req => native.reply(req.body));
     app.addHook("onClose", async () => native.close());
   }
+  for (const route of ["/native/recovery", "/native/journal/phase"]) app.post(route, async (req, reply) => {
+    if (!recoveryStore) return reply.code(503).send({error: "recovery_store_unavailable"});
+    return recoveryStore.ledger.journalPhase(req.body);
+  });
+  app.post("/native/quarantine/ack", async (req, reply) => {
+    if (!recoveryStore) return reply.code(503).send({error: "recovery_store_unavailable"});
+    return recoveryStore.ledger.quarantineAck(req.body);
+  });
+  app.post("/native/journal/read", async (req, reply) => {
+    if (!recoveryStore) return reply.code(503).send({error: "recovery_store_unavailable"});
+    return recoveryStore.ledger.journalRead(req.body);
+  });
+  app.post("/admin/reconciliation/quarantine", async (req, reply) => {
+    if (!recoveryStore) return reply.code(503).send({error: "recovery_store_unavailable"});
+    return recoveryStore.ledger.quarantine(req.body, recoveryStore.api);
+  });
   // Read-only persistent proof lookup. Never accepts a receipt or triggers native completion.
   app.post("/settlement/proof", async (req, reply) => {
-    if (!raid) return reply.code(503).send({ error: "native_session_bridge_not_ready" });
-    return raid.ledger.proof(req.body);
+    if (!recoveryStore) return reply.code(503).send({ error: "recovery_store_unavailable" });
+    return recoveryStore.ledger.proof(req.body);
   });
   for (const route of ["/cashin", "/cashout", "/extract", "/payout", "/settlement"]) {
     app.post(route, async (req, reply) => {
@@ -60,10 +82,11 @@ async function main() {
   const api = SsgClient.fromEnv(), serverId = process.env.SERVER_ID ?? "raid";
   const path = join(dir, "raid.sqlite");
   const links = new LinkStore(path, serverId, api);
+  const ledger = new RaidLedger(path, serverId, catalog);
   const raid = process.env.RAID_FINANCIAL_ENABLED === "1"
-    ? { ledger: new RaidLedger(path, serverId, catalog), api, native: new NativeHttpBridge() } : undefined;
-  const server = createServer(process.env.BRIDGE_TOKEN ?? "", catalog, links, raid);
-  if (raid) server.addHook("onClose", async () => raid.ledger.close());
+    ? { ledger, api, native: new NativeHttpBridge() } : undefined;
+  const server = createServer(process.env.BRIDGE_TOKEN ?? "", catalog, links, raid, {ledger, api, adminToken: process.env.RAID_RECONCILIATION_ADMIN_TOKEN});
+  server.addHook("onClose", async () => ledger.close());
   server.addHook("onClose", async () => links.close());
   for (const signal of ["SIGTERM", "SIGINT"] as const) process.once(signal, () => { void server.close(); });
   await server.listen({ host: "0.0.0.0", port: Number(process.env.PORT ?? 3000) });
