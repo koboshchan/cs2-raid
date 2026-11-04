@@ -24,6 +24,33 @@ public static class FlowTests
         Check(!g.ShootRequest("b","a"));Check(g.ShootRequest("a","b"));g.Tick(now,true);
         Check(g.Join("d"));Check(g.Phase==GamePhase.Lobby);Check(g.Solo("d"));g.Tick(now,true);
         g.Leave("b");Check(g.Players["a"].Team==null);Check(!g.Players.ContainsKey("b"));
+        // Actual shared StopGameplay orchestration: adapter failures cannot bypass
+        // the fence, clock restore, later teardown or pending-reset protection.
+        foreach(var failingAdapter in new[]{0,1}){
+            var owner=new RaidBuyOwnership();bool loaded=true;int clock=45,restored=0,later=0,reports=0;
+            var saved=new Dictionary<string,Action>{{"clock",()=>{clock=90;restored++;}}};
+            void Report(Exception _){reports++;}
+            void Restore()=>TestModeState.RestoreEntries(saved,(_,f)=>f(),Report);
+            Check(owner.Apply(()=>{},Restore,()=>saved.Count!=0,Report,true));
+            var generation=owner.Generation;
+            void Adapter(int position){
+                Check(!loaded&&owner.Blocked&&!owner.Owned&&!owner.Allows(generation,true));
+                Check(clock==90&&saved.Count==0&&restored==1);
+                if(position==failingAdapter)throw new InvalidOperationException(position==0?"financial":"native presentation");
+            }
+            RaidGameplayStop.Run(owner,()=>loaded=false,Restore,()=>saved.Count!=0,Report,
+                ()=>Adapter(0),()=>Adapter(1),()=>later++);
+            Check(!loaded&&owner.Blocked&&!owner.Owned&&owner.Generation!=generation);
+            Check(reports==1&&later==1&&restored==1&&!owner.Pending);
+            // A retained restoration fault is never hidden by a teardown failure.
+            saved["clock"]=()=>throw new InvalidOperationException("restore");
+            RaidGameplayStop.Run(owner,()=>loaded=false,Restore,()=>saved.Count!=0,Report,
+                ()=>throw new InvalidOperationException("financial"),()=>later++);
+            Check(owner.Pending&&owner.Blocked&&saved.Count==1&&later==2);
+            Check(!owner.BeginReset(Restore,()=>saved.Count!=0,Report));
+            saved["clock"]=()=>clock=90;
+            Check(owner.BeginReset(Restore,()=>saved.Count!=0,Report));
+        }
         // Execute the SAME ownership transaction as production with injected native failures.
         foreach(var failure in new[]{"missing-rules","unsupported-type","capture","set","notify","restore"}){
             var owner=new RaidBuyOwnership();var saved=new Dictionary<string,Action>();

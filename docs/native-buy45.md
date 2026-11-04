@@ -43,3 +43,9 @@ The shared RaidBuyOwnership transaction closes admission before phase setup, cap
 ResetLobby stops session admission before attempting restoration. If any captured restoration remains pending, it returns without constructing a new match or applying new native state. A successful explicit reset after cleanup starts a new ownership generation; cleanup alone never clears the fault fence. Stop/unload also invalidate ownership before cleanup. Failed restore entries are retained for retry.
 
 Injected tests execute this same transaction class with missing rules, unsupported type, capture failure, setter failure, notification failure and restore failure, then cleanup retries, pending reset refusal, successful reset, stale-generation rejection, Countdown restoration failure and Stop. These are deterministic transaction tests, not executed native API fault injection or runtime acceptance.
+
+Production stop ordering correction
+
+StopGameplay now invokes shared RaidGameplayStop.Run before any financial invalidation, player lookup or presentation. It clears session admission and invalidates ownership/restores the buy clock first; all subsequent teardown resources are isolated. Failed normal cvar restoration entries remain queued rather than being silently discarded. Map-start StopGameplay also precedes spread housekeeping. Map-end invokes StopGameplay first, and unload isolates StopGameplay from other teardown callbacks.
+
+Tests run the exact shared orchestration used by StopGameplay with financial and native-presentation exceptions, asserting the fence and restoration are already complete inside those callbacks and later teardown still executes. A pending restore plus adapter failure also prevents reset. This does not execute native APIs and does not establish runtime acceptance.

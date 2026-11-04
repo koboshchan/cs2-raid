@@ -59,3 +59,19 @@ public sealed class RaidBuyOwnership
     public bool Allows(int generation,bool window) => !Blocked&&Owned&&generation==Generation&&window;
     private static void SafeReport(Action<Exception> report,Exception ex){try{report(ex);}catch{/* keep fence closed */}}
 }
+
+
+// Production StopGameplay's orchestration, also run with injected adapter failures.
+// No native or financial operation can precede admission/ownership invalidation.
+public static class RaidGameplayStop
+{
+    public static void Run(RaidBuyOwnership owner,Action stopAdmission,
+        Action restoreBuy,Func<bool> pending,Action<Exception> report,params Action[] teardown){
+        try{
+            stopAdmission();
+        }finally{
+            owner.Stop(restoreBuy,pending,report);
+        }
+        TestModeState.FinalizeAll(report,teardown);
+    }
+}

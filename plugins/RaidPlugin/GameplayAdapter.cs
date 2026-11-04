@@ -58,7 +58,7 @@ public sealed partial class RaidPlugin
         AddCommand("css_cashout","Cash in from SSG",(p,c)=>BeginCashIn(p,c.ArgCount==2?c.GetArg(1):""));
         RegisterListener<Listeners.OnEntityTakeDamagePre>(Damage);
         RegisterListener<Listeners.OnTick>(GameplayTick);
-        RegisterListener<Listeners.OnMapStart>(_=>{AbandonExpiredSpread();spreadMapEnded=false;StopGameplay();game=new();});
+        RegisterListener<Listeners.OnMapStart>(_=>{StopGameplay();AbandonExpiredSpread();spreadMapEnded=false;game=new();});
         RegisterListener<Listeners.OnMapEnd>(()=>{try{StopGameplay();}finally{spreadMapEnded=true;AbandonExpiredSpread();}});
         RegisterEventHandler<EventRoundStart>((e,i)=>{ResetLobby();return HookResult.Continue;});
         RegisterEventHandler<EventPlayerDisconnect>((e,i)=>{if(Human(e.Userid))game.Leave(Id(e.Userid));return HookResult.Continue;},HookMode.Pre);
@@ -398,10 +398,23 @@ public sealed partial class RaidPlugin
     }
     private void StopGameplay()
     {
-        InvalidateFinancialMatch();
-        if(sessionLoaded)foreach(var p in Utilities.GetPlayers().Where(Human)){if(IsFinancialActorBlocked(Id(p)))TryIsolateFinancialActor(p);else if(FinancialFrozen(Id(p)))HoldFinancialInventory(p);else SetPresentation(p,false,false);}
-        raidBuyOwnership.Stop(CleanupRaidBuyFailure,()=>raidBuyBaselines.Count!=0,RaidBuyError);RestoreSpread();ClearTonightMatch();ClearPricing();sessionLoaded=false;ClearPartnerVisuals();ClearLoot();observedWeapons.Clear();
-        foreach(var (name,value) in savedCvars)RestoreCvar(name,value);
-        savedCvars.Clear();
+        var wasLoaded=sessionLoaded;
+        RaidGameplayStop.Run(raidBuyOwnership,()=>sessionLoaded=false,
+            CleanupRaidBuyFailure,()=>raidBuyBaselines.Count!=0,RaidBuyError,
+            InvalidateFinancialMatch,
+            ()=>{
+                if(!wasLoaded)return;
+                foreach(var p in Utilities.GetPlayers().Where(Human)){
+                    try{if(IsFinancialActorBlocked(Id(p)))TryIsolateFinancialActor(p);else if(FinancialFrozen(Id(p)))HoldFinancialInventory(p);else SetPresentation(p,false,false);}
+                    catch(Exception ex){RaidBuyError(ex);}
+                }
+            },
+            RestoreSpread,ClearTonightMatch,ClearPricing,ClearPartnerVisuals,ClearLoot,observedWeapons.Clear,
+            ()=>{
+                foreach(var (name,value) in savedCvars.ToArray()){
+                    try{RestoreCvar(name,value);savedCvars.Remove(name);}
+                    catch(Exception ex){RaidBuyError(ex);}
+                }
+            });
     }
 }
