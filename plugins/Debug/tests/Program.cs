@@ -207,7 +207,7 @@ var clock=new PreviewClock(0,15);
 Check(clock.Tick(0,0,true,true,"css")==null,"outside invisible");
 Check(clock.Remaining(4000)==11,"outside clock advances");
 Check(clock.Tick(4000,1,true,true,"css")!.Contains("00:11"),"reentry shortened box");
-Check(clock.Tick(4001,2,true,true,"css")!.Contains("#00FF00"),"real immediately green");
+Check(clock.Tick(4050,2,true,true,"css")!.Contains("#00FF00"),"real immediately green");
 Check(clock.Tick(5000,1,true,true,"css")!.Contains("[ 10 ]"),"ten bracket");
 Check(clock.Tick(14000,2,true,true,"css")!.Contains("[ 1 ]"),"one bracket");
 Check(clock.Tick(15000,2,true,true,"css")=="","zero clear");
@@ -276,13 +276,14 @@ Check(!cancelFirst.Available,"native cleanup failure invalidates availability be
 
 var dedupe=new PreviewClock(0,15);
 Check(dedupe.Tick(0,2,true,true,"classes")!=null,"first render");
-for(int ms=1;ms<1000;ms++)Check(dedupe.Tick(ms,2,true,true,"classes")==null,"same displayed second no resend");
+for(int ms=1;ms<200;ms++)Check(dedupe.Tick(ms,2,true,true,"classes")==null,"before HTML keepalive deadline");
+Check(dedupe.Tick(200,2,true,true,"classes")!=null,"same content required HTML keepalive");
 Check(dedupe.Tick(1000,2,true,true,"classes")!=null,"next second render");
-Check(dedupe.Tick(1001,1,true,true,"classes")!.Contains("#FF0000"),"immediate red");
-Check(dedupe.Tick(1002,1,true,true,"tags")!=null,"immediate style");
-Check(dedupe.Tick(1003,0,true,true,"tags")=="","exit immediate clear");
-Check(dedupe.Tick(1004,0,true,true,"tags")==null,"exit clear once");
-Check(dedupe.Tick(1005,2,true,true,"tags")!=null,"reenter immediate");
+Check(dedupe.Tick(1050,1,true,true,"classes")!.Contains("#FF0000"),"immediate red");
+Check(dedupe.Tick(1100,1,true,true,"tags")!=null,"immediate style");
+Check(dedupe.Tick(1101,0,true,true,"tags")=="","exit immediate clear");
+Check(dedupe.Tick(1102,0,true,true,"tags")==null,"exit clear once");
+Check(dedupe.Tick(1150,2,true,true,"tags")!=null,"reenter immediate");
 Check(dedupe.Tick(5000,2,true,true,"classes")!.Contains("[ 10 ]"),"shape boundary");
 foreach(var variant in new[]{"plain","tags","classes"})Check(PreviewArgs.Parse(["15",variant])!.Style==variant,"bounded matrix parser");
 Check(!PreviewClock.Markup(15,false,"classes").Contains("style="),"matrix no browser css");
@@ -345,3 +346,20 @@ worldTimer.Tick(0,2,true,true,"world");worldTimer.Tick(4000,0,true,true,"world")
 Check(worldTimer.Remaining(6000)==9,"world outside timer continues");
 Check(WorldProbeGeometry.Text(worldTimer.Remaining(6000),false)=="[ 9 ]\nExtracting","world reentry actual remaining");
 worldTimer.Clear(false);Check(!worldTimer.Owned,"world clock managed cancellation");
+
+foreach(var mode in new[]{"css","png","plain","tags","classes"}){
+ var renewClock=new PreviewClock(0,300,200);
+ Check(renewClock.Tick(0,2,true,true,mode)!=null,"HTML first "+mode);
+ Check(renewClock.Tick(199,2,true,true,mode)==null,"HTML deadline before "+mode);
+ Check(renewClock.Tick(200,2,true,true,mode)!=null,"HTML same content keepalive "+mode);
+ Check(renewClock.Tick(200,1,true,true,mode)==null,"HTML aggregate cap "+mode);
+ Check((renewClock.Tick(250,1,true,true,mode)!=null)==(mode!="plain"),"HTML pending latest color "+mode);
+ Check(renewClock.Tick(9000,1,true,true,mode)!=null,"HTML delayed tick single current send "+mode);
+ Check(renewClock.Tick(9000,1,true,true,mode)==null,"HTML no burst "+mode);
+ Check(!PreviewDismiss.ShouldRender(renewClock.Tick(9001,0,true,true,mode)),"HTML outside no reopen "+mode);
+ Check(!PreviewDismiss.ShouldRender(renewClock.Tick(9500,0,true,true,mode)),"HTML outside no renew "+mode);
+}
+var minRenew=new PreviewClock(0,300,1);minRenew.Tick(0,2,true,true,"css");
+Check(minRenew.Tick(99,2,true,true,"css")==null&&minRenew.Tick(100,2,true,true,"css")!=null,"HTML minimum100ms clamp");
+var maxRenew=new PreviewClock(0,300,9999);maxRenew.Tick(0,2,true,true,"css");
+Check(maxRenew.Tick(499,2,true,true,"css")==null&&maxRenew.Tick(500,2,true,true,"css")!=null,"HTML maximum500ms clamp");

@@ -62,7 +62,7 @@ public sealed partial class DebugPlugin
         if(Server.MapName!="df_spaceport_player_scale_raytrace"||!p!.PawnIsAlive||p.TeamNum<2||p.PlayerPawn.Value is not {IsValid:true}){
             c.ReplyToCommand("Requires correct map and current living T/CT pawn.");return;
         }
-        previews[p.SteamID]=new(p,p.Handle,p.PlayerPawn.Raw,new PreviewClock(Environment.TickCount64,a.Seconds),a.Style);
+        previews[p.SteamID]=new(p,p.Handle,p.PlayerPawn.Raw,new PreviewClock(Environment.TickCount64,a.Seconds,Config.ExtractHudHtmlKeepaliveMs),a.Style);
         c.ReplyToCommand(a.Style=="world"?"WORLD PROBE: world-visible, NOT private. Stops rendering if another human is present. Upper-view placement/appearance unverified. !extracthud stop removes owned entity.":a.Style=="alert"?"Private per-player alert probe started. Alert lifetime/dismissal and appearance unverified; no raid or money changes.":"Private live-position HTML capability probe started. CSS/image/layout support unverified; no raid timer or money changes.");
     }
     private void TickPreviews(){

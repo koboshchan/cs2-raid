@@ -17,10 +17,12 @@ public sealed class PreviewClock
 {
     public long End {get;}
     public bool Owned {get;private set;}
-    private long next;
+    private long keepaliveDeadline;
+    private long lastDispatch=long.MinValue/2;
+    private readonly int htmlKeepaliveMs;
     private int color;
     private string? lastMarkup;
-    public PreviewClock(long now,int seconds){End=now+seconds*1000L;}
+    public PreviewClock(long now,int seconds,int htmlKeepaliveMs=200){End=now+seconds*1000L;this.htmlKeepaliveMs=Math.Clamp(htmlKeepaliveMs,100,500);}
     // Same embedded release-qualified JSON authority as Raid, no independently rounded HUD bounds.
     private static readonly System.Text.Json.JsonDocument ZoneProfile=System.Text.Json.JsonDocument.Parse(
         typeof(PreviewClock).Assembly.GetManifestResourceStream("SpaceportZoneProfile")
@@ -40,9 +42,14 @@ public sealed class PreviewClock
     public string? Tick(long now,int zone,bool valid,bool channel,string style){
         if(!valid||!channel||zone==0||now>=End)return Clear(channel);
         var markup=Markup(Remaining(now),zone==1,style);
-        // Content changes are immediate; unchanged content renews only at Duration2 minus0.5s.
-        if(Owned&&lastMarkup==markup&&now<next)return null;
-        Owned=true;next=now+1500;color=zone;lastMarkup=markup;
+        // Requested native Duration2 is not evidence of actual client lifetime.
+        // Separate changed content from empirical HTML renewal; cap aggregate sends to20/s.
+        var html=style!="alert"&&style!="world";
+        var changed=!Owned||lastMarkup!=markup;
+        var renew=html&&now>=keepaliveDeadline;
+        if(!changed&&!renew)return null;
+        if(html&&now-lastDispatch<50)return null; // No catch-up burst; next tick uses current content.
+        Owned=true;lastDispatch=now;keepaliveDeadline=now+htmlKeepaliveMs;color=zone;lastMarkup=markup;
         return markup;
     }
     public static string Markup(int n,bool red,string style){

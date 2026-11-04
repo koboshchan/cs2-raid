@@ -17,6 +17,7 @@ public sealed class DebugConfig : BasePluginConfig
     public string ExtractHudPrivateTarget {get;set;}="";
     public string ExtractHudRelease {get;set;}="";
     public bool ExtractHudExclusive {get;set;}
+    public int ExtractHudHtmlKeepaliveMs {get;set;}=200;
 
     // Opt-in only for isolated LAN map tests. Never enable on a public server.
     public bool EveryoneIsAdmin { get; set; } = false;
@@ -26,7 +27,7 @@ public sealed class DebugConfig : BasePluginConfig
 public sealed partial class DebugPlugin : BasePlugin, IPluginConfig<DebugConfig>
 {
     public override string ModuleName => "Map Debug";
-    public override string ModuleVersion => "0.1.4-world.1";
+    public override string ModuleVersion => "0.1.4-world.2";
     public override string ModuleAuthor => "koboshchan";
     public override string ModuleDescription => "Debug economy and durable map issue reports";
     public DebugConfig Config { get; set; } = new();
