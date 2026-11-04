@@ -198,7 +198,7 @@ try
 }
 finally { Directory.Delete(root, true); }
 Console.WriteLine($"ALL {checks} CHECKS PASSED");
-Check(PreviewArgs.Parse([])==new PreviewArgs(300,"plain",false),"preview default");
+Check(PreviewArgs.Parse([])==new PreviewArgs(300,"alert",false),"preview default");
 foreach(var bad in new[]{new[]{"red"},new[]{"15","red"},new[]{"plain","tags","classes"},new[]{"15","16"},new[]{"0"},new[]{"3601"},new[]{"stop","css"}})
  Check(PreviewArgs.Parse(bad)==null,"invalid preview args rejected");
 Check(PreviewArgs.Parse(["15","png"])==null&&PreviewArgs.Parse(["15","css"])==null,"retired backgrounds rejected no fallback");
@@ -406,3 +406,9 @@ foreach(var textStyle in new[]{"plain","tags","classes"}){
     var markup=PreviewClock.Markup(180,false,textStyle);
     Check(!markup.Contains("<img")&&!markup.Contains("<div")&&!markup.Contains("background")&&!markup.Contains("data:"),"text-only no images/background");
 }
+
+Check(PreviewArgs.Parse(["15"])==new PreviewArgs(15,"alert",false),"final fallback duration-only selects alert");
+Check(PreviewArgs.Parse(["15","alert"])!.Style=="alert","final fallback explicit alert supported");
+Check(PreviewArgs.Parse(["15","world"])!.Style=="world","legacy world explicit only no silent selection");
+Check(PreviewArgs.Parse(["15","css"])==null&&PreviewArgs.Parse(["15","png"])==null,"final fallback never retired backgrounds");
+Check(PreviewClock.Markup(15,false,"alert")=="EXTRACT 00:15 Extracting"&&PreviewClock.Markup(15,true,"alert")=="WARNING 00:15 Extracting","alert state expressed in words not colors");

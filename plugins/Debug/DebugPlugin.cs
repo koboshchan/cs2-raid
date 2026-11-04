@@ -55,7 +55,7 @@ public sealed partial class DebugPlugin : BasePlugin, IPluginConfig<DebugConfig>
     public override void Load(bool hotReload)
     {
         loaded = true;
-        AddCommand("css_extracthud", "Private probe: !extracthud [seconds] [css|png] or stop", ExtractHudCommand);
+        AddCommand("css_extracthud", "Debug alert default: !extracthud [seconds] [alert|plain|tags|classes|world] or stop", ExtractHudCommand);
         AddCommand("css_banner", "Private native banner: win|lose|tie gold|blue|red|gray", ColoredBannerCommand);
         AddCommand("css_testwin", "Preview a private native round-win banner", (p, c) => BannerCommand(p, c, BannerResult.Win));
         AddCommand("css_testlose", "Preview a private native round-loss banner", (p, c) => BannerCommand(p, c, BannerResult.Lose));

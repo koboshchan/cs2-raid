@@ -3,8 +3,8 @@ namespace Cs2Debug;
 public sealed record PreviewArgs(int Seconds,string Style,bool Stop)
 {
     public static PreviewArgs? Parse(string[] args){
-        if(args.Length==1&&args[0]=="stop")return new(0,"plain",true);
-        int seconds=300;string style="plain";bool number=false,variant=false;
+        if(args.Length==1&&args[0]=="stop")return new(0,"alert",true);
+        int seconds=300;string style="alert";bool number=false,variant=false;
         foreach(var a in args){
             if(int.TryParse(a,NumberStyles.None,CultureInfo.InvariantCulture,out var n)&&!number&&n>=1&&n<=3600){seconds=n;number=true;}
             else if((a=="plain"||a=="tags"||a=="classes"||a=="alert"||a=="world")&&!variant){style=a;variant=true;}
