@@ -12,6 +12,20 @@ public sealed class TestFlow
     };
     public Dictionary<string,int> Wallet { get; }=[];
     public List<string> Ledger { get; }=[];
+    // Separate fixture-only native enemies, never raid members or economic actors.
+    public const int BotCapacity=32;
+    public Dictionary<string,bool> Bots {get;}=[];
+    public bool EnrollBot(string id,bool scoped,bool lobby){
+        if(!scoped||!lobby||!id.StartsWith("bot:",StringComparison.Ordinal)||Bots.ContainsKey(id)||Bots.Count>=BotCapacity)return false;
+        Bots.Add(id,true);return true;
+    }
+    public bool BotLiving(string id)=>Bots.GetValueOrDefault(id);
+    public void KillBot(string id){if(Bots.ContainsKey(id))Bots[id]=false;}
+    public bool EnemyDamage(string from,string to){
+        if(Teams.Phase!=GamePhase.Active)return false;
+        return from!=to&&(BotLiving(from)||Teams.Living(from))&&(BotLiving(to)||Teams.Living(to))&&
+            (Bots.ContainsKey(from)||Bots.ContainsKey(to)||Teams.CanDamage(from,to));
+    }
     public bool Manual {get;set;}
     public bool Join(string id){if(Teams.Phase!=GamePhase.Lobby||!Teams.Join(id))return false;Wallet.Add(id,Credits);return true;}
     // Single game-thread transaction; native setup occurs only AFTER all policy stores agree.

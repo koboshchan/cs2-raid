@@ -159,6 +159,27 @@ static class TestModeTests
             lifecycle.Stop();lifecycle.Start(true);
         }
         lifecycle.Stop();Check(!lifecycle.RebuildRound(true,true,false)); // explicit OFF/map end never auto-ON
+        var botflow=new TestFlow();var botmode=new TestModeState();botmode.Start(true);
+        Check(!botflow.EnrollBot("bot:1",false,true)&&!botflow.EnrollBot("bot:1",true,false));
+        Check(!botflow.EnrollBot("human",true,true));
+        for(int i=0;i<32;i++)Check(botflow.EnrollBot("bot:"+i,true,true));
+        Check(!botflow.EnrollBot("bot:33",true,true)&&!botflow.EnrollBot("bot:1",true,true));
+        Check(botflow.Wallet.Count==0&&botflow.Teams.Players.Count==0);
+        Check(botflow.Enroll(botmode,"h1",true)&&botflow.Enroll(botmode,"h2",true)&&botflow.Enroll(botmode,"h3",true));
+        botflow.Teams.ShootRequest("h1","h2");botflow.Teams.ShootRequest("h2","h1");botflow.Teams.Solo("h3");
+        var bt=DateTimeOffset.UtcNow;botflow.Tick(bt,true);
+        Check(botflow.Teams.Phase==GamePhase.CharacterSelect);
+        foreach(var h in new[]{"h1","h2","h3"})botflow.Teams.SelectCharacter(h,1);
+        botflow.Tick(bt,true);Check(botflow.Teams.Phase==GamePhase.Buy);
+        Check(!botflow.Spend("bot:1","glock"));
+        botflow.Tick(bt.AddSeconds(31),true);botflow.Tick(bt.AddSeconds(37),true);botflow.Tick(bt.AddSeconds(48),true);
+        Check(botflow.Teams.Phase==GamePhase.Active);
+        Check(botflow.EnemyDamage("h1","bot:1")&&botflow.EnemyDamage("bot:1","h1"));
+        Check(!botflow.EnemyDamage("h1","h2")&&!botflow.EnemyDamage("h2","h1"));
+        Check(botflow.EnemyDamage("h1","h3")&&botflow.EnemyDamage("bot:1","bot:2"));
+        botflow.KillBot("bot:1");Check(!botflow.BotLiving("bot:1")&&!botflow.EnemyDamage("bot:1","h1")&&!botflow.EnemyDamage("h1","bot:1"));
+        Check(botflow.Wallet.Count==3&&botflow.Teams.Players.Count==3&&botmode.Participants.Count==3);
+        var resetbots=new TestFlow();Check(resetbots.EnrollBot("bot:1",true,true)&&resetbots.BotLiving("bot:1"));
         var oldServer=Environment.GetEnvironmentVariable("RAID_TEST_SERVER");
         var oldMoney=Environment.GetEnvironmentVariable("RAID_FINANCIAL_ENABLED");
         var oldScaffold=Environment.GetEnvironmentVariable("RAID_ENABLE_SCAFFOLD");

@@ -31,6 +31,17 @@ public sealed partial class RaidPlugin
         ConVar<bool>.Find("sv_lan")?.Value==true,ConVar<int>.Find("hostport")?.Value??0,
         ConVar<string>.Find("ip")?.Value);
     private bool TestParticipant(CCSPlayerController? p)=>Human(p)&&testMode.Participants.ContainsKey(Id(p))&&testControllers.GetValueOrDefault(Id(p))==p.EntityHandle.Raw;
+    private static string BotId(CCSPlayerController p)=>"bot:"+p.EntityHandle.Raw;
+    private bool TestBot(CCSPlayerController? p)=>TestServer&&p is {IsValid:true,IsBot:true}&&testFlow.Bots.ContainsKey(BotId(p));
+    private CCSPlayerController? TestController(CBaseEntity entity)=>Utilities.GetPlayers().FirstOrDefault(p=>p.IsValid&&(p.EntityHandle.Raw==entity.EntityHandle.Raw||p.PlayerPawn.Raw==entity.EntityHandle.Raw));
+    private void AutoEnrollTestBots(){
+        if(!testMode.AutoEnrollAllowed(TestServer,TestScope(),true,testUnloaded))return;
+        foreach(var p in Utilities.GetPlayers().Where(p=>p.IsValid&&p.IsBot)){
+            if(!testFlow.EnrollBot(BotId(p),true,true))continue;
+            if(!p.PawnIsAlive){if(p.TeamNum is not (2 or 3))p.SwitchTeam(CsTeam.CounterTerrorist);p.Respawn();}
+            else{TestHealth(p);ApplyTestPresentation(p);}
+        }
+    }
     private sealed class TestStartup { public bool DefaultEnabled {get;set;} }
     private void RegisterTestMode()
     {
@@ -177,6 +188,16 @@ public sealed partial class RaidPlugin
             return HookResult.Continue;
         });
         RegisterEventHandler<EventPlayerSpawn>((e,i)=>{
+            if(testMode.NativeActive&&TestBot(e.Userid)){
+                var raw=e.Userid!.EntityHandle.Raw;var generation=testMode.Generation;
+                Server.NextFrame(()=>{
+                    if(!testMode.NativeActive||!testMode.CallbackAllowed(generation,testUnloaded)||!TestScope())return;
+                    var bot=Utilities.GetPlayers().FirstOrDefault(p=>p.IsValid&&p.EntityHandle.Raw==raw);
+                    if(!TestBot(bot))return;
+                    if(!testFlow.BotLiving(BotId(bot!))){bot!.ChangeTeam(CsTeam.Spectator);return;}
+                    TestHealth(bot!);ApplyTestPresentation(bot!);
+                });
+            }
             if(testMode.NativeActive&&TestParticipant(e.Userid)){
                 var id=Id(e.Userid!);var generation=testMode.Generation;
                 Server.NextFrame(()=>{
@@ -192,11 +213,13 @@ public sealed partial class RaidPlugin
             }return HookResult.Continue;
         });
         RegisterEventHandler<EventPlayerDeath>((e,i)=>{
+            if(testMode.NativeActive&&TestBot(e.Userid)&&testMode.Phase==TestModeState.Stage.Active)testFlow.KillBot(BotId(e.Userid!));
             if(testMode.NativeActive&&TestParticipant(e.Userid)){
                 var p=e.Userid!;testFlow.Teams.Kill(Id(p),null);if(Location(p) is {} pos)testDeaths[Id(p)]=pos;testRoamed.Remove(Id(p));
             }return HookResult.Continue;
         },HookMode.Pre);
         RegisterEventHandler<EventPlayerDisconnect>((e,i)=>{
+            if(TestBot(e.Userid)){try{RestoreTestPlayer(e.Userid!);}finally{testFlow.Bots.Remove(BotId(e.Userid!));}}
             if(TestParticipant(e.Userid)){var id=Id(e.Userid!);try{RestoreTestPlayer(e.Userid!);}finally{testMode.Leave(id);testFlow.Leave(id);testControllers.Remove(id);testDeaths.Remove(id);testRoamed.Remove(id);}}
             return HookResult.Continue;
         },HookMode.Pre);
@@ -219,7 +242,7 @@ public sealed partial class RaidPlugin
             QueueTestEnrollment();
         }catch{StopTestMode();throw;}
     }
-    private string TestStatus()=>$"TEST {(testMode.Enabled?"ON":"OFF")} | MONEY {(TestServer?"HARD OFF":"production gates")} | phase {testMode.Phase} | {testMode.Participants.Count} opted-in | 200HP saved-pawns={testPawns.Count} / spread 0.5 baselines={spreadOriginals.Count} shared SERVER-WIDE / CHASE living duo else ROAMING death+64 observers={testObservers.Count} | KIT STUB labels only, NO DeltaOps | custom duo immunity / same-side FFA (native QA pending) | native-map/captured insertion, finite TEST credits only; no loot/SSG/session | flow={(testFlow.Manual?"MANUAL QA":"AUTO")} / spawns={testSpawns.Count} / ledger={testFlow.Ledger.Count} pending-cvars={testCvars.Count} | generation {testMode.Generation}";
+    private string TestStatus()=>$"TEST {(testMode.Enabled?"ON":"OFF")} | MONEY {(TestServer?"HARD OFF":"production gates")} | phase {testMode.Phase} | {testMode.Participants.Count} opted-in | 200HP saved-pawns={testPawns.Count} / spread 0.5 baselines={spreadOriginals.Count} shared SERVER-WIDE / CHASE living duo else ROAMING death+64 observers={testObservers.Count} | solo-enemy bots={testFlow.Bots.Count}/{TestFlow.BotCapacity} (no wallet/selection) | KIT STUB labels only, NO DeltaOps | custom duo immunity / same-side FFA (native QA pending) | native-map/captured insertion, finite TEST credits only; no loot/SSG/session | flow={(testFlow.Manual?"MANUAL QA":"AUTO")} / spawns={testSpawns.Count} / ledger={testFlow.Ledger.Count} pending-cvars={testCvars.Count} | generation {testMode.Generation}";
     private void TestCvar<T>(string name,T value){
         var cv=ConVar<T>.Find(name)??throw new InvalidOperationException("Missing "+name);
         TestModeState.SetCaptured(testCvars,name,()=>cv.Value,
@@ -236,7 +259,7 @@ public sealed partial class RaidPlugin
     }
     private void ApplyTestPhase(){
         if(testMode.Phase==TestModeState.Stage.Closed){CleanupTestNative();return;}
-        foreach(var p in Utilities.GetPlayers().Where(TestParticipant)) {
+        foreach(var p in Utilities.GetPlayers().Where(p=>TestParticipant(p)||TestBot(p))) {
             ApplyTestPresentation(p);
             if(testMode.Phase==TestModeState.Stage.Freeze)TestHealth(p);
         }
@@ -264,7 +287,7 @@ public sealed partial class RaidPlugin
         var generation=testMode.Generation;
         Server.NextFrame(()=>{
             if(!testMode.CallbackAllowed(generation,testUnloaded))return;
-            AutoEnrollTestHumans();
+            AutoEnrollTestHumans();AutoEnrollTestBots();
         });
     }
     private void AutoEnrollTestHumans(){
@@ -340,7 +363,7 @@ public sealed partial class RaidPlugin
     private HookResult TestDamage(CBaseEntity entity,CTakeDamageInfo info){
         if(!TestServer||!testMode.NativeActive)return HookResult.Continue;
         if(!TestScope()){StopTestMode();return HookResult.Continue;}
-        var victim=Controller(entity);
+        var victim=TestController(entity);
         // Unlike production Controller(), resolve ALL controllers, including bots and projectile owners.
         CCSPlayerController? ResolveActor(CBaseEntity? source){
             var visited=new HashSet<uint>();
@@ -357,19 +380,20 @@ public sealed partial class RaidPlugin
         // Unknown/map/projectile entities without resolvable player ownership fail closed.
         bool World(CBaseEntity? source)=>source==null||source is {IsValid:true,DesignerName:"worldspawn"};
         var actualWorld=attacker==null&&World(damageSource)&&World(inflictor);
-        var enrolledVictim=TestParticipant(victim);var enrolledAttacker=TestParticipant(attacker);
+        var enrolledVictim=TestParticipant(victim)||TestBot(victim);var enrolledAttacker=TestParticipant(attacker)||TestBot(attacker);
         if(!enrolledVictim&&!enrolledAttacker)return HookResult.Continue;
         // No cross-fixture damage (including bots/unenrolled humans). World damage only in Active.
         if(!enrolledVictim || !enrolledAttacker&&!actualWorld)return HookResult.Handled;
         if(testMode.Phase==TestModeState.Stage.Lobby){
-            if(enrolledAttacker&&info.Damage>0&&(info.BitsDamageType&DamageTypes_t.DMG_BULLET)!=0){
+            if(TestParticipant(attacker)&&TestParticipant(victim)&&info.Damage>0&&(info.BitsDamageType&DamageTypes_t.DMG_BULLET)!=0){
                 if(testFlow.Teams.ShootRequest(Id(attacker!),Id(victim!))){
                     SyncTestTeams();TestAnnounce(SafeName(attacker!.PlayerName)+" and "+SafeName(victim!.PlayerName)+" duo ready.");
                 }else attacker!.PrintToChat("TEST team request sent if both unpaired; the other player must shoot back.");
             }return HookResult.Handled;
         }
         return TestFlow.DamageAllowed(testMode.Phase==TestModeState.Stage.Active,enrolledVictim,enrolledAttacker,actualWorld,
-            testFlow.Teams.Living(Id(victim!)),enrolledAttacker&&testFlow.Teams.CanDamage(Id(attacker!),Id(victim!)))
+            TestBot(victim)?testFlow.BotLiving(BotId(victim!)):testFlow.Teams.Living(Id(victim!)),
+            enrolledAttacker&&testFlow.EnemyDamage(TestBot(attacker)?BotId(attacker!):Id(attacker!),TestBot(victim)?BotId(victim!):Id(victim!)))
             ?HookResult.Continue:HookResult.Handled;
     }
     private void TestSecond(){
@@ -378,7 +402,7 @@ public sealed partial class RaidPlugin
             if(!TestScope()||sessionLoaded){StopTestMode();return;}
             if(testFlow.Manual)return;
             // Full-connect may precede Steam authorization; retry only in Lobby, no mid-match credit grants.
-            AutoEnrollTestHumans();
+            AutoEnrollTestHumans();AutoEnrollTestBots();
             if(!testMode.NativeActive)return;
             var live=testMode.Participants.Keys.All(id=>Find(id) is {} p&&TestParticipant(p)&&p.PawnIsAlive);
             // Do not let readiness/selection clocks start while an enrolled player cannot spawn.
@@ -468,6 +492,6 @@ public sealed partial class RaidPlugin
     private void StopTestMode(){
         testMode.Stop(); // Fence all callbacks before touching native resources.
         try{CleanupTestNative();}
-        finally{testControllers.Clear();testDeaths.Clear();testRoamed.Clear();testSpawns.Clear();}
+        finally{testFlow.Bots.Clear();testControllers.Clear();testDeaths.Clear();testRoamed.Clear();testSpawns.Clear();}
     }
 }
