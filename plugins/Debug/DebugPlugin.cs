@@ -19,7 +19,7 @@ public sealed class DebugConfig : BasePluginConfig
 public sealed class DebugPlugin : BasePlugin, IPluginConfig<DebugConfig>
 {
     public override string ModuleName => "Map Debug";
-    public override string ModuleVersion => "0.1.0";
+    public override string ModuleVersion => "0.1.1";
     public override string ModuleAuthor => "koboshchan";
     public override string ModuleDescription => "Debug economy and durable map issue reports";
     public DebugConfig Config { get; set; } = new();
@@ -28,6 +28,7 @@ public sealed class DebugPlugin : BasePlugin, IPluginConfig<DebugConfig>
     private readonly ReportLimiter textureLimiter = new();
     private readonly ReportLimiter listLimiter = new();
     private readonly ReportLimiter resetLimiter = new();
+    private readonly ReportLimiter bannerLimiter = new();
     private ReportStore? store;
     private readonly HashSet<ulong> grantedAdmins = [];
     private bool loaded;
@@ -46,6 +47,9 @@ public sealed class DebugPlugin : BasePlugin, IPluginConfig<DebugConfig>
     public override void Load(bool hotReload)
     {
         loaded = true;
+        AddCommand("css_testwin", "Preview a private native round-win banner", (p, c) => BannerCommand(p, c, BannerResult.Win));
+        AddCommand("css_testlose", "Preview a private native round-loss banner", (p, c) => BannerCommand(p, c, BannerResult.Lose));
+        AddCommand("css_testdraw", "Preview a private native round-draw banner", (p, c) => BannerCommand(p, c, BannerResult.Draw));
         AddCommand("css_report", "Save a map issue at your current position", ReportCommand);
         AddCommand("css_reports", "List latest reports (1-20, default 5)", ReportsCommand);
         AddCommand("css_markreset", "Reset your two AK ladder shots", (p, c) =>
@@ -137,7 +141,7 @@ public sealed class DebugPlugin : BasePlugin, IPluginConfig<DebugConfig>
     }
     private void ClearState()
     {
-        shots.Clear(); reportLimiter.Clear(); textureLimiter.Clear(); listLimiter.Clear(); resetLimiter.Clear();
+        shots.Clear(); reportLimiter.Clear(); textureLimiter.Clear(); listLimiter.Clear(); resetLimiter.Clear(); bannerLimiter.Clear();
     }
     private static bool Human(CCSPlayerController? p) => p is { IsValid: true, IsBot: false } && p.SteamID != 0;
     private ShotTracker Tracker(CCSPlayerController p)
@@ -154,13 +158,55 @@ public sealed class DebugPlugin : BasePlugin, IPluginConfig<DebugConfig>
     {
         if (grantedAdmins.Remove(id)) AdminManager.RemovePlayerPermissions(new SteamID(id), "@css/root");
         shots.Remove(id); reportLimiter.Remove(id);
-        textureLimiter.Remove(id); listLimiter.Remove(id); resetLimiter.Remove(id);
+        textureLimiter.Remove(id); listLimiter.Remove(id); resetLimiter.Remove(id); bannerLimiter.Remove(id);
     }
     private bool Ready(CCSPlayerController? p, CommandInfo c)
     {
         if (!active) { c.ReplyToCommand("Map Debug is disabled."); return false; }
         if (!Human(p)) { c.ReplyToCommand("A connected human player is required."); return false; }
         return true;
+    }
+    private void BannerCommand(CCSPlayerController? p, CommandInfo c, BannerResult result)
+    {
+        if (!Ready(p, c)) return;
+        if (!RoundBanner.TryCreate(p!.TeamNum, result, out var banner))
+        { c.ReplyToCommand("Join T or CT before testing a round banner."); return; }
+        if (!bannerLimiter.Allow(p.SteamID, Environment.TickCount64, 3000))
+        { c.ReplyToCommand("Wait three seconds between banner previews."); return; }
+        try
+        {
+            // Direct client delivery only: never FireEvent(), TerminateRound(), or change rules.
+            var end = new EventRoundEnd(true);
+            try
+            {
+                end.Winner = banner.Winner;
+                end.Reason = banner.Reason;
+                end.Message = banner.Message;
+                end.Nomusic = 1;
+                end.PlayerCount = 1;
+                end.Time = 0;
+                end.Legacy = 0;
+                end.FireEventToClient(p);
+            }
+            finally { end.Free(); } // FireEventToClient does NOT own/free the event.
+            var panel = new EventCsWinPanelRound(true);
+            try
+            {
+                panel.FinalEvent = 0; // Not a match-final panel.
+                panel.FunfactToken = "";
+                panel.ShowTimerAttack = false;
+                panel.ShowTimerDefend = false;
+                panel.TimerTime = 0;
+                panel.FireEventToClient(p);
+            }
+            finally { panel.Free(); }
+            c.ReplyToCommand($"Private {result.ToString().ToLowerInvariant()} preview sent. The real round is unchanged.");
+        }
+        catch (Exception e)
+        {
+            Logger.LogError(e, "Private round banner preview failed.");
+            c.ReplyToCommand("Banner preview failed; check the Debug plugin log.");
+        }
     }
     private static bool TryPose(CCSPlayerController p, out Point position, out Point angles)
     {

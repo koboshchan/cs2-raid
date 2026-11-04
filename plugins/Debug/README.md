@@ -19,3 +19,12 @@ bullet_impact does not expose a hit entity or projectile ID. The plugin saves th
 The pure test executable is tests/Debug.Tests.csproj and produces Debug.Tests.dll under bin/Release/net10.0. It links DebugCore.cs directly, uses no external packages and does not execute native server APIs. It covers shot correlation, penetration and stale-event rejection, reset behavior, validation, rate limits, override baseline policy, failed first-point pairing, flushed JSONL reopen/recovery and unavailable-storage handling. Both projects compile against the pinned builder image with warnings treated as errors.
 
 EveryoneIsAdmin defaults to false. Enable it only on the isolated LAN test server to temporarily grant authenticated human players @css/root. Existing root admins are not changed. Grants owned by Debug are removed on disconnect, config reload or unload and never written to admins.json. CounterStrikeSharp supplies permissions, not general admin commands.
+
+
+## Private native round-banner previews
+
+Chat commands `!testwin`, `!testlose`, and `!testdraw` require an enabled Debug plugin and a human on T or CT. Each sends a synthetic `round_end` followed by `cs_win_panel_round` directly to the invoking player, using `FireEventToClient`. Win uses their current native team; loss uses the opposite team; draw uses winner 0/reason 10. Both manually created events are freed after sending. Three-second per-player cooldown.
+
+These commands do not broadcast events, end the real round, change scores, change teams, or write game rules. Client rendering is experimental until checked in game. Test all three while another player watches, verify only the invoker sees the banner and the real timer, scores and movement continue. Reconnect if a client's cosmetic panel gets stuck. The server may replicate real round-end state over the fake preview; no shared state is changed to force the UI.
+
+API references: https://docs.cssharp.dev/api/CounterStrikeSharp.API.Core.EventRoundEnd.html and https://docs.cssharp.dev/api/CounterStrikeSharp.API.Modules.Events.GameEvent.html .

@@ -158,3 +158,24 @@ public sealed class ReportStore : IDisposable
     private void Fail(Exception e) { Failure = e.GetType().Name; Dispose(); }
     public void Dispose() { try { stream?.Dispose(); } catch (IOException) { } finally { stream = null; } }
 }
+
+
+// CS2 native teams are 2 (T) and 3 (CT); 0 is the draw winner.
+// Event reasons match CounterStrikeSharp RoundEndReason (CTsWin=8, TerroristsWin=9, RoundDraw=10).
+public enum BannerResult { Win, Lose, Draw }
+public readonly record struct RoundBanner(int Winner, int Reason, string Message)
+{
+    public static bool TryCreate(int nativeTeam, BannerResult result, out RoundBanner banner)
+    {
+        banner = default;
+        if (nativeTeam is not (2 or 3) || !Enum.IsDefined(result)) return false;
+        var winner = result == BannerResult.Draw ? 0 : result == BannerResult.Win ? nativeTeam : 5 - nativeTeam;
+        banner = winner switch
+        {
+            2 => new(2, 9, "#SFUI_Notice_Terrorists_Win"),
+            3 => new(3, 8, "#SFUI_Notice_CTs_Win"),
+            _ => new(0, 10, "#SFUI_Notice_Round_Draw")
+        };
+        return true;
+    }
+}
