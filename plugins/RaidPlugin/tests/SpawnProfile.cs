@@ -42,7 +42,27 @@ public static class SpawnProfileTests
         var duo=new GameplayState();duo.Join("a");duo.Join("b");duo.ShootRequest("a","b");duo.ShootRequest("b","a");
         Check(!SpawnProfile.LayoutReady(duo.Players.Values));
         var solo=new GameplayState();solo.Join("a");solo.Solo("a");Check(SpawnProfile.LayoutReady(solo.Players.Values));
-        var legacy=new GameplayConfig();Check(legacy.Spawns.Length==0&&legacy.SpawnProfile==""&&legacy.MapRelease=="");
+        var zone=p.ExtractionZone!;
+        Check(zone.Valid&&zone.UnboundedZ);
+        Check(zone.MinX==1051.424683&&zone.MaxX==1266.525269&&zone.MinY==-6398.375488&&zone.MaxY==-5561.906738);
+        Check(zone==NativeExtractionZone.FromCorners(1266.525269,-5561.906738,1051.424683,-6398.375488));
+        Check(zone==NativeExtractionZone.FromCorners(1051.424683,-6398.375488,1266.525269,-5561.906738));
+        foreach(var x in new[]{zone.MinX,zone.MaxX})foreach(var y in new[]{zone.MinY,zone.MaxY})
+            foreach(var z in new[]{double.MinValue,-1e12,0,1e12,double.MaxValue})Check(zone.Contains(x,y,z));
+        Check(zone.Contains(zone.MinX,-6000,0));Check(zone.Contains(zone.MaxX,-6000,0));
+        Check(zone.Contains(1100,zone.MinY,0));Check(zone.Contains(1100,zone.MaxY,0));
+        Check(!zone.Contains(Math.BitDecrement(zone.MinX),-6000,0));Check(!zone.Contains(Math.BitIncrement(zone.MaxX),-6000,0));
+        Check(!zone.Contains(1100,Math.BitDecrement(zone.MinY),0));Check(!zone.Contains(1100,Math.BitIncrement(zone.MaxY),0));
+        foreach(var bad in new[]{double.NaN,double.PositiveInfinity,double.NegativeInfinity}){
+            Check(!zone.Contains(bad,-6000,0));Check(!zone.Contains(1100,bad,0));Check(!zone.Contains(1100,-6000,bad));
+        }
+        Check(SpawnProfile.Parse(JsonSerializer.Serialize(p)).ExtractionZone==zone);
+        Reject(json.Replace("\"unboundedZ\": true","\"unboundedZ\": false"));
+        Reject(json.Replace("1051.424683","1e400"));Reject(json.Replace("1266.525269","1000"));
+        // Legacy bounded radius and vertical distance are unchanged.
+        var legacy=new GameplayConfig{ExtractionCenter=new(0,0,0),ExtractionRadius=10};
+        Check(new Position(0,0,10).Within(legacy.ExtractionCenter,legacy.ExtractionRadius));
+        Check(!new Position(0,0,11).Within(legacy.ExtractionCenter,legacy.ExtractionRadius));Check(legacy.Spawns.Length==0&&legacy.SpawnProfile==""&&legacy.MapRelease=="");
         Check(!legacy.Enabled&&!legacy.NativeFlowVerified&&!legacy.CoordinatesConfirmed&&!legacy.FinancialNativeVerified);
         Check(!legacy.Ready(1));
         Console.WriteLine($"{checks} qualified spawn profile checks passed");

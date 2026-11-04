@@ -61,5 +61,12 @@
       "pitch": 0,
       "roll": 0
     }
-  ]
+  ],
+  "extractionZone": {
+    "minX": 1051.424683,
+    "maxX": 1266.525269,
+    "minY": -6398.375488,
+    "maxY": -5561.906738,
+    "unboundedZ": true
+  }
 }

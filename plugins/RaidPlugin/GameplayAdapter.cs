@@ -319,6 +319,10 @@ public sealed partial class RaidPlugin
     private bool InExtractionZone(string id)
     {
         if(!game.Living(id))return false;
+        // Explicit profile selection never falls back to an unrelated map trigger/sphere.
+        if(!string.IsNullOrEmpty(gameplayConfig.SpawnProfile))
+            return SpawnBindingReady && selectedSpawnProfile?.ExtractionZone is {} zone &&
+                Find(id) is {} player && Location(player) is {} native && zone.Contains(native.X,native.Y,native.Z);
         if(extractionTrigger!=null)return extractionTouching.Contains(id);
         return gameplayConfig.ExtractionCenter is {} center && gameplayConfig.ExtractionRadius>0 && Find(id) is {} p && Location(p) is {} pos && pos.Within(center,gameplayConfig.ExtractionRadius);
     }
