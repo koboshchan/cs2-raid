@@ -247,6 +247,7 @@ try{
         RegisterEventHandler<EventPlayerDeath>((e,i)=>{
             if(testMode.NativeActive&&TestBot(e.Userid)&&testMode.Phase==TestModeState.Stage.Active)testFlow.KillBot(BotId(e.Userid!));
             if(testMode.NativeActive&&testMode.Phase==TestModeState.Stage.Lobby&&(TestParticipant(e.Userid)||TestBot(e.Userid))){
+                QueueLobbyWeaponCleanup(e.Userid!);
                 var raw=e.Userid!.EntityHandle.Raw;var generation=testMode.Generation;
                 Server.NextFrame(()=>{
 try{
@@ -275,7 +276,7 @@ try{
         TestModeState.RequireIsolatedFixture(ModuleDirectory,
             Environment.GetEnvironmentVariable("RAID_PRODUCTION_STATE_PRESENT")=="1");
 
-        if(testUnloaded || spreadMapEnded || testPawns.Count!=0 || testObservers.Count!=0 || testCvars.Count!=0 || testWeapons.Count!=0 || TestServer&&spreadOriginals.Count!=0)
+        if(testUnloaded || spreadMapEnded || testPawns.Count!=0 || testObservers.Count!=0 || testCvars.Count!=0 || testCash.Count!=0 || testWeapons.Count!=0 || TestServer&&spreadOriginals.Count!=0)
             throw new InvalidOperationException("Unloaded or pending native cleanup. Retry off; inspect saved baseline counters.");
         if(sessionLoaded || PendingSettlement || linking.Count!=0 || gameplayConfig.Enabled)
             throw new InvalidOperationException("Production config/session or pending bridge conflicts. Disable production gameplay first.");
@@ -526,7 +527,7 @@ try{
     private void RestoreTestPlayer(CCSPlayerController p){
         // Each resource is isolated; raw handles include entity serials and never target replacements.
         var pawn=p.PlayerPawn.Raw;var observer=p.ObserverPawn.Raw;
-        RestoreTestPawns(pawn);RestoreTestObservers(observer);
+        RestoreTestPawns(pawn);RestoreTestObservers(observer);RestoreTestCash(p.EntityHandle.Raw);
     }
     private void RestoreTestPawns(uint? only=null){
         var entries=only is {} raw?testPawns.Where(x=>x.Key==raw).ToDictionary():testPawns;
@@ -554,7 +555,7 @@ try{
     }
     private void CleanupTestNative(){
         TestModeState.FinalizeAll(TestCleanupError,
-            ()=>RestoreTestPawns(),()=>RestoreTestObservers(),
+            ()=>RestoreTestPawns(),()=>RestoreTestObservers(),()=>RestoreTestCash(),
             ()=>{foreach(var raw in testWeapons.ToArray())try{if(new CHandle<CCSWeaponBase>(raw).Value is {IsValid:true} gun)gun.Remove();testWeapons.Remove(raw);}catch(Exception ex){try{TestCleanupError(ex);}catch{}}},
             ()=>{if(TestServer)TestModeState.RestoreEntries(spreadOriginals,(_,baseline)=>{
                 var modes=SpreadModes(baseline.Data);
