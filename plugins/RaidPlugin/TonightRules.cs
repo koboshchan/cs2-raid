@@ -24,3 +24,38 @@ public static class TonightRules
             ? new(2,9,"#SFUI_Notice_Terrorists_Win") : new(3,8,"#SFUI_Notice_CTs_Win");
     }
 }
+
+// Shared by the actual adapter and injected failure tests. Faults remain latched
+// after cleanup until an explicit reset successfully opens a fresh generation.
+public sealed class RaidBuyOwnership
+{
+    public bool Blocked { get; private set; }
+    public bool Owned { get; private set; }
+    public int Generation { get; private set; }
+    public bool Pending { get; private set; }
+    public bool BeginReset(Action restore,Func<bool> pending,Action<Exception> report){
+        Blocked=true;Owned=false;Generation++;
+        Cleanup(restore,pending,report);
+        if(Pending)return false;
+        Blocked=false;return true;
+    }
+    public bool Apply(Action setup,Action restore,Func<bool> pending,Action<Exception> report,bool ownsBuy){
+        if(Blocked)return false;
+        Owned=false; // admission closes before any native lookup, capture or write
+        try{setup();Owned=ownsBuy;return true;}
+        catch(Exception ex){
+            Blocked=true;Generation++;SafeReport(report,ex);
+            Cleanup(restore,pending,report);return false;
+        }
+    }
+    public void Cleanup(Action restore,Func<bool> pending,Action<Exception> report){
+        Owned=false;
+        try{restore();}catch(Exception ex){SafeReport(report,ex);}
+        Pending=pending();
+    }
+    public void Stop(Action restore,Func<bool> pending,Action<Exception> report){
+        Blocked=true;Owned=false;Generation++;Cleanup(restore,pending,report);
+    }
+    public bool Allows(int generation,bool window) => !Blocked&&Owned&&generation==Generation&&window;
+    private static void SafeReport(Action<Exception> report,Exception ex){try{report(ex);}catch{/* keep fence closed */}}
+}

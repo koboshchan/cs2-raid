@@ -24,6 +24,53 @@ public static class FlowTests
         Check(!g.ShootRequest("b","a"));Check(g.ShootRequest("a","b"));g.Tick(now,true);
         Check(g.Join("d"));Check(g.Phase==GamePhase.Lobby);Check(g.Solo("d"));g.Tick(now,true);
         g.Leave("b");Check(g.Players["a"].Team==null);Check(!g.Players.ContainsKey("b"));
+        // Execute the SAME ownership transaction as production with injected native failures.
+        foreach(var failure in new[]{"missing-rules","unsupported-type","capture","set","notify","restore"}){
+            var owner=new RaidBuyOwnership();var saved=new Dictionary<string,Action>();
+            int baseline=90,current=baseline,restores=0,reports=0;bool failRestore=failure=="restore";
+            void Report(Exception _){reports++;}
+            void Restore()=>TestModeState.RestoreEntries(saved,(_,f)=>f(),Report);
+            Check(owner.BeginReset(Restore,()=>saved.Count!=0,Report));
+            var generation=owner.Generation;
+            bool Setup(){
+                return owner.Apply(()=>{
+                    Check(!owner.Allows(generation,true)); // capture/setup never admits
+                    if(failure=="missing-rules"||failure=="unsupported-type"||failure=="capture")throw new InvalidOperationException(failure);
+                    TestModeState.SetCaptured(saved,"clock",()=>current,v=>{
+                        if(v==baseline){restores++;if(failRestore)throw new InvalidOperationException("restore");}
+                        current=v;
+                        if(v==45&&failure=="set")throw new InvalidOperationException("set");
+                    },45);
+                    throw new InvalidOperationException("notify"); // fail after mutation/capture
+                },Restore,()=>saved.Count!=0,Report,true);
+            }
+            Check(!Setup());Check(owner.Blocked&&!owner.Owned&&!owner.Allows(generation,true));
+            Check(reports>0&&owner.Generation!=generation);
+            bool mutatedAgain=false;
+            Check(!owner.Apply(()=>mutatedAgain=true,Restore,()=>saved.Count!=0,Report,true)&&!mutatedAgain);
+            if(failRestore){
+                Check(owner.Pending&&saved.Count==1&&current==45);
+                Check(!owner.BeginReset(Restore,()=>saved.Count!=0,Report)); // no new generation admission while pending
+                Check(owner.Blocked&&!owner.Owned&&saved.Count==1);
+                failRestore=false;
+            }
+            Check(owner.BeginReset(Restore,()=>saved.Count!=0,Report));
+            Check(!owner.Pending&&saved.Count==0&&current==baseline);
+            var fresh=owner.Generation;
+            Check(owner.Apply(()=>{},Restore,()=>saved.Count!=0,Report,true));
+            Check(owner.Allows(fresh,true)&&!owner.Allows(generation,true)&&!owner.Allows(fresh,false));
+            // Countdown restore failure also uses the transaction, not an unguarded phase call.
+            saved["rules"]=()=>throw new InvalidOperationException("countdown restore");
+            Check(!owner.Apply(()=>saved["rules"](),Restore,()=>saved.Count!=0,Report,false));
+            Check(owner.Blocked&&!owner.Owned&&owner.Pending);
+            saved["rules"]=()=>{restores++;};
+            owner.Cleanup(Restore,()=>saved.Count!=0,Report);
+            Check(!owner.Pending&&owner.Blocked&&!owner.Allows(fresh,true)); // cleanup alone never readmits
+            Check(owner.BeginReset(Restore,()=>saved.Count!=0,Report));
+            Check(owner.Apply(()=>{},Restore,()=>saved.Count!=0,Report,true));
+            owner.Stop(Restore,()=>saved.Count!=0,Report);
+            Check(owner.Blocked&&!owner.Owned&&!owner.Allows(fresh,true));
+        }
         // Buy is half-open [0,45), independent of one-second Tick jitter.
         var boundary=Buy();
         Check(GameplayState.BuySeconds==45);

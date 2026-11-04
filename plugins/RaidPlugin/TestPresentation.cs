@@ -176,4 +176,15 @@ public sealed partial class RaidPlugin
             ex=>Server.PrintToConsole("Raid buy baseline cleanup pending: "+ex.Message));
     }
 
+    private static void RaidBuyError(Exception ex)=>Server.PrintToConsole("Raid buy ownership fenced; cleanup/reset required: "+ex.Message);
+    private void CleanupRaidBuyFailure(){
+        // Each resource is isolated. Failed restoration entries remain retryable.
+        TestModeState.FinalizeAll(RaidBuyError,
+            ()=>{foreach(var p in Utilities.GetPlayers().Where(Human)){
+                try{if(p.PlayerPawn.Value is {} pawn)pawn.InBuyZone=false;}catch(Exception ex){RaidBuyError(ex);}
+            }},
+            ()=>{if(savedCvars.ContainsKey("mp_buy_anywhere"))SetCvar("mp_buy_anywhere",0);},
+            RestoreRaidBuyClock);
+    }
+
 }

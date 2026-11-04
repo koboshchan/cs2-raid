@@ -35,3 +35,11 @@ No public/private server was started, restarted, deployed or altered for this of
 ## Required runtime acceptance, not performed
 
 On a separately approved isolated runtime, verify T and CT native Buy HUD counts45 down to0, stops at the exact boundary, denies after expiry/death/disconnect, and does not extend on repeated presentation ticks. Verify lobby/reset, Countdown/Freeze/Active transitions, OFF, disconnect, round rebuild, map end/start, unload and stale callbacks restore baseline state without touching another rules entity. Confirm actual cvar type and exact native buyzone/menu closure. Native menu purchases, paid reloads, abilities and financial integration remain separately gated.
+
+## Production ownership failure fence
+
+The shared RaidBuyOwnership transaction closes admission before phase setup, captures an ownership generation, and only opens Buy admission after all setup/notification writes succeed. Setup or Countdown teardown exceptions latch a fault, invalidate the generation, close pawn buyzones, attempt buy-anywhere denial and restore each captured clock/cvar independently. The production second loop retries cleanup without reopening admission. Faulted/stopped buy commands are handled before the no-session vanilla fallback; autobuy/rebuy are also fenced. Purchase admission requires successful owned Buy plus the absolute45-second window.
+
+ResetLobby stops session admission before attempting restoration. If any captured restoration remains pending, it returns without constructing a new match or applying new native state. A successful explicit reset after cleanup starts a new ownership generation; cleanup alone never clears the fault fence. Stop/unload also invalidate ownership before cleanup. Failed restore entries are retained for retry.
+
+Injected tests execute this same transaction class with missing rules, unsupported type, capture failure, setter failure, notification failure and restore failure, then cleanup retries, pending reset refusal, successful reset, stale-generation rejection, Countdown restoration failure and Stop. These are deterministic transaction tests, not executed native API fault injection or runtime acceptance.
