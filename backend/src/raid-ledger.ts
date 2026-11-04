@@ -140,7 +140,7 @@ export class RaidLedger {
     return { operationKey: row.key, requestFingerprint: row.fingerprint, operation: row.operation,
       request: row.request, financialState: row.state, proof: proof ?? null,
       journal: this.journal(row.key) ?? null,
-      disposition: this.journal(row.key)?.terminal === "quarantined" ? "quarantined" : "unresolved",
+      disposition: this.journal(row.key)?.terminal ?? "unresolved",
       audit: this.db.prepare("SELECT data FROM raid_reconciliation_audit WHERE operation_key=? ORDER BY id")
         .all(row.key).map(entry => JSON.parse(String(entry.data))) };
   }
@@ -173,31 +173,62 @@ export class RaidLedger {
   private audit(key: string, data: unknown) {
     this.db.prepare("INSERT INTO raid_reconciliation_audit(operation_key,data) VALUES (?,?)").run(key, JSON.stringify(data));
   }
+  quarantineAck(input: unknown) {
+    const value = ackInput.parse(input);
+    const identity = {operationKey: value.operationKey, requestFingerprint: value.requestFingerprint};
+    const row = this.bound(identity), journal = this.journal(row.key);
+    if (!journal || journal.revocationEpoch !== value.revocationEpoch ||
+      JSON.stringify(value.session) !== JSON.stringify(row.request.session)) throw new Error("Revocation identity conflict");
+    if (journal.terminal === "quarantined") {
+      if (JSON.stringify(journal.ack) !== JSON.stringify(value)) throw new Error("Conflicting quarantine acknowledgement");
+      return this.journalRead(identity);
+    }
+    if (journal.terminal !== "quarantine_requested") throw new Error("No requested quarantine");
+    this.db.exec("BEGIN IMMEDIATE");
+    try {
+      const next = {...journal, terminal: "quarantined", ack: value, updatedAt: new Date().toISOString()};
+      this.db.prepare("UPDATE raid_native_journal SET data=? WHERE operation_key=?").run(JSON.stringify(next), row.key);
+      this.audit(row.key, {kind: "native_quarantine_ack", ...value, at: next.updatedAt});
+      this.db.exec("COMMIT");
+    } catch(error) {this.db.exec("ROLLBACK"); throw error;}
+    return this.journalRead(identity);
+  }
   async quarantine(input: unknown, api: RaidMoneyApi) {
     const value = quarantineInput.parse(input);
-    return this.serialized(value.operationKey, async () => {
-      const row = this.bound({operationKey: value.operationKey, requestFingerprint: value.requestFingerprint});
-      // Lookup failure aborts terminalization. Absence is evidence only, never compensation authority.
-      const receipt = await api.byKey(row.key);
-      if (receipt) this.verify(row, receipt);
-      if (row.receipt && receipt && row.receipt.transaction_id !== receipt.transaction_id)
-        throw new Error("Canonical transaction conflict");
-      this.db.exec("BEGIN IMMEDIATE");
-      try {
-        const journal = this.journal(row.key);
-        const next = {...journal, terminal: "quarantined", updatedAt: new Date().toISOString()};
+    const identity = {operationKey: value.operationKey, requestFingerprint: value.requestFingerprint};
+    let row = this.bound(identity);
+    // Revocation MUST precede awaits: a delayed finalize is not protected by a process queue.
+    this.db.exec("BEGIN IMMEDIATE");
+    try {
+      const old = this.journal(row.key);
+      if (!old?.terminal) {
+        const next = {...old, terminal: "quarantine_requested", revocationEpoch: randomUUID(),
+          updatedAt: new Date().toISOString()};
         this.db.prepare("INSERT INTO raid_native_journal VALUES (?,?) ON CONFLICT(operation_key) DO UPDATE SET data=excluded.data")
           .run(row.key, JSON.stringify(next));
-        if (receipt && !row.receipt) {
-          if (!this.transition(row, {...row, receipt, state: "paid"})) throw new Error("Concurrent financial transition");
-        }
-        this.audit(row.key, {kind: "manual_quarantine", ...value, at: next.updatedAt,
-          originalKeyLookup: receipt ? {status: "committed", receipt} : {status: "absent_not_authority"},
-          retainedProof: row.receipt ?? null });
-        this.db.exec("COMMIT");
-      } catch(error) {this.db.exec("ROLLBACK"); throw error;}
-      return this.journalRead({operationKey: value.operationKey, requestFingerprint: value.requestFingerprint});
-    });
+        this.audit(row.key, {kind: "quarantine_requested", ...value, revocationEpoch: next.revocationEpoch, at: next.updatedAt});
+      }
+      this.db.exec("COMMIT");
+    } catch(error) {this.db.exec("ROLLBACK"); throw error;}
+    // No financial mutation. A denied/mismatched lookup leaves durable revocation requested.
+    const receipt = await api.byKey(row.key);
+    row = this.get(row.key);
+    if (receipt) this.verify(row, receipt);
+    if (row.receipt && receipt && row.receipt.transaction_id !== receipt.transaction_id)
+      throw new Error("Canonical transaction conflict");
+    this.db.exec("BEGIN IMMEDIATE");
+    try {
+      if (receipt && !row.receipt && !this.transition(row, {...row, receipt, state: "paid"}))
+        throw new Error("Concurrent financial transition");
+      this.audit(row.key, {kind: "quarantine_original_key_lookup", ...value, at: new Date().toISOString(),
+        originalKeyLookup: receipt ? {status: "committed", receipt} : {status: "absent_not_authority"},
+        retainedProof: row.receipt ?? null});
+      this.db.exec("COMMIT");
+    } catch(error) {this.db.exec("ROLLBACK"); throw error;}
+    return this.journalRead(identity);
+  }
+  private requireNotRevoked(key: string) {
+    if (this.journal(key)?.terminal) throw new Error("Terminal quarantine or revocation requested");
   }
   async execute(operation: RaidOperation, input: unknown, api: RaidMoneyApi, native: RaidNativeBridge): Promise<SettlementProof & { state: string }> {
     const request = operation === "cashin" ? cashInRequestSchema.parse(input) : extractionRequestSchema.parse(input);
@@ -206,24 +237,28 @@ export class RaidLedger {
   }
   private async executeOriginal(operation: RaidOperation, input: unknown, api: RaidMoneyApi, native: RaidNativeBridge): Promise<SettlementProof & { state: string }> {
     let row = this.prepare(operation, input);
-    if (this.journal(row.key)?.terminal) throw new Error("Terminal quarantine");
+    this.requireNotRevoked(row.key);
     if (row.state === "manual") throw new Error("Manual reconciliation required");
     if (row.state === "prepared") {
       if (!await native.validateAndFreeze(row.key, row.operation, row.request)) throw new Error("Native session or snapshot rejected");
+      this.requireNotRevoked(row.key);
       this.transition(row, { ...row, state: "frozen" }); row = this.get(row.key);
     }
     if (row.state === "frozen") {
       // First reconcile, even if original session has gone. NEVER change key or
       // silently retry a new identity after response loss or revoked consent.
       let receipt = row.amountCents === 0 ? null : await api.byKey(row.key);
+      this.requireNotRevoked(row.key);
       if (!receipt && row.amountCents > 0) {
         if (!await native.validateAndFreeze(row.key, row.operation, row.request)) throw new Error("Native session no longer valid");
+        this.requireNotRevoked(row.key);
         receipt = await api.moveRaidMoney({ key: row.key, appUserId: row.appUserId, amountCents: row.amountCents, operation: row.operation });
       }
       try { if (receipt) this.verify(row, receipt); }
       catch (error) { this.transition(row, { ...row, state: "manual" }); throw error; }
       this.transition(row, { ...row, state: "paid", ...(receipt ? { receipt } : { zeroReceiptId: randomUUID() }) });
       row = this.get(row.key);
+      this.requireNotRevoked(row.key);
     }
     const proof: SettlementProof = {
       operationKey: row.key, operation: row.operation, requestFingerprint: row.fingerprint,
@@ -232,7 +267,9 @@ export class RaidLedger {
     if (row.state === "paid") {
       // Durable receipt precedes native completion. Retry requires a real
       // idempotent native adapter, never re-give on arbitrary response strings.
+      this.requireNotRevoked(row.key);
       if (!await native.finalize(proof, row.request)) throw new Error("Native completion unresolved");
+      this.requireNotRevoked(row.key);
       this.transition(row, { ...row, state: "settled" }); row = this.get(row.key);
     }
     return { ...proof, state: row.state };
@@ -251,4 +288,8 @@ const quarantineInput = journalIdentity.extend({operator: z.string().min(1).max(
   reason: z.string().min(1).max(1024), evidence: z.string().min(1).max(4096),
   isolationEvidence: z.string().min(1).max(4096)}).strict();
 type NativeJournal = {nativeSnapshot?: string; phase?: typeof phases[number]; proof?: SettlementProof;
-  terminal?: string; updatedAt: string};
+  terminal?: string; revocationEpoch?: string; ack?: z.infer<typeof ackInput>; updatedAt: string};
+
+const ackInput = journalIdentity.extend({revocationEpoch: z.string().uuid(),
+  session: cashInRequestSchema.shape.session,
+  nativePhase: z.enum([...phases, "quarantined"]), isolationEvidence: z.string().min(1).max(4096)}).strict();

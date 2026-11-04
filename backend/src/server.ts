@@ -48,6 +48,10 @@ export function createServer(token: string, catalog: Catalog, links: Pick<LinkSt
     if (!recoveryStore) return reply.code(503).send({error: "recovery_store_unavailable"});
     return recoveryStore.ledger.journalPhase(req.body);
   });
+  app.post("/native/quarantine/ack", async (req, reply) => {
+    if (!recoveryStore) return reply.code(503).send({error: "recovery_store_unavailable"});
+    return recoveryStore.ledger.quarantineAck(req.body);
+  });
   app.post("/native/journal/read", async (req, reply) => {
     if (!recoveryStore) return reply.code(503).send({error: "recovery_store_unavailable"});
     return recoveryStore.ledger.journalRead(req.body);

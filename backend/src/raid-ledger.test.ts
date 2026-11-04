@@ -228,17 +228,17 @@ test("manual quarantine original-key lookup reconciles lost payment, never repla
  let queried="";
  const api={...f.api,async byKey(key:string){queried=key;return f.api.byKey(key);}};
  const result=await f.ledger.quarantine(body,api);f.reopen();
- assert.equal(queried,row.key);assert.equal(result.disposition,"quarantined");
+ assert.equal(queried,row.key);assert.equal(result.disposition,"quarantine_requested");
  assert.equal(result.proof?.transactionId,[...f.receipts.values()][0].transaction_id);
  assert.equal(result.journal?.phase,undefined);
- assert.equal(result.audit.length,1);assert.equal(f.raw("SELECT * FROM raid_item_claims").length,2);
+ assert.equal(result.audit.length,2);assert.equal(f.raw("SELECT * FROM raid_item_claims").length,2);
  await assert.rejects(f.ledger.execute("extract",input,f.api,f.native),/Terminal/);
  assert.throws(()=>f.ledger.journalPhase({...identity,nativeSnapshot:"x",phase:"snapshot",evidence:"x"}),/Terminal/);
  assert.equal(f.calls,1);assert.equal(f.finals,0);
  }finally{f.cleanup();}
 });
 
-test("lookup absence never means refund/release and lookup failures cannot terminalize",async()=>{
+test("lookup absence never means refund/release and lookup failures retain requested revocation",async()=>{
  const f=setup();try{
  const input=extract();f.invalid();await assert.rejects(f.ledger.execute("extract",input,f.api,f.native));
  const row=JSON.parse(String(f.raw("SELECT data FROM raid_operations")[0].data));
@@ -246,10 +246,10 @@ test("lookup absence never means refund/release and lookup failures cannot termi
  const body={...identity,operator:"op",reason:"rejected snapshot",evidence:"investigation",
  isolationEvidence:"no active native generation"};
  await assert.rejects(f.ledger.quarantine(body,{...f.api,async byKey(){throw new Error("lookup denied");}}),/lookup denied/);
- assert.equal(f.ledger.journalRead(identity).disposition,"unresolved");
+ assert.equal(f.ledger.journalRead(identity).disposition,"quarantine_requested");
  const result=await f.ledger.quarantine(body,f.api);
  assert.equal(result.financialState,"prepared");assert.equal(result.proof,null);
- assert.equal(result.audit[0].originalKeyLookup.status,"absent_not_authority");
+ assert.equal(result.audit[1].originalKeyLookup.status,"absent_not_authority");
  assert.equal(f.raw("SELECT * FROM raid_item_claims").length,2);assert.equal(f.calls,0);
  }finally{f.cleanup();}
 });
@@ -272,13 +272,19 @@ test("recovery-only HTTP works money OFF, admin auth isolated, Origin rejected, 
  assert.equal((await app.inject({method:"POST",url:"/admin/reconciliation/quarantine",headers:{...adminHeaders,origin:""},payload:manual})).statusCode,401);
  assert.equal((await app.inject({method:"POST",url:"/admin/reconciliation/quarantine",headers:adminHeaders,payload:manual})).statusCode,200);
  const read=await app.inject({method:"POST",url:"/native/journal/read",headers,payload:identity});
- assert.equal(read.json().disposition,"quarantined");assert.equal(read.json().journal.phase,"snapshot");
+ assert.equal(read.json().disposition,"quarantine_requested");assert.equal(read.json().journal.phase,"snapshot");
+ const ack={...identity,revocationEpoch:read.json().journal.revocationEpoch,session,nativePhase:"quarantined",isolationEvidence:"native fsync and physical isolation verified"};
+ assert.equal((await app.inject({method:"POST",url:"/native/quarantine/ack",headers:adminHeaders,payload:ack})).statusCode,401);
+ assert.equal((await app.inject({method:"POST",url:"/native/quarantine/ack",headers:{...headers,origin:""},payload:ack})).statusCode,401);
+ const acked=await app.inject({method:"POST",url:"/native/quarantine/ack",headers,payload:ack});
+ assert.equal(acked.statusCode,200);assert.equal(acked.json().disposition,"quarantined");
+
  assert.equal((await app.inject({method:"POST",url:"/native/recovery",headers,payload})).statusCode,400);
  assert.equal(f.calls,1);
  }finally{await app.close();f.cleanup();}
 });
 
-test("execute and admin are serialized so terminal quarantine cannot race payment/finalize",async()=>{
+test("admin requests revocation immediately while finalize is pending",async()=>{
  const f=setup();try{
  const input=extract();let signal!:()=>void,release!:()=>void;
  const entered=new Promise<void>(r=>signal=r), wait=new Promise<void>(r=>release=r);
@@ -289,8 +295,8 @@ test("execute and admin are serialized so terminal quarantine cannot race paymen
  const manual=f.ledger.quarantine({operationKey:row.key,requestFingerprint:row.fingerprint,
   operator:"op",reason:"unresolved",evidence:"post-payment",isolationEvidence:"isolated"},
   {...f.api,async byKey(key:string){lookups++;return f.api.byKey(key);}});
- assert.equal(lookups,0);release();
- await assert.rejects(execution,/unresolved/);assert.equal((await manual).disposition,"quarantined");
+ assert.equal(lookups,1);release();
+ await assert.rejects(execution,/unresolved/);assert.equal((await manual).disposition,"quarantine_requested");
  assert.equal(lookups,1);assert.equal(f.calls,1);
  }finally{f.cleanup();}
 });
@@ -317,14 +323,14 @@ test("prepayment evidence cannot attest consumption; zero extraction keeps null 
  }finally{z.cleanup();}
 });
 
-test("manual receipt mismatch cannot quarantine or replace evidence; admin configuration cannot reuse native secret",async()=>{
+test("manual receipt mismatch retains requested revocation; admin configuration cannot reuse native secret",async()=>{
  const f=setup();try{
  const proof=await f.ledger.execute("extract",extract(),f.api,f.native);
  const identity={operationKey:proof.operationKey,requestFingerprint:proof.requestFingerprint};
  await assert.rejects(f.ledger.quarantine({...identity,operator:"op",reason:"audit",evidence:"audit",isolationEvidence:"isolated"},
  {...f.api,async byKey(key:string){return {...(await f.api.byKey(key))!,amount_cents:1};}}),/mismatch/);
- assert.equal(f.ledger.journalRead(identity).disposition,"unresolved");
- assert.deepEqual(f.ledger.journalRead(identity).audit,[]);
+ assert.equal(f.ledger.journalRead(identity).disposition,"quarantine_requested");
+ assert.equal(f.ledger.journalRead(identity).audit[0].kind,"quarantine_requested");
  const links={async create(){return {};},async poll(){return {};}};
  assert.throws(()=>createServer("n".repeat(40),catalog,links,undefined,{ledger:f.ledger,api:f.api,adminToken:"n".repeat(40)}),/separate/);
  assert.throws(()=>createServer("n".repeat(40),catalog,links,undefined,{ledger:f.ledger,api:f.api,adminToken:"short"}),/separate/);
@@ -347,5 +353,63 @@ test("native false during async recovery barrier retains paid and repeats finali
  assert.equal((await f.ledger.execute("extract",input,f.api,native)).state,"settled");
  assert.deepEqual(seen[0],seen[1]);assert.deepEqual(seen[1],seen[2]);
  assert.equal(attempts,3);assert.equal(f.calls,1);
+ }finally{f.cleanup();}
+});
+
+test("revocation request survives restart, native epoch/session ack required and exact ack replay is idempotent",async()=>{
+ const f=setup();try{
+ const proof=await f.ledger.execute("cashin",cashin(),f.api,f.native);
+ const identity={operationKey:proof.operationKey,requestFingerprint:proof.requestFingerprint};
+ const manual={...identity,operator:"op",reason:"revoke",evidence:"race",isolationEvidence:"requested only"};
+ const requested=await f.ledger.quarantine(manual,f.api),epoch=requested.journal!.revocationEpoch!;
+ assert.equal(requested.disposition,"quarantine_requested");f.reopen();
+ assert.equal(f.ledger.journalRead(identity).journal?.revocationEpoch,epoch);
+ const ack={...identity,revocationEpoch:epoch,session,nativePhase:"quarantined",isolationEvidence:"fsync tombstone; original handle absent; connected actor spectator"};
+ assert.throws(()=>f.ledger.quarantineAck({...ack,revocationEpoch:randomUUID()}),/identity/);
+ assert.throws(()=>f.ledger.quarantineAck({...ack,session:{...session,pawnGeneration:"replacement"}}),/identity/);
+ const terminal=f.ledger.quarantineAck(ack);
+ assert.equal(terminal.disposition,"quarantined");
+ assert.deepEqual(f.ledger.quarantineAck(ack),terminal);
+ assert.throws(()=>f.ledger.quarantineAck({...ack,isolationEvidence:"changed"}),/Conflicting/);
+ assert.equal((await f.ledger.quarantine(manual,f.api)).journal?.revocationEpoch,epoch);
+ assert.equal(f.calls,1);
+ }finally{f.cleanup();}
+});
+
+test("delayed positive finalize cannot settle after requested revocation, even before native ack",async()=>{
+ const f=setup();try{
+ let entered!:()=>void,release!:()=>void;
+ const seen=new Promise<void>(r=>entered=r),gate=new Promise<void>(r=>release=r);
+ const input=extract();
+ const running=f.ledger.execute("extract",input,f.api,{...f.native,async finalize(){entered();await gate;return true;}});
+ await seen;
+ const row=JSON.parse(String(f.raw("SELECT data FROM raid_operations")[0].data));
+ const identity={operationKey:row.key,requestFingerprint:row.fingerprint};
+ const pending=await f.ledger.quarantine({...identity,operator:"op",reason:"revoke delayed callback",evidence:"race",isolationEvidence:"pending native"},f.api);
+ assert.equal(pending.disposition,"quarantine_requested");
+ assert.throws(()=>f.ledger.journalPhase({...identity,nativeSnapshot:"x",phase:"snapshot",evidence:"late"}),/Terminal/);
+ release();await assert.rejects(running,/revocation requested/);
+ assert.equal(f.ledger.journalRead(identity).financialState,"paid");
+ await assert.rejects(f.ledger.execute("extract",input,f.api,f.native),/revocation requested/);
+ assert.equal(f.calls,1);
+ }finally{f.cleanup();}
+});
+
+test("revocation during in-flight payment preserves eventual receipt but never sends finalize",async()=>{
+ const f=setup();try{
+ let entered!:()=>void,release!:()=>void;
+ const seen=new Promise<void>(r=>entered=r),gate=new Promise<void>(r=>release=r);
+ const input=extract();
+ const api={...f.api,async moveRaidMoney(op:RaidMoney){entered();await gate;return f.api.moveRaidMoney(op);}};
+ const running=f.ledger.execute("extract",input,api,f.native);await seen;
+ const row=JSON.parse(String(f.raw("SELECT data FROM raid_operations")[0].data));
+ const identity={operationKey:row.key,requestFingerprint:row.fingerprint};
+ const requested=await f.ledger.quarantine({...identity,operator:"op",reason:"in flight",evidence:"race",isolationEvidence:"await native"},f.api);
+ assert.equal(requested.disposition,"quarantine_requested");
+ assert.equal(requested.proof,null);
+ release();await assert.rejects(running,/revocation requested/);
+ const result=f.ledger.journalRead(identity);
+ assert.equal(result.financialState,"paid");assert.equal(result.proof?.transactionId,[...f.receipts.values()][0].transaction_id);
+ assert.equal(result.disposition,"quarantine_requested");assert.equal(f.finals,0);assert.equal(f.calls,1);
  }finally{f.cleanup();}
 });

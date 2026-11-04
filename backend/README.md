@@ -61,3 +61,24 @@ distributed lock. SQLite FULL/WAL transactions durably couple phase updates and
 audit records, but multiple independently executing backend owners are not an
 accepted topology. Backup the database with its WAL safely. Do not enable money
 until native failure-path, disconnect/map/unload and physical quarantine QA pass.
+
+
+Revocation handshake supersedes immediate admin terminal quarantine above.
+Admin first atomically records quarantine_requested with a stable UUID
+revocationEpoch and audit BEFORE any await or original-key lookup. Failed or
+mismatched lookup retains revocation requested; it cannot silently resume.
+Phase advancement and execute are blocked immediately. After each native/network
+await, execution rechecks revocation before new financial/native actions or
+settled acknowledgement. An already in-flight financial receipt is preserved.
+
+Native reads disposition quarantine_requested and journal.revocationEpoch.
+On the game thread it must fsync a local Quarantine/tombstone, prevent delayed
+callback consumption, isolate original handle and connected actor, then POST
+/native/quarantine/ack with original operationKey, requestFingerprint,
+revocationEpoch, exact original session, nativePhase (snapshot,
+consumption_intent, consumed, cleanup_complete or quarantined), isolationEvidence.
+Native BRIDGE_TOKEN authentication applies; Origin is rejected. Exact epoch and
+session are required. This acknowledgement alone transitions disposition to
+quarantined. Identical ack replay does not replace evidence. Different ack
+rejects. Backend trusts native evidence, not an independently measured isolation
+test. Admin repeat preserves epoch. No native ack means no terminal disposition.
