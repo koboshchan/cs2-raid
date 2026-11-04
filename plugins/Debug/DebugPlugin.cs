@@ -19,7 +19,7 @@ public sealed class DebugConfig : BasePluginConfig
 public sealed class DebugPlugin : BasePlugin, IPluginConfig<DebugConfig>
 {
     public override string ModuleName => "Map Debug";
-    public override string ModuleVersion => "0.1.5";
+    public override string ModuleVersion => "0.1.6";
     public override string ModuleAuthor => "koboshchan";
     public override string ModuleDescription => "Debug economy and durable map issue reports";
     public DebugConfig Config { get; set; } = new();
@@ -29,6 +29,7 @@ public sealed class DebugPlugin : BasePlugin, IPluginConfig<DebugConfig>
     private readonly ReportLimiter listLimiter = new();
     private readonly ReportLimiter resetLimiter = new();
     private readonly ReportLimiter bannerLimiter = new();
+    private readonly ReportLimiter bannerResetLimiter = new();
     private ReportStore? store;
     private readonly HashSet<ulong> grantedAdmins = [];
     private bool loaded;
@@ -47,6 +48,7 @@ public sealed class DebugPlugin : BasePlugin, IPluginConfig<DebugConfig>
     public override void Load(bool hotReload)
     {
         loaded = true;
+        AddCommand("css_bannerreset", "Reset your private native banner preview", BannerResetCommand);
         AddCommand("css_banner", "Private native banner: win|lose|draw", SimpleBannerCommand);
         AddCommand("css_testwin", "Preview a private native round-win banner", (p, c) => BannerCommand(p, c, BannerResult.Win));
         AddCommand("css_testlose", "Preview a private native round-loss banner", (p, c) => BannerCommand(p, c, BannerResult.Lose));
@@ -142,7 +144,7 @@ public sealed class DebugPlugin : BasePlugin, IPluginConfig<DebugConfig>
     }
     private void ClearState()
     {
-        shots.Clear(); reportLimiter.Clear(); textureLimiter.Clear(); listLimiter.Clear(); resetLimiter.Clear(); bannerLimiter.Clear();
+        shots.Clear(); reportLimiter.Clear(); textureLimiter.Clear(); listLimiter.Clear(); resetLimiter.Clear(); bannerLimiter.Clear(); bannerResetLimiter.Clear();
     }
     private static bool Human(CCSPlayerController? p) => p is { IsValid: true, IsBot: false } && p.SteamID != 0;
     private ShotTracker Tracker(CCSPlayerController p)
@@ -159,13 +161,37 @@ public sealed class DebugPlugin : BasePlugin, IPluginConfig<DebugConfig>
     {
         if (grantedAdmins.Remove(id)) AdminManager.RemovePlayerPermissions(new SteamID(id), "@css/root");
         shots.Remove(id); reportLimiter.Remove(id);
-        textureLimiter.Remove(id); listLimiter.Remove(id); resetLimiter.Remove(id); bannerLimiter.Remove(id);
+        textureLimiter.Remove(id); listLimiter.Remove(id); resetLimiter.Remove(id); bannerLimiter.Remove(id); bannerResetLimiter.Remove(id);
     }
     private bool Ready(CCSPlayerController? p, CommandInfo c)
     {
         if (!active) { c.ReplyToCommand("Map Debug is disabled."); return false; }
         if (!Human(p)) { c.ReplyToCommand("A connected human player is required."); return false; }
         return true;
+    }
+    private void BannerResetCommand(CCSPlayerController? p, CommandInfo c)
+    {
+        if (!Ready(p, c)) return;
+        if (c.ArgCount != 1)
+        { c.ReplyToCommand("Usage: !bannerreset"); return; }
+        if (!bannerResetLimiter.Allow(p!.SteamID, Environment.TickCount64, 1000))
+        { c.ReplyToCommand("Wait one second between banner resets."); return; }
+        try
+        {
+            // Cosmetic client notification ONLY, not a real round start.
+            // CSS delivers directly to this player's legacy event listener, bypassing
+            // the server event manager and all server/plugin round-start handlers.
+            // No invented event fields and no replicated round-state writes.
+            var reset = new EventRoundStart(true);
+            try { reset.FireEventToClient(p); }
+            finally { reset.Free(); }
+            c.ReplyToCommand("Private banner reset notification sent. The real round is unchanged.");
+        }
+        catch (Exception e)
+        {
+            Logger.LogError(e, "Private banner reset failed.");
+            c.ReplyToCommand("Banner reset failed; check the Debug plugin log.");
+        }
     }
     private void SimpleBannerCommand(CCSPlayerController? p, CommandInfo c)
     {
