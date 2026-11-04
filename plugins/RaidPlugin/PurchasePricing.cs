@@ -6,6 +6,17 @@ namespace Cs2Raid;
 
 public sealed partial class RaidPlugin
 {
+    private readonly Dictionary<string,int> nativeProjections=[];
+    private void ObserveNativeSpend(CCSPlayerController p)
+    {
+        if(gameplayConfig.CustomPricingEnabled || !sessionLoaded || !game.Living(Id(p)) || p.InGameMoneyServices is not {} money)return;
+        var id=Id(p);
+        if(nativeProjections.TryGetValue(id,out var projected)) {
+            var spend=GameplayConfig.NativeSpend(projected,money.Account);
+            if(spend>0)game.TryPurchase(id,spend); // Account for ENGINE debit, never a second custom charge.
+        }
+        nativeProjections[id]=Math.Max(0,money.Account);
+    }
     private sealed record BuySnapshot(string Steam,int Tick,long Balance,string Item);
     private readonly Dictionary<int,BuySnapshot> buySnapshots=[];
     private readonly Dictionary<nint,(CCSWeaponBaseVData Data,int Original)> priceOriginals=[];
@@ -17,6 +28,7 @@ public sealed partial class RaidPlugin
     {
         AddCommandListener("buy",(p,c)=>{
             if(!Human(p))return HookResult.Continue;
+            if(!gameplayConfig.CustomPricingEnabled)return HookResult.Continue;
             buySnapshots.Remove(p.Slot);
             var item=c.ArgCount==2?PriceItem(c.GetArg(1)):null;
             if(!sessionLoaded || game.Phase!=GamePhase.Active || !game.Living(Id(p)) || item==null || item.PriceDollars<0) {
@@ -31,6 +43,11 @@ public sealed partial class RaidPlugin
         RegisterEventHandler<EventItemPurchase>((e,i)=>{
             var p=e.Userid;
             if(!Human(p))return HookResult.Continue;
+            if(!gameplayConfig.CustomPricingEnabled) {
+                // Informational only: no catalog debit/refund, HUD rewrite or price assertion.
+                p.PrintToChat($"Purchased {SafeName(e.Weapon=="ak47"?"AK-47":e.Weapon)} (vanilla pricing).");
+                return HookResult.Continue;
+            }
             var item=PriceItem(e.Weapon);
             if(item==null || !buySnapshots.Remove(p.Slot,out var snap) || snap.Steam!=Id(p) || snap.Tick!=Server.TickCount || snap.Item!=BuyName(e.Weapon)) {
                 // Never invent a refund or award cash for an uncorrelated engine event.
@@ -53,6 +70,7 @@ public sealed partial class RaidPlugin
     }
     private void PatchPrice(CCSWeaponBase weapon)
     {
+        if(!gameplayConfig.CustomPricingEnabled)return;
         var item=PriceItem(weapon.DesignerName);var data=weapon.VData;
         if(item==null || data==null || data.Handle==nint.Zero)return;
         priceOriginals.TryAdd(data.Handle,(data,data.Price));data.Price=item.PriceDollars;
@@ -60,6 +78,6 @@ public sealed partial class RaidPlugin
     private void ClearPricing()
     {
         foreach(var entry in priceOriginals.Values)entry.Data.Price=entry.Original;
-        priceOriginals.Clear();buySnapshots.Clear();
+        priceOriginals.Clear();buySnapshots.Clear();nativeProjections.Clear();
     }
 }

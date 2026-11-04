@@ -8,13 +8,13 @@
   {
     "id": "p2000",
     "entity": "weapon_hkp2000",
-    "priceDollars": 250,
+    "priceDollars": 200,
     "kind": "pistol"
   },
   {
     "id": "usp-s",
     "entity": "weapon_usp_silencer",
-    "priceDollars": 250,
+    "priceDollars": 200,
     "kind": "pistol"
   },
   {
@@ -44,7 +44,7 @@
   {
     "id": "tec-9",
     "entity": "weapon_tec9",
-    "priceDollars": 600,
+    "priceDollars": 500,
     "kind": "pistol"
   },
   {
@@ -62,37 +62,37 @@
   {
     "id": "mac-10",
     "entity": "weapon_mac10",
-    "priceDollars": 750,
+    "priceDollars": 1050,
     "kind": "smg"
   },
   {
     "id": "ump",
     "entity": "weapon_ump45",
-    "priceDollars": 900,
+    "priceDollars": 1200,
     "kind": "smg"
   },
   {
     "id": "mp9",
     "entity": "weapon_mp9",
-    "priceDollars": 950,
+    "priceDollars": 1250,
     "kind": "smg"
   },
   {
     "id": "bizon",
     "entity": "weapon_bizon",
-    "priceDollars": 1000,
+    "priceDollars": 1300,
     "kind": "smg"
   },
   {
     "id": "mp7",
     "entity": "weapon_mp7",
-    "priceDollars": 1100,
+    "priceDollars": 1400,
     "kind": "smg"
   },
   {
     "id": "mp5-sd",
     "entity": "weapon_mp5sd",
-    "priceDollars": 1100,
+    "priceDollars": 1400,
     "kind": "smg"
   },
   {
@@ -104,37 +104,37 @@
   {
     "id": "nova",
     "entity": "weapon_nova",
-    "priceDollars": 750,
+    "priceDollars": 1050,
     "kind": "shotgun"
   },
   {
     "id": "sawed-off",
     "entity": "weapon_sawedoff",
-    "priceDollars": 800,
+    "priceDollars": 1100,
     "kind": "shotgun"
   },
   {
     "id": "mag-7",
     "entity": "weapon_mag7",
-    "priceDollars": 1000,
+    "priceDollars": 1300,
     "kind": "shotgun"
   },
   {
     "id": "xm1014",
     "entity": "weapon_xm1014",
-    "priceDollars": 1700,
+    "priceDollars": 2000,
     "kind": "shotgun"
   },
   {
     "id": "galil",
     "entity": "weapon_galilar",
-    "priceDollars": 1900,
+    "priceDollars": 1800,
     "kind": "rifle"
   },
   {
     "id": "famas",
     "entity": "weapon_famas",
-    "priceDollars": 1900,
+    "priceDollars": 1950,
     "kind": "rifle"
   },
   {
@@ -152,19 +152,19 @@
   {
     "id": "aug",
     "entity": "weapon_aug",
-    "priceDollars": 3000,
+    "priceDollars": 3300,
     "kind": "rifle"
   },
   {
     "id": "ak",
     "entity": "weapon_ak47",
-    "priceDollars": 3100,
+    "priceDollars": 2700,
     "kind": "rifle"
   },
   {
     "id": "sg553",
     "entity": "weapon_sg556",
-    "priceDollars": 3300,
+    "priceDollars": 3000,
     "kind": "rifle"
   },
   {
@@ -188,7 +188,7 @@
   {
     "id": "awp",
     "entity": "weapon_awp",
-    "priceDollars": 5000,
+    "priceDollars": 4750,
     "kind": "sniper"
   },
   {

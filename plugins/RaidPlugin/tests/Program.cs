@@ -45,3 +45,13 @@ foreach(var order in Enumerable.Range(0,100)) {
 Console.WriteLine($"{checks-before} gameplay checks passed; {checks} total");
 
 var shop=Active();Check(!shop.TryPurchase("a",1));Check(!shop.TryPurchase("ghost",0));Check(!shop.TryPurchase("a",-1));Check(shop.Claim("funds","a",100,100,new Random()));Check(shop.TryPurchase("a",30));Check(shop.Players["a"].Cash==70);Check(shop.TryPurchase("a",70));Check(shop.Players["a"].Cash==0);Check(!shop.TryPurchase("a",1));Check(shop.Kill("a",null));Check(!shop.TryPurchase("a",0));Check(!Lobby("a").TryPurchase("a",0));Console.WriteLine("12 purchase checks passed");
+
+Check(!new GameplayConfig().CustomPricingEnabled);
+Check(!System.Text.Json.JsonSerializer.Deserialize<GameplayConfig>("{}")!.CustomPricingEnabled);
+Check(System.Text.Json.JsonSerializer.Deserialize<GameplayConfig>("{\"CustomPricingEnabled\":true}")!.CustomPricingEnabled);
+Check(GameplayConfig.NativeSpend(1000,700)==300);
+Check(GameplayConfig.NativeSpend(700,700)==0);
+Check(GameplayConfig.NativeSpend(700,1000)==0);
+Check(GameplayConfig.NativeSpend(100,0)==100);
+Check(GameplayConfig.NativeSpend(100,-1)==100);
+Console.WriteLine("8 vanilla pricing checks passed");

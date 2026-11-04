@@ -70,5 +70,6 @@
     }
   ],
   "lootSpawnChance": 0.01,
-  "lootModel": "models/props/de_dust/hr_dust/dust_crates/dust_crate_style_01_64x64x64.vmdl"
+  "lootModel": "models/props/de_dust/hr_dust/dust_crates/dust_crate_style_01_64x64x64.vmdl",
+  "customPricingEnabled": false
 }

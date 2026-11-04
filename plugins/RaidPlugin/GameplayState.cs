@@ -113,6 +113,8 @@ public sealed record LootPoint(string Id,Position Position,string Tier);
 public sealed class GameplayConfig
 {
     public bool Enabled { get; set; }
+    public bool CustomPricingEnabled { get; set; } = false;
+    public static int NativeSpend(int projected,int current) => Math.Max(0,projected-Math.Max(0,current));
     public bool CoordinatesConfirmed { get; set; }
     public Position Lobby { get; set; } = new(0,0,0);
     public Position ReadyPlatform { get; set; } = new(0,0,0);

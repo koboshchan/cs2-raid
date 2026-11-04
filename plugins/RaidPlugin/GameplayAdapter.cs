@@ -43,6 +43,8 @@ public sealed partial class RaidPlugin
         RegisterEventHandler<EventRoundStart>((e,i)=>{ResetLobby();return HookResult.Continue;});
         RegisterEventHandler<EventPlayerDisconnect>((e,i)=>{if(Human(e.Userid))game.Leave(Id(e.Userid));return HookResult.Continue;},HookMode.Pre);
         RegisterEventHandler<EventPlayerDeath>((e,i)=>{
+            if(Human(e.Userid))ObserveNativeSpend(e.Userid);
+            if(Human(e.Attacker))ObserveNativeSpend(e.Attacker);
             if(Human(e.Userid)&&game.Kill(Id(e.Userid),Human(e.Attacker)?Id(e.Attacker):null))
                 Server.NextFrame(UpdateSpectators);
             return HookResult.Continue;
@@ -149,11 +151,12 @@ public sealed partial class RaidPlugin
             lootEntities.Add(prop.EntityHandle.Raw,point);
         }
     }
-    private static void SetMoney(CCSPlayerController p,long value)
+    private void SetMoney(CCSPlayerController p,long value)
     {
         if(p.InGameMoneyServices is not {} money)return;
         // Ledger is authoritative; CS HUD is limited. Never mint SSG funds here.
         money.Account=(int)Math.Min(value,65535);
+        nativeProjections[Id(p)]=money.Account;
         Utilities.SetStateChanged(p,"CCSPlayerController","m_pInGameMoneyServices");
     }
     private void GameplayTick()
@@ -164,6 +167,7 @@ public sealed partial class RaidPlugin
         var current=new Dictionary<uint,(string Owner,string Entity)>();
         foreach(var p in Utilities.GetPlayers().Where(Human)) {
             if(!game.Living(Id(p)))continue;
+            ObserveNativeSpend(p);
             SetMoney(p,game.Players[Id(p)].Cash);
             if(p.PlayerPawn.Value?.WeaponServices is not {} ws)continue;
             foreach(var handle in ws.MyWeapons)if(handle.Value is {IsValid:true} weapon)current[handle.Raw]=(Id(p),weapon.DesignerName);
