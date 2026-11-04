@@ -156,6 +156,17 @@ BUILD
 FROM scratch AS debug-artifacts
 COPY --from=debug-build /work/artifacts/ /
 
+FROM dependencies AS pricetest-build
+WORKDIR /work
+COPY plugins/PriceTest/ /work/src/
+RUN --network=none <<'BUILD'
+set -eu
+printf '<configuration><packageSources><clear /></packageSources></configuration>' > /work/NuGet.Config
+dotnet build /work/src/PriceTest.csproj -c Release --configfile /work/NuGet.Config -o /work/artifacts/plugin -p:CSS_API_DIR=/deps/css/addons/counterstrikesharp/api -p:TreatWarningsAsErrors=true -p:UseSharedCompilation=false
+BUILD
+FROM scratch AS pricetest-artifacts
+COPY --from=pricetest-build /work/artifacts/ /
+
 FROM dependencies AS server-dependencies
 RUN curl -fL --retry 3 https://mms.alliedmods.net/mmsdrop/2.0/mmsource-2.0.0-git1483-linux.tar.gz -o /deps/metamod.tar.gz \
  && echo "0fdcccaa369937ed7f521c78462314b5266f39c1d65a84e4c2d3847324cd7776  /deps/metamod.tar.gz" | sha256sum -c - \
