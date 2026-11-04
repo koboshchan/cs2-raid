@@ -26,7 +26,7 @@ public sealed class DebugConfig : BasePluginConfig
 public sealed partial class DebugPlugin : BasePlugin, IPluginConfig<DebugConfig>
 {
     public override string ModuleName => "Map Debug";
-    public override string ModuleVersion => "0.1.4-hudonly.6";
+    public override string ModuleVersion => "0.1.4-hudonly.7";
     public override string ModuleAuthor => "koboshchan";
     public override string ModuleDescription => "Debug economy and durable map issue reports";
     public DebugConfig Config { get; set; } = new();

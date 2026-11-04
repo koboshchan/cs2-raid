@@ -7,7 +7,7 @@ public sealed record PreviewArgs(int Seconds,string Style,bool Stop)
         int seconds=300;string style="css";bool number=false,variant=false;
         foreach(var a in args){
             if(int.TryParse(a,NumberStyles.None,CultureInfo.InvariantCulture,out var n)&&!number&&n>=1&&n<=3600){seconds=n;number=true;}
-            else if((a=="css"||a=="png"||a=="plain"||a=="tags"||a=="classes")&&!variant){style=a;variant=true;}
+            else if((a=="css"||a=="png"||a=="plain"||a=="tags"||a=="classes"||a=="alert")&&!variant){style=a;variant=true;}
             else return null;
         }
         return new(seconds,style,false);
@@ -46,6 +46,7 @@ public sealed class PreviewClock
         return markup;
     }
     public static string Markup(int n,bool red,string style){
+        if(style=="alert")return (red?"WARNING ":"EXTRACT ")+(n<=10?"[ "+n.ToString(CultureInfo.InvariantCulture)+" ]":(n/60).ToString("00",CultureInfo.InvariantCulture)+":"+(n%60).ToString("00",CultureInfo.InvariantCulture))+" Extracting";
         var c=red?"#FF0000":"#00FF00";
         var clock=n<=10?"[ "+n.ToString(CultureInfo.InvariantCulture)+" ]":(n/60).ToString("00",CultureInfo.InvariantCulture)+":"+(n%60).ToString("00",CultureInfo.InvariantCulture);
         if(style=="plain")return clock+"<br>Extracting";
@@ -116,4 +117,13 @@ public static class PreviewDismiss
     // These are experiments, NOT claimed full-dismiss semantics.
     public static int? ProbeDuration(string mode)=>mode=="clearblank"?1:mode=="clearttl"?0:null;
     public static bool ShouldRender(string? text)=>!string.IsNullOrEmpty(text);
+}
+
+public static class PreviewDispatch
+{
+    public static bool IsHtml(string style)=>style!="alert";
+    public static void Send(string style,string? message,Action<string> html,Action<string> alert){
+        if(!PreviewDismiss.ShouldRender(message))return;
+        if(IsHtml(style))html(message!);else alert(message!);
+    }
 }
