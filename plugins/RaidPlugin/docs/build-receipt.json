@@ -1,0 +1,21 @@
+{
+  "plugin": "RaidPlugin",
+  "sdk": "mcr.microsoft.com/dotnet/sdk:10.0.403-noble@sha256:de4fe90a98845d75910b9769662465c84de1a934665c431279d1382b2bddc02b",
+  "css_version": "1.0.379",
+  "css_zip_sha256": "bd7e52265346a66a3106934c1f1085b642ec5560b7f070a9b10be510341d583a",
+  "build_count": 2,
+  "warnings_per_build": 0,
+  "errors_per_build": 0,
+  "deterministic_match": true,
+  "raid_rule_checks_per_build": 19,
+  "archive_sha256": "5990be9b636f6f2600ef672047167154f2fa69e3522674698dc14e8479772a7b",
+  "dll_sha256": "0bdc1e1b16b5f78f97ecbd74a1c26c6ec111a1b0e1060104644d1b98b9479bbd",
+  "deps_json_sha256": "6502aaaee29d66350300eb7edae086a3f67a471e76d247480999d2c519d74c01",
+  "pdb_sha256": "341c02064cfefc01ddadb1afc3e33a8e8cdb948fd25f9e137e4c0edc1748f22f",
+  "source_zip_sha256": "not applicable",
+  "api_dll_sha256": "652ac51d86a963d3cf795bad9271f821579a3bb65bc871313b900ba834f9d1ec",
+  "logging_dll_sha256": "a76a735b63e6ef3b0bf41ff92423cbd16103b8952e8306140a9bd650346034dc",
+  "plugin_executed": false,
+  "server_started": false,
+  "deployed": false
+}

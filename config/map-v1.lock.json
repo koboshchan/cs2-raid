@@ -1,0 +1,47 @@
+{
+  "url": "https://github.com/koboshchan/cs2-raid/releases/tag/map-v1",
+  "assets": [
+    {
+      "name": "df_spaceport_server_ready_20261104.zip.part001",
+      "size": 536870912,
+      "sha256": "sha256:95024e3bbcad61ed7e046bb4242f330ab42e4121657e5de2df16d32fcf08b70d"
+    },
+    {
+      "name": "df_spaceport_server_ready_20261104.zip.part002",
+      "size": 536870912,
+      "sha256": "sha256:ddddcf0b2ff5d2bb18deb337dce58726ba63a46d9e00fb881099dc7c03e42923"
+    },
+    {
+      "name": "df_spaceport_server_ready_20261104.zip.part003",
+      "size": 536870912,
+      "sha256": "sha256:fcf86c6a3b7fa497c5a4b937f9a2a2cd2144cf79a096255cca5db88cbd240659"
+    },
+    {
+      "name": "df_spaceport_server_ready_20261104.zip.part004",
+      "size": 536870912,
+      "sha256": "sha256:1171f8cb1855837f4eff06bec146651cbfcc90093a8113487e809cbe857f9249"
+    },
+    {
+      "name": "df_spaceport_server_ready_20261104.zip.part005",
+      "size": 536870912,
+      "sha256": "sha256:a046b64914ac29854996c4104e490f9f91b6551451b9e9a8a99face5f0fcd23d"
+    },
+    {
+      "name": "df_spaceport_server_ready_20261104.zip.part006",
+      "size": 6063720,
+      "sha256": "sha256:8922cd5038caa9f31baa6c029cbb73542bfcc9b0762be99bec9b0130bfea3d31"
+    },
+    {
+      "name": "SHA256SUMS",
+      "size": 783,
+      "sha256": "sha256:0a3af18508281e1bfbd4dd51cd7c0e527f91a6575f941c27b6db51b82b460aaa"
+    },
+    {
+      "name": "REASSEMBLY.md",
+      "size": 1008,
+      "sha256": "sha256:3c98af2dd26c29c92ae41e8dfe3e63cc1385f064ebdfa193a811ef6889807c25"
+    }
+  ],
+  "archive_sha256": "c0ec824ac4b05359412251411cb38b0861a7111c8b12c0f1865eb84044d01f62",
+  "archive_bytes": 2690418280
+}
