@@ -191,7 +191,7 @@ public static class BannerInput
             "win" => BannerResult.Win, "lose" => BannerResult.Lose,
             "tie" => BannerResult.Draw, _ => (BannerResult)(-1)
         };
-        return Enum.IsDefined(parsed) && color.ToLowerInvariant() is "green" or "gold" or "red" or "white" or "blue";
+        return Enum.IsDefined(parsed) && color.ToLowerInvariant() is "gold" or "blue" or "red" or "gray";
     }
     public static string NativeColor(int team, BannerResult result) =>
         result == BannerResult.Lose ? "red" : result == BannerResult.Draw ? "gray" : team == 2 ? "gold" : "blue";

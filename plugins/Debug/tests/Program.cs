@@ -30,7 +30,7 @@ foreach (var team in new[] { -1, 0, 1, 4, 255 })
 
 foreach (var team in new[] { 2, 3 })
 foreach (var result in new[] { "win", "lose", "tie" })
-foreach (var color in new[] { "green", "gold", "red", "white", "blue" })
+foreach (var color in new[] { "gold", "blue", "red", "gray" })
 {
     Check(BannerInput.TryParse(result, color, out var parsed), $"parse {result} {color}");
     var expected = result == "lose" ? "red" : result == "tie" ? "gray" : team == 2 ? "gold" : "blue";
@@ -40,6 +40,8 @@ foreach (var color in new[] { "green", "gold", "red", "white", "blue" })
 Check(BannerInput.TryParse("WIN", "GOLD", out var upper) && upper == BannerResult.Win, "case insensitive banner");
 Check(!BannerInput.TryParse("draw", "red", out _), "reject invalid result");
 Check(!BannerInput.TryParse("win", "<font color=green>", out _), "reject color injection");
+Check(!BannerInput.TryParse("win", "green", out _), "reject removed green");
+Check(!BannerInput.TryParse("win", "white", out _), "reject removed white");
 Check(!BannerInput.TryParse("win", "purple", out _), "reject unadvertised color");
 Check(!RoundBanner.TryCreate(2, (BannerResult)99, out _), "undefined banner result rejected");
 var a = new Point(1, 2, 3);
