@@ -26,7 +26,7 @@ public sealed class DebugConfig : BasePluginConfig
 public sealed partial class DebugPlugin : BasePlugin, IPluginConfig<DebugConfig>
 {
     public override string ModuleName => "Map Debug";
-    public override string ModuleVersion => "0.1.4-hudonly.7";
+    public override string ModuleVersion => "0.1.4-world.1";
     public override string ModuleAuthor => "koboshchan";
     public override string ModuleDescription => "Debug economy and durable map issue reports";
     public DebugConfig Config { get; set; } = new();
@@ -170,6 +170,8 @@ public sealed partial class DebugPlugin : BasePlugin, IPluginConfig<DebugConfig>
     }
     private void ForgetId(ulong id)
     {
+        RemoveWorld(id);
+        previews.Remove(id);
         if (grantedAdmins.Remove(id)) AdminManager.RemovePlayerPermissions(new SteamID(id), "@css/root");
         shots.Remove(id); reportLimiter.Remove(id);
         textureLimiter.Remove(id); listLimiter.Remove(id); resetLimiter.Remove(id); bannerLimiter.Remove(id);

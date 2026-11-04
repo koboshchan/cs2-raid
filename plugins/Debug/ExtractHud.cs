@@ -7,7 +7,7 @@ public sealed record PreviewArgs(int Seconds,string Style,bool Stop)
         int seconds=300;string style="css";bool number=false,variant=false;
         foreach(var a in args){
             if(int.TryParse(a,NumberStyles.None,CultureInfo.InvariantCulture,out var n)&&!number&&n>=1&&n<=3600){seconds=n;number=true;}
-            else if((a=="css"||a=="png"||a=="plain"||a=="tags"||a=="classes"||a=="alert")&&!variant){style=a;variant=true;}
+            else if((a=="css"||a=="png"||a=="plain"||a=="tags"||a=="classes"||a=="alert"||a=="world")&&!variant){style=a;variant=true;}
             else return null;
         }
         return new(seconds,style,false);
@@ -128,10 +128,15 @@ public static class PreviewDispatch
     }
 }
 
-// No entity may be created until the complete native recipient/lifecycle audit is proven.
-// An explicit world request is recognized, but never falls through to HTML/alert.
-public static class WorldProbeGate
+// Pure camera-relative placement, intended upper view, client appearance is unverified.
+public static class WorldProbeGeometry
 {
-    public static bool Requested(IEnumerable<string> args)=>args.Contains("world",StringComparer.Ordinal);
-    public static string Unavailable=>"UNAVAILABLE: world probe recipient privacy is not proven before first transmit and across lifecycle races. No entity created; no broadcast.";
+    public static (float X,float Y,float Z) Place(float x,float y,float z,float pitch,float yaw){
+        if(!float.IsFinite(x)||!float.IsFinite(y)||!float.IsFinite(z)||!float.IsFinite(pitch)||!float.IsFinite(yaw))throw new ArgumentException("Nonfinite eyes");
+        var p=pitch*Math.PI/180;var a=yaw*Math.PI/180;
+        return ((float)(x+48*Math.Cos(p)*Math.Cos(a)+12*Math.Sin(p)*Math.Cos(a)),
+                (float)(y+48*Math.Cos(p)*Math.Sin(a)+12*Math.Sin(p)*Math.Sin(a)),
+                (float)(z-48*Math.Sin(p)+12*Math.Cos(p)));
+    }
+    public static string Text(int n,bool red)=>(n<=10?"[ "+n.ToString(CultureInfo.InvariantCulture)+" ]":(n/60).ToString("00",CultureInfo.InvariantCulture)+":"+(n%60).ToString("00",CultureInfo.InvariantCulture))+"\n"+(red?"WARNING":"Extracting");
 }

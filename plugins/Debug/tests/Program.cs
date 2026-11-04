@@ -333,8 +333,15 @@ Check(htmlCalls==1&&alertCalls==3,"HTML path never alert");
 PreviewDispatch.Send("alert","",_=>htmlCalls++,_=>alertCalls++);
 Check(htmlCalls==1&&alertCalls==3,"empty dispatch no foreign surface");
 
-Check(WorldProbeGate.Requested(["15","world"]),"world explicit recognized unavailable");
-Check(WorldProbeGate.Requested(["world","15"]),"world either argument order gated");
-Check(!WorldProbeGate.Requested(["15","alert"]),"world gate does not change alert");
-Check(WorldProbeGate.Unavailable.StartsWith("UNAVAILABLE:")&&WorldProbeGate.Unavailable.Contains("No entity created"),"world honest fail closed");
-Check(PreviewArgs.Parse(["15","world"])==null,"world never falls through native render styles");
+Check(PreviewArgs.Parse(["15","world"])!.Style=="world","actual world parser");
+Check(WorldProbeGeometry.Text(15,false)=="00:15\nExtracting","world clock");
+Check(WorldProbeGeometry.Text(10,true)=="[ 10 ]\nWARNING","world final warning");
+var eye=WorldProbeGeometry.Place(0,0,64,0,0);
+Check(Math.Abs(eye.X-48)<0.001&&Math.Abs(eye.Z-76)<0.001,"eye forward48 upper12");
+bool worldBad=false;try{WorldProbeGeometry.Place(float.NaN,0,0,0,0);}catch(ArgumentException){worldBad=true;}
+Check(worldBad,"world nonfinite fail closed");
+var worldTimer=new PreviewClock(0,15);
+worldTimer.Tick(0,2,true,true,"world");worldTimer.Tick(4000,0,true,true,"world");
+Check(worldTimer.Remaining(6000)==9,"world outside timer continues");
+Check(WorldProbeGeometry.Text(worldTimer.Remaining(6000),false)=="[ 9 ]\nExtracting","world reentry actual remaining");
+worldTimer.Clear(false);Check(!worldTimer.Owned,"world clock managed cancellation");
