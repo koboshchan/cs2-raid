@@ -1,0 +1,13 @@
+# Stage 2 native B-menu fixture purchasing (pending, not implemented)
+
+Scope freeze: finish independently reviewed round/automatic human enrollment + separate solo bot enemies first. Existing strict custom buy interception remains unchanged; !testbuy is fallback current implementation, not acceptance of native B-menu economics.
+
+Requested primary UX: native B GUI on both T/CT, buyzone everywhere, only automatic 30-second Buy. Use vanilla prices. Dedicated private-LAN test fixture only, external SSG money HARD OFF. Local finite authoritative test balance; HUD projection min(balance,65535), never read clamped HUD into authoritative balance. Preserve knives across spawn, purchase, removal and cleanup. Bots no economic membership/actions.
+
+Before code inspect current dependency API docs and native purchase event/hook ordering. Inventory exact native command paths including B-menu buy, autobuy/rebuy, console buy, team-specific aliases, direct grants, equip/loadout, pickup/drop and spawned entities. Current custom GiveNamedItem implementation is not native purchase transaction proof. Do not enable engine purchasing merely by setting buytime/buy-anywhere/cash cvars.
+
+Plan candidate hooks: pre-command buy authorization and reservation with generation/controller identity/phase/item/price/unique request state, paired item_purchase and native inventory observations for authoritative committed delivery; native money change observation/projection guard, inventory/entity spawn/pickup and cleanup hooks for duplicate/utility/out-of-phase rejection. Verify each actual supported hook and callback ordering first. An event alone may be post-delivery and cannot be assumed cancellable. Native B-menu cash limit and price synchronization must be tested; HUD cash cannot become source of truth.
+
+Exactly-once reservation/debit/delivery/cancel/reconcile ledger. Explicit policy and tests for insufficient balance, cancellation, native grant failure, ambiguous delivery, multi-buy same-frame/reentrancy, phase transition, reconnect, round/map cleanup, stale serial handles and generation. Fail closed on uncertain delivery, no automatic refund into free gear. No free purchases outside Buy, no drop/resale refunds, no utility or abilities through any command/menu/grant/pickup path. Strict allowlist, no arbitrary entity strings. Native prices and authoritative finite balance must agree for each supported native item.
+
+Acceptance requires offline extracted transaction tests plus real LAN B-menu T/CT buys, failure/cancel/out-of-phase/utility attempts, simultaneous inputs, inventory ledger/native wallet reconciliation, knife preservation and round/reconnect tests. Separate review, warned coordinated target restart. No DeltaOps abilities.
