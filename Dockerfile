@@ -72,7 +72,7 @@ COPY --from=deltaops-build /work/artifacts/ /
 FROM dependencies AS raid-build
 ENV HOME=/work/home DOTNET_CLI_HOME=/work/home NUGET_PACKAGES=/work/nuget
 RUN --network=none mkdir /work && chown 1000:1000 /work
-COPY --chown=1000:1000 plugins/RaidPlugin/RaidPlugin.csproj plugins/RaidPlugin/RaidPlugin.cs plugins/RaidPlugin/RaidState.cs plugins/RaidPlugin/GameplayState.cs plugins/RaidPlugin/GameplayAdapter.cs plugins/RaidPlugin/PartnerVisuals.cs plugins/RaidPlugin/PurchasePricing.cs plugins/RaidPlugin/TonightGameplay.cs plugins/RaidPlugin/TonightRules.cs plugins/RaidPlugin/DeltaOpsBridge.cs plugins/RaidPlugin/source.sha256 /input/
+COPY --chown=1000:1000 plugins/RaidPlugin/RaidPlugin.csproj plugins/RaidPlugin/RaidPlugin.cs plugins/RaidPlugin/RaidState.cs plugins/RaidPlugin/GameplayState.cs plugins/RaidPlugin/GameplayAdapter.cs plugins/RaidPlugin/PartnerVisuals.cs plugins/RaidPlugin/PurchasePricing.cs plugins/RaidPlugin/TonightGameplay.cs plugins/RaidPlugin/TonightRules.cs plugins/RaidPlugin/DeltaOpsBridge.cs plugins/RaidPlugin/SettlementProtocol.cs plugins/RaidPlugin/SettlementBridge.cs plugins/RaidPlugin/source.sha256 /input/
 COPY --chown=1000:1000 plugins/RaidPlugin/tests/ /input/tests/
 USER 1000:1000
 WORKDIR /work
@@ -87,7 +87,7 @@ cat > /work/NuGet.Config <<'EOF'
 EOF
 for n in 1 2; do
   mkdir -p /work/run$n/src /work/artifacts/build-$n
-  cp /input/RaidPlugin.csproj /input/RaidPlugin.cs /input/RaidState.cs /input/GameplayState.cs /input/GameplayAdapter.cs /input/PartnerVisuals.cs /input/PurchasePricing.cs /input/TonightGameplay.cs /input/TonightRules.cs /input/DeltaOpsBridge.cs /work/run$n/src/; cp -R /input/tests /work/run$n/src/
+  cp /input/RaidPlugin.csproj /input/RaidPlugin.cs /input/RaidState.cs /input/GameplayState.cs /input/GameplayAdapter.cs /input/PartnerVisuals.cs /input/PurchasePricing.cs /input/TonightGameplay.cs /input/TonightRules.cs /input/DeltaOpsBridge.cs /input/SettlementProtocol.cs /input/SettlementBridge.cs /work/run$n/src/; cp -R /input/tests /work/run$n/src/
   dotnet build /work/run$n/src/RaidPlugin.csproj -c Release --configfile /work/NuGet.Config \
     -o /work/artifacts/build-$n -p:CSS_API_DIR=/deps/css/addons/counterstrikesharp/api \
     -p:Deterministic=true -p:ContinuousIntegrationBuild=true -p:PathMap=/work/run$n/src=/_/raidplugin \

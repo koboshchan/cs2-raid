@@ -26,6 +26,17 @@ public sealed class GameplayState
     private readonly HashSet<int> levers = [];
     private readonly Dictionary<string,ExtractionIntent> extractionIntents = [];
     private int nextTeam;
+    private readonly HashSet<string> cashIns=[];
+    public string ExtractionWindowId { get; private set; } = "";
+    internal bool ApplyCashIn(string id,long dollars) {
+        if(Phase!=GamePhase.Buy || !Living(id) || dollars is <1 or >15000 || Players[id].Cash!=0 || !cashIns.Add(id))return false;
+        Players[id].Cash=dollars;return true;
+    }
+    internal bool IsIssuedExtraction(ExtractionIntent intent) => extractionIntents.TryGetValue(intent.Player,out var issued) && issued==intent;
+    internal bool ConfirmVerifiedExtraction(ExtractionIntent intent) {
+        if(Phase!=GamePhase.Active || !IsIssuedExtraction(intent) || !Living(intent.Player) || Players[intent.Player].Cash!=intent.Cash || ExtractionAt==null)return false;
+        var p=Players[intent.Player];p.Extracted=true;p.Cash=0;holds.Remove(p.Id);extractionIntents.Remove(p.Id);return true;
+    }
     public GamePhase Phase { get; private set; }
     public DateTimeOffset? StartsAt { get; private set; }
     public DateTimeOffset? EndsAt { get; private set; }
@@ -130,7 +141,7 @@ public sealed class GameplayState
     public bool PullLever(string id,int number,DateTimeOffset now)
     {
         if(Phase!=GamePhase.Active || !Living(id) || number<1 || number>4 || ExtractionAt!=null || !levers.Add(number))return false;
-        if(levers.Count>=2)ExtractionAt=now.AddMinutes(5);
+        if(levers.Count>=2){ExtractionAt=now.AddMinutes(5);ExtractionWindowId=Guid.NewGuid().ToString("N");}
         return true;
     }
     public ExtractionIntent[] ExtractionCandidates(DateTimeOffset now,IEnumerable<string> inZone)
@@ -139,15 +150,6 @@ public sealed class GameplayState
         var candidates=inZone.Distinct().Where(Living).Select(id=>new ExtractionIntent(MatchId+":"+id,id,Players[id].Cash)).ToArray();
         foreach(var intent in candidates)extractionIntents[intent.Player]=intent;
         return candidates;
-    }
-    // Called only after a durable backend settlement receipt. No local payout or refund occurs.
-    public bool ConfirmExtraction(ExtractionIntent intent,string durableReceipt)
-    {
-        if(Phase!=GamePhase.Active || string.IsNullOrWhiteSpace(durableReceipt) ||
-           !extractionIntents.TryGetValue(intent.Player,out var issued) || issued!=intent ||
-           intent.Id!=MatchId+":"+intent.Player || !Living(intent.Player) ||
-           Players[intent.Player].Cash!=intent.Cash || ExtractionAt==null)return false;
-        var p=Players[intent.Player];p.Extracted=true;p.Cash=0;holds.Remove(p.Id);extractionIntents.Remove(p.Id);return true;
     }
     public bool FinishExtractionWindow(DateTimeOffset now)
     {
@@ -170,6 +172,7 @@ public sealed class GameplayConfig
     public static int NativeSpend(int projected,int current) => Math.Max(0,projected-Math.Max(0,current));
     public static bool Utility(string name) => name.Replace("weapon_","").ToLowerInvariant() is "flashbang" or "smokegrenade" or "hegrenade" or "molotov" or "incgrenade" or "decoy";
     public bool CoordinatesConfirmed { get; set; }
+    public bool FinancialNativeVerified { get; set; } = false;
     public bool NativeFlowVerified { get; set; } // explicit live-QA gate, never enabled by example
     public Position Lobby { get; set; } = new(0,0,0);
     public Position ReadyPlatform { get; set; } = new(0,0,0);

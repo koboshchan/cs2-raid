@@ -62,9 +62,9 @@ public static class FlowTests
         Check(!g.PullLever("a",2,t.AddMinutes(5)));Check(g.ExtractionCandidates(t.AddMinutes(8),["c"]).Length==0);
         Check(g.ExtractionCandidates(t.AddMinutes(9),[]).Length==0);
         var candidates=g.ExtractionCandidates(t.AddMinutes(9),["ghost","c","c"]);Check(candidates.Length==1);
-        Check(candidates[0].Cash==1000);Check(!g.ConfirmExtraction(candidates[0],""));
-        Check(g.Players["c"].Cash==1000 && !g.Players["c"].Extracted);Check(!g.ConfirmExtraction(candidates[0] with { Cash=2000 },"receipt"));
-        Check(g.ConfirmExtraction(candidates[0],"durable-receipt"));Check(!g.ConfirmExtraction(candidates[0],"durable-receipt"));
+        Check(candidates[0].Cash==1000);Check(!new GameplayConfig().FinancialNativeVerified);
+        Check(g.Players["c"].Cash==1000 && !g.Players["c"].Extracted);Check(!g.ConfirmVerifiedExtraction(candidates[0] with { Cash=2000 }));
+        Check(g.ConfirmVerifiedExtraction(candidates[0]));Check(!g.ConfirmVerifiedExtraction(candidates[0]));
         Check(g.Players["c"].Extracted && g.Players["c"].Cash==0 && !g.Living("c"));Check(!g.CanDamage("c","a"));
         Check(!g.FinishExtractionWindow(t.AddMinutes(8)));Check(g.FinishExtractionWindow(t.AddMinutes(9)));Check(g.ExtractionAt==null);
         Check(g.PullLever("a",1,t.AddMinutes(10)));Check(g.PullLever("b",2,t.AddMinutes(10)));Check(g.ExtractionAt==t.AddMinutes(15));
@@ -113,13 +113,13 @@ public static class FlowTests
                 Check(sim.Players.Values.Where(x=>x.Team!=null).GroupBy(x=>x.Team).All(x=>x.Count()<=2));
             }
         }
-        var issued=Active();Check(!issued.ConfirmExtraction(new(issued.MatchId+":a","a",0),"receipt"));
+        var issued=Active();Check(!issued.ConfirmVerifiedExtraction(new(issued.MatchId+":a","a",0)));
         issued.PullLever("a",1,t);issued.PullLever("b",2,t);
         var oldIntent=issued.ExtractionCandidates(t.AddMinutes(5),["a"]).Single();
         issued.FinishExtractionWindow(t.AddMinutes(5));issued.PullLever("a",1,t.AddMinutes(6));issued.PullLever("b",2,t.AddMinutes(6));
-        Check(!issued.ConfirmExtraction(oldIntent,"stale-window-receipt"));
+        Check(!issued.ConfirmVerifiedExtraction(oldIntent));
         var timed=issued.ExtractionCandidates(t.AddMinutes(11),["a"]).Single();
-        issued.Tick(t.AddMinutes(30),true);Check(!issued.ConfirmExtraction(timed,"late-receipt"));
+        issued.Tick(t.AddMinutes(30),true);Check(!issued.ConfirmVerifiedExtraction(timed));
         Check(!Active().AddLoot(new("invalid",origin,(LootKind)99,1,1)));
         conf=new GameplayConfig {MapLoot=[new("invalid",(LootKind)99,1)]};Reject(conf.Validate);
         Check(!new GameplayConfig().CustomPricingEnabled);

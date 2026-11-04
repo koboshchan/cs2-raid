@@ -10,16 +10,16 @@ Authoritative requirements remain in [SPEC.md](SPEC.md). Implementation status b
 - [x] Safe hold timer, release/range reset, configured money range and single-consumer award.
 - [x] Death cash becomes one claimable bag instead of kill transfer; gun drop tracking stages E sale.
 - [x] Four distinct lever IDs, two pulls open five-minute countdown, reusable reset.
-- [x] Extraction candidate snapshot and durable-receipt-required confirmation boundary. No payout implementation.
+- [x] Extraction candidate snapshot and internal structured-proof-only confirmation boundary; disabled native settlement adapter.
 - [x] Buy-phase-only guns/armor; utility blocked at buy command. Kit utility remains DeltaOps-owned.
 - [x] Native staging adapter compiled: phase movement/visibility, E proximity, native ground CanUse veto, map targetname resolution, touch-trigger membership with configured sphere fallback.
 - [x] Disable by default; additional nativeFlowVerified gate. Empty example coordinates/targets, never fabricated map data.
 
 ## Blocking work, NOT complete
 
-- [ ] DeltaOps PluginCapability assignment + duo/FFA-aware abilities. deltaops-abilities-fix 4df1896 is read-only reference only; not merged. No capability exists there. Raid character selection refuses confirmation until assignment succeeds.
+- [x] Offline DeltaOps PluginCapability assignment, six characters, custom duo/FFA targeting and fail-closed reset lifecycle. Unsafe global enemy reveals suppressed; live ability/utility QA remains blocked.
 - [ ] Live verify all twelve ability routes, kit utility delivery/economy fencing and selection lifecycle.
-- [ ] Backend-authoritative cash-in max $15,000, durable debit/settlement IDs, exact receipt reconciliation, extraction gun/unused-utility valuation and approved payouts. All money endpoints remain disabled; !cashout moves nothing. Extraction window currently reports unavailable and preserves in-match cash, NOT a successful extraction.
+- [ ] Financial ENABLEMENT remains blocked. Offline backend durable debit/mint receipt journal and gated native polling/proof adapter exist. Cash-in max $15,000; full-price guns and unused utility extraction. Backend RAID_FINANCIAL_ENABLED defaults unset and native FinancialNativeVerified defaults false. Native partial-completion recovery, durable cleanup evidence, manual reconciliation/lifecycle, live input freeze and end-to-end QA remain unfinished. No automatic refunds/regrants.
 - [ ] Reload/magazine economy (weapon price / 20), reserve-ammo control and native affordability.
 - [ ] Lucas/Ocean confirmed lobby, platform, team spawn pads, loot targetnames, four lever targetnames and extraction trigger/zone. Zero actual targets shipped.
 - [ ] True lootable death equipment/utility drop completeness, money-bag visible prop/model and armor destruction.
@@ -34,11 +34,11 @@ Authoritative requirements remain in [SPEC.md](SPEC.md). Implementation status b
 
 ## Storage
 
-Match state exists only in memory; no persistent stash. Existing backend SQLite remains account links/purchase-outbox only. Do not treat local ExtractionIntent or an arbitrary string as a backend receipt. Only a trusted future backend bridge may call ConfirmExtraction after durable receipt verification.
+Match state exists only in memory; no persistent stash. Backend SQLite contains links, legacy outbox and durable raid operation/receipt journal. Native allowlist and cleanup progress remain memory-only, a financial enablement blocker. No public arbitrary-receipt completion API remains. ConfirmVerifiedExtraction is internal and called only after locally issued request and authenticated backend structured-proof validation.
 
 ## Offline build acceptance
 
-Dedicated cs2-raid Docker daemon, SDK 10.0.403 and pinned CSS 1.0.379. Two Release builds, zero warnings/errors, byte-identical DLL/deps/PDB. Each run passed 19 legacy rule checks plus 10,264 flow-v2 checks, including 10,000 generated lobby-invariant assertions. This is pure-model/compiler evidence, not native gameplay acceptance. Receipt confirmation additionally requires an issued intent from the current extraction window; stale-window, forged and post-timeout intents reject. Trusted backend receipt validation is still absent, so the native adapter never invokes confirmation.
+Dedicated cs2-raid Docker daemon, SDK 10.0.403 and pinned CSS 1.0.379. Two Release builds, zero warnings/errors, byte-identical DLL/deps/PDB. Each run passed 19 legacy rule checks plus 10,336 flow-v2 checks plus 41 settlement-protocol checks, including 10,000 generated lobby-invariant assertions. This is pure-model/compiler evidence, not native gameplay acceptance. Receipt confirmation additionally requires an issued intent from the current extraction window; stale-window, forged and post-timeout intents reject. Authenticated private-backend proof validation is present behind OFF gates; native success/failure paths are not covered by pure-model tests. Backend passed 47 tests and TypeScript build. Debug passed 182 checks. Raid and DeltaOps repeat builds were byte-identical with zero warnings/errors.
 
 ## Tonight implementation, offline only
 
@@ -48,6 +48,6 @@ Dedicated cs2-raid Docker daemon, SDK 10.0.403 and pinned CSS 1.0.379. Two Relea
 - [x] Shared VData half-spread/inaccuracy baselines are saved once and restored on map end/unload; new guns patched on spawn.
 - [x] HUD clamp is projection only; full long ledger survives collection, money bag death/drop and overflow rejection.
 - [x] Private loss banners on death; private win helper available for trusted receipt completion only.
-- [ ] Trusted extraction settlement adapter must call private ShowRaidResult(player,true) after confirmed extraction, not before backend payment.
+- [x] Gated extraction adapter calls private ShowRaidResult(player,true) only after proof and logical/native consumption; rendering failure does not retry payment. Native runtime and partial-consumption recovery remain blocked.
 - [ ] Live native QA of 200 HP, both-team weapon buys, same-side strangers/opposite-side duos, all gun spread modes, predicted client impacts, private banners and two-user death/freecam transitions.
 - [ ] No production or native engine acceptance is implied by compiler/pure-model tests.

@@ -31,6 +31,7 @@ public sealed partial class RaidPlugin
     private HookResult ChooseNativeTeam(CCSPlayerController? p,CommandInfo c)
     {
         if(!sessionLoaded || !Human(p))return HookResult.Continue;
+        if(FinancialFrozen(Id(p)))return HookResult.Handled;
         if(c.ArgCount==2 && int.TryParse(c.GetArg(1),out var team) && TonightRules.ChooseNativeTeam(game.Phase,team)) {
             // SwitchTeam does not kill/respawn, reset cash, or alter the raid duo.
             p.SwitchTeam((CsTeam)team);

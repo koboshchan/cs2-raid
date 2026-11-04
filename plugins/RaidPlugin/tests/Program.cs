@@ -20,3 +20,5 @@ var large=Make();for(int i=0;i<1000;i++)large.RecordPurchasedGun("b",new("glock"
 Console.WriteLine($"{checks} raid rule checks passed");
 
 FlowTests.Run();
+
+SettlementTests.Run();

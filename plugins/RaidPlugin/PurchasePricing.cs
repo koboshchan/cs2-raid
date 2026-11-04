@@ -9,7 +9,7 @@ public sealed partial class RaidPlugin
     private readonly Dictionary<string,int> nativeProjections=[];
     private void ObserveNativeSpend(CCSPlayerController p)
     {
-        if(gameplayConfig.CustomPricingEnabled || !sessionLoaded || !game.Living(Id(p)) || p.InGameMoneyServices is not {} money)return;
+        if(FinancialFrozen(Id(p)) || gameplayConfig.CustomPricingEnabled || !sessionLoaded || !game.Living(Id(p)) || p.InGameMoneyServices is not {} money)return;
         var id=Id(p);
         if(nativeProjections.TryGetValue(id,out var projected)) {
             var spend=GameplayConfig.NativeSpend(projected,money.Account);
@@ -29,6 +29,7 @@ public sealed partial class RaidPlugin
         AddCommandListener("buy",(p,c)=>{
             if(!Human(p))return HookResult.Continue;
             if(!sessionLoaded)return HookResult.Continue;
+            if(FinancialFrozen(Id(p)))return HookResult.Handled;
             var requested=c.ArgCount==2?PriceItem(c.GetArg(1)):null;
             if(game.Phase!=GamePhase.Buy || !game.Living(Id(p)) || requested==null || GameplayConfig.Utility(requested.Entity)) {
                 p.PrintToChat("Buying is limited to guns/armor in the 30s buy phase. Utility comes from character kits.");return HookResult.Handled;

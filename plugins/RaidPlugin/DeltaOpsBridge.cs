@@ -42,6 +42,7 @@ public sealed partial class RaidPlugin
         if (!deltaOpsBridgeLoaded || !gameplayConfig.Enabled || !sessionLoaded) return false;
         string a = first.ToString(System.Globalization.CultureInfo.InvariantCulture);
         string b = second.ToString(System.Globalization.CultureInfo.InvariantCulture);
+        if(operation!=4 && (FinancialFrozen(a) || FinancialFrozen(b)))return false;
         return operation switch
         {
             0 => deltaOpsCharactersReady && game.Phase == GamePhase.CharacterSelect && game.Living(a) &&

@@ -36,7 +36,7 @@ public sealed partial class RaidPlugin
         if(File.Exists(path)) gameplayConfig=JsonSerializer.Deserialize<GameplayConfig>(File.ReadAllText(path),new JsonSerializerOptions { PropertyNameCaseInsensitive=true }) ?? new();
         gameplayConfig.Validate();
         if(!gameplayConfig.Enabled) return;
-        RegisterDeltaOpsBridge(); RegisterPartnerVisuals(); RegisterPricing(); RegisterTonightGameplay();
+        RegisterDeltaOpsBridge(); RegisterPartnerVisuals(); RegisterPricing(); RegisterTonightGameplay();RegisterSettlementBridge();
         VirtualFunctions.CCSPlayer_WeaponServices_CanUseFunc.Hook(BlockGroundPickup,HookMode.Pre);
         VirtualFunctions.CBaseTrigger_StartTouchFunc.Hook(ExtractionTouchStart,HookMode.Post);
         VirtualFunctions.CBaseTrigger_EndTouchFunc.Hook(ExtractionTouchEnd,HookMode.Post);
@@ -52,7 +52,7 @@ public sealed partial class RaidPlugin
             if(!deltaOpsCharactersReady || assignCharacter==null || !assignCharacter(p,number)) {p.PrintToChat("Character bridge unavailable. Selection not confirmed; raid stays in selection.");return;}
             if(game.SelectCharacter(Id(p),number))p.PrintToChat("Selected "+GameplayState.Characters[number-1]);
         });
-        AddCommand("css_cashout","Cash in from SSG",(p,c)=>c.ReplyToCommand("Cash-in disabled until durable backend debit and receipt reconciliation are installed. No funds moved."));
+        AddCommand("css_cashout","Cash in from SSG",(p,c)=>BeginCashIn(p,c.ArgCount==2?c.GetArg(1):""));
         RegisterListener<Listeners.OnEntityTakeDamagePre>(Damage);
         RegisterListener<Listeners.OnTick>(GameplayTick);
         RegisterListener<Listeners.OnMapStart>(_=>{StopGameplay();game=new();});
@@ -107,7 +107,7 @@ public sealed partial class RaidPlugin
     }
     private void ResetLobby()
     {
-        ClearPartnerVisuals();ClearLoot();ClearTonightMatch();game=new();observedWeapons.Clear();nativeProjections.Clear();lastCountdown=-1;
+        InvalidateFinancialMatch();ClearPartnerVisuals();ClearLoot();ClearTonightMatch();game=new();observedWeapons.Clear();nativeProjections.Clear();lastCountdown=-1;
         sessionLoaded=gameplayConfig.Ready(0);
         if(!sessionLoaded){Server.PrintToChatAll("Raid disabled until map coordinates and native flow QA are confirmed.");return;}
         SetCvar("mp_autoteambalance",0);SetCvar("mp_limitteams",0);SetCvar("mp_ignore_round_win_conditions",1);
@@ -154,6 +154,7 @@ public sealed partial class RaidPlugin
         if(lootEntities.Values.Contains(entity.EntityHandle.Raw))return HookResult.Handled; // never shoot-to-loot
         var attacker=Controller(info.Attacker.Value);var victim=Controller(entity);
         if(victim==null)return HookResult.Continue;
+        if(FinancialFrozen(Id(victim)) || attacker!=null && FinancialFrozen(Id(attacker)))return HookResult.Handled;
         if(game.Phase==GamePhase.Lobby) {
             if(attacker!=null && info.Damage>0 && (info.BitsDamageType & DamageTypes_t.DMG_BULLET)!=0 && game.ShootRequest(Id(attacker),Id(victim))) {
                 Server.PrintToChatAll(SafeName(attacker.PlayerName)+" and "+SafeName(victim.PlayerName)+" are teammates");
@@ -173,17 +174,19 @@ public sealed partial class RaidPlugin
             else if(!game.Players.ContainsKey(Id(p))&&p.TeamNum!=(int)CsTeam.Spectator)p.ChangeTeam(CsTeam.Spectator);
         }
         if(game.Phase==GamePhase.Lobby && !deltaOpsCharactersReady)deltaOpsCharactersReady=ResetDeltaOpsCharacters();
+        if(PendingSettlement)return; // Await durable/manual reconciliation before advancing phase or closing window.
         var previous=game.Phase;
         var count=game.Tick(DateTimeOffset.UtcNow,deltaOpsCharactersReady && gameplayConfig.Ready(game.Players.Values.Select(x=>x.Team).Distinct().Count()));
         if(game.Phase!=previous)OnPhaseChanged();
         if(count is int n && n!=lastCountdown){lastCountdown=n;Server.PrintToChatAll(game.Phase+" "+n+"s");}
         if(game.Phase==GamePhase.Active && game.ExtractionAt is {} at && DateTimeOffset.UtcNow>=at) {
-            // Backend /extract is deliberately 503. Do NOT destroy cash, grant credit or
-            // claim extraction before durable settlement support exists.
+            if(extractionAdmissionClosed) {game.FinishExtractionWindow(DateTimeOffset.UtcNow);extractionAdmissionClosed=false;return;}
+            extractionAdmissionClosed=true;
             var inZone=game.Players.Keys.Where(InExtractionZone).ToArray();
-            if(game.ExtractionCandidates(DateTimeOffset.UtcNow,inZone).Length>0)
-                Server.PrintToChatAll("Extraction settlement unavailable. No SSG funds paid; cash remains in this match.");
-            game.FinishExtractionWindow(DateTimeOffset.UtcNow);
+            var candidates=game.ExtractionCandidates(DateTimeOffset.UtcNow,inZone);
+            if(FinancialReady)foreach(var intent in candidates){var p=Find(intent.Player);if(p!=null)BeginExtraction(p,intent);}
+            else if(candidates.Length>0)Server.PrintToChatAll("Extraction settlement disabled pending financial native QA. No SSG funds paid.");
+            if(!PendingSettlement){game.FinishExtractionWindow(DateTimeOffset.UtcNow);extractionAdmissionClosed=false;}
         }
         if(game.Phase==GamePhase.Closed) {
             foreach(var m in game.Players.Values.Where(x=>!x.Extracted)){var p=Find(m.Id);if(p!=null) {try {ShowRaidResult(p,false);} catch(Exception) { /* UI must not prevent closing a raid. */ } if(p.PawnIsAlive)p.CommitSuicide(false,true);}}
@@ -253,7 +256,9 @@ public sealed partial class RaidPlugin
     {
         if(!sessionLoaded)return;
         UpdatePartnerVisuals();
-        foreach(var p in Utilities.GetPlayers().Where(Human))if(game.Living(Id(p))) {
+        foreach(var p in Utilities.GetPlayers().Where(Human)) {
+            if(FinancialFrozen(Id(p))) {HoldFinancialInventory(p);continue;}
+            if(!game.Living(Id(p)))continue;
             ObserveNativeSpend(p);SetMoney(p,game.Players[Id(p)].Cash);
             if(p.PlayerPawn.Value is {} pawn)pawn.InBuyZone=game.Phase==GamePhase.Buy;
         }
@@ -267,7 +272,7 @@ public sealed partial class RaidPlugin
             var weapon=new CHandle<CBasePlayerWeapon>(handle).Value;
             if(weapon is not {IsValid:true} || weapon.OwnerEntity.IsValid || weapon.AbsOrigin is not {} pos)continue;
             var item=catalog.FirstOrDefault(x=>x.Entity==old.Entity);
-            if(item==null || (!item.IsGun && !GameplayConfig.Utility(item.Entity)))continue;
+            if(FinancialFrozen(old.Owner) || item==null || (!item.IsGun && !GameplayConfig.Utility(item.Entity)))continue;
             var key="equipment:"+handle;
             if(game.AddLoot(new(key,new(pos.X,pos.Y,pos.Z),LootKind.Equipment,item.PriceDollars,item.PriceDollars)))lootEntities[key]=handle;
         }
@@ -279,7 +284,7 @@ public sealed partial class RaidPlugin
     private void Interact(CCSPlayerController p)
     {
         var id=Id(p);
-        if(!game.Living(id) || Location(p) is not {} pos || (p.Buttons & PlayerButtons.Use)==0){game.ReleaseUse(id);useDown.Remove(id);return;}
+        if(FinancialFrozen(id) || !game.Living(id) || Location(p) is not {} pos || (p.Buttons & PlayerButtons.Use)==0){game.ReleaseUse(id);useDown.Remove(id);return;}
         var pressed=useDown.Add(id);
         var target=game.Ground.Values.Where(x=>pos.Within(x.Position,96)).OrderBy(x=>Math.Pow(pos.X-x.Position.X,2)+Math.Pow(pos.Y-x.Position.Y,2)+Math.Pow(pos.Z-x.Position.Z,2)).FirstOrDefault();
         if(target!=null) {
@@ -340,6 +345,7 @@ public sealed partial class RaidPlugin
     }
     private void StopGameplay()
     {
+        InvalidateFinancialMatch();
         if(sessionLoaded)foreach(var p in Utilities.GetPlayers().Where(Human))SetPresentation(p,false,false);
         RestoreSpread();ClearTonightMatch();ClearPricing();sessionLoaded=false;ClearPartnerVisuals();ClearLoot();observedWeapons.Clear();
         foreach(var (name,value) in savedCvars)RestoreCvar(name,value);
