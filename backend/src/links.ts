@@ -12,6 +12,10 @@ export class LinkStore {
       CREATE TABLE IF NOT EXISTS bindings (steam TEXT PRIMARY KEY, app_user TEXT NOT NULL UNIQUE, grant_id TEXT NOT NULL) STRICT;`);
   }
   close() { this.db.close(); }
+  status(steam: string) {
+    steamSchema.parse(steam);
+    return { linked: !!this.db.prepare("SELECT steam FROM bindings WHERE steam=?").get(steam) };
+  }
   async create(steam: string) {
     steamSchema.parse(steam);
     if (this.db.prepare("SELECT steam FROM bindings WHERE steam=?").get(steam)) throw new Error("Already linked; operator unlink required");

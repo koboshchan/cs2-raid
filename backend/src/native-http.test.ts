@@ -37,7 +37,7 @@ test("finalize callback contains only structured durable proof and immutable req
 test("native polling routes have identical private auth, Origin rejection and no command surface",async()=>{
  const n=new NativeHttpBridge(),token="n".repeat(40);
  // Route-only test: no ledger/money call is possible in this scenario.
- const app=createServer(token,new Map(),{async create(){return {};},async poll(){return {};}},
+ const app=createServer(token,new Map(),{status(){return {linked:false};},async create(){return {};},async poll(){return {};}},
  {ledger:{} as never,api:{} as never,native:n});
  try{
  const headers={authorization:"Bearer "+token};

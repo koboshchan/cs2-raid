@@ -129,7 +129,7 @@ test("unlinked account and forged armor fail closed",async()=>{
 });
 test("injected HTTP routes enforce confidential auth and native checks, default boot closed",async()=>{
  const f=setup(),token="t".repeat(40);
- const app=createServer(token,catalog,{async create(){return {};},async poll(){return {};}},
+ const app=createServer(token,catalog,{status(){return {linked:false};},async create(){return {};},async poll(){return {};}},
  {ledger:f.ledger,api:f.api,native:f.native});
  try {
  const input=extract();
@@ -161,7 +161,7 @@ test("freeze crash before network reopens identical durable request without mone
 test("proof lookup is authenticated, read-only, durable and requires exact persisted fingerprint",async()=>{
  const f=setup(),token="p".repeat(40),input=extract();
  const settled=await f.ledger.execute("extract",input,f.api,f.native); f.reopen();
- const app=createServer(token,catalog,{async create(){return {};},async poll(){return {};}},{ledger:f.ledger,api:f.api,native:f.native});
+ const app=createServer(token,catalog,{status(){return {linked:false};},async create(){return {};},async poll(){return {};}},{ledger:f.ledger,api:f.api,native:f.native});
  try{
  const payload={operationKey:settled.operationKey,requestFingerprint:settled.requestFingerprint};
  const headers={authorization:"Bearer "+token};
@@ -258,7 +258,7 @@ test("recovery-only HTTP works money OFF, admin auth isolated, Origin rejected, 
  const f=setup(),token="n".repeat(40),adminToken="a".repeat(40);
  const proof=await f.ledger.execute("cashin",cashin(),f.api,f.native);
  const identity={operationKey:proof.operationKey,requestFingerprint:proof.requestFingerprint};
- const app=createServer(token,catalog,{async create(){return {};},async poll(){return {};}},undefined,
+ const app=createServer(token,catalog,{status(){return {linked:false};},async create(){return {};},async poll(){return {};}},undefined,
    {ledger:f.ledger,api:f.api,adminToken});
  try{
  const headers={authorization:"Bearer "+token},adminHeaders={authorization:"Bearer "+adminToken};
@@ -331,7 +331,7 @@ test("manual receipt mismatch retains requested revocation; admin configuration 
  {...f.api,async byKey(key:string){return {...(await f.api.byKey(key))!,amount_cents:1};}}),/mismatch/);
  assert.equal(f.ledger.journalRead(identity).disposition,"quarantine_requested");
  assert.equal(f.ledger.journalRead(identity).audit[0].kind,"quarantine_requested");
- const links={async create(){return {};},async poll(){return {};}};
+ const links={status(){return {linked:false};},async create(){return {};},async poll(){return {};}};
  assert.throws(()=>createServer("n".repeat(40),catalog,links,undefined,{ledger:f.ledger,api:f.api,adminToken:"n".repeat(40)}),/separate/);
  assert.throws(()=>createServer("n".repeat(40),catalog,links,undefined,{ledger:f.ledger,api:f.api,adminToken:"short"}),/separate/);
  }finally{f.cleanup();}

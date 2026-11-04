@@ -7,7 +7,7 @@ import { join } from "node:path";
 import { SsgClient, ApiError } from "./client";
 import { loadCatalog, type Catalog } from "./catalog";
 import { LinkStore, steamSchema } from "./links";
-export function createServer(token: string, catalog: Catalog, links: Pick<LinkStore, "create" | "poll">,
+export function createServer(token: string, catalog: Catalog, links: Pick<LinkStore, "create" | "poll" | "status">,
   raid?: { ledger: RaidLedger; api: RaidMoneyApi; native: RaidNativeBridge },
   recovery?: {ledger: RaidLedger; api: RaidMoneyApi; adminToken?: string}) {
   if (token.length < 32) throw new Error("BRIDGE_TOKEN must contain at least 32 random characters");
@@ -36,6 +36,7 @@ export function createServer(token: string, catalog: Catalog, links: Pick<LinkSt
   const identity = (body: unknown) => steamSchema.parse(
     typeof body === "object" && body !== null && "steamId64" in body ? body.steamId64 : undefined);
   // Caller MUST be trusted server plugin using an engine-authenticated SteamID, never a client supplied ID.
+  app.post("/link/status", async req => links.status(identity(req.body)));
   app.post("/link", async req => links.create(identity(req.body)));
   app.post("/link/poll", async req => links.poll(identity(req.body)));
   if (raid?.native instanceof NativeHttpBridge) {
