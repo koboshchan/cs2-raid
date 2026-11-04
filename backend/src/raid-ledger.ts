@@ -40,11 +40,14 @@ type RecordRow = {
 const uuid = z.string().uuid();
 export class RaidLedger {
   private db: DatabaseSync;
+  private running = new Map<string, Promise<unknown>>();
   constructor(path: string, private serverId: string, private catalog: Catalog) {
     this.db = new DatabaseSync(path);
     this.db.exec(`PRAGMA journal_mode=WAL; PRAGMA synchronous=FULL; PRAGMA busy_timeout=5000;
       CREATE TABLE IF NOT EXISTS bindings (steam TEXT PRIMARY KEY, app_user TEXT NOT NULL UNIQUE, grant_id TEXT NOT NULL) STRICT;
       CREATE TABLE IF NOT EXISTS raid_operations (key TEXT PRIMARY KEY, data TEXT NOT NULL) STRICT;
+      CREATE TABLE IF NOT EXISTS raid_native_journal (operation_key TEXT PRIMARY KEY, data TEXT NOT NULL) STRICT;
+      CREATE TABLE IF NOT EXISTS raid_reconciliation_audit (id INTEGER PRIMARY KEY, operation_key TEXT NOT NULL, data TEXT NOT NULL) STRICT;
       CREATE TABLE IF NOT EXISTS raid_item_claims (instance TEXT PRIMARY KEY, operation_key TEXT NOT NULL) STRICT;`);
     raidOperationKey(serverId, "cashin", "00000000000000000000000000000000", "76561198000000001");
   }
@@ -114,8 +117,96 @@ export class RaidLedger {
       amountCents: row.amountCents, transactionId: row.receipt?.transaction_id ?? null,
       appUserId: row.appUserId, state: row.state };
   }
+  private async serialized<T>(key: string, action: () => Promise<T>): Promise<T> {
+    const prior = this.running.get(key) ?? Promise.resolve();
+    const current = prior.catch(() => {}).then(action);
+    this.running.set(key, current);
+    try { return await current; }
+    finally { if (this.running.get(key) === current) this.running.delete(key); }
+  }
+  private journal(key: string): NativeJournal | undefined {
+    const raw = this.db.prepare("SELECT data FROM raid_native_journal WHERE operation_key=?").get(key);
+    return raw ? JSON.parse(String(raw.data)) : undefined;
+  }
+  private bound(input: unknown) {
+    const identity = journalIdentity.parse(input), row = this.get(identity.operationKey);
+    if (identity.requestFingerprint !== row.fingerprint) throw new Error("Journal identity conflict");
+    return row;
+  }
+  journalRead(input: unknown) {
+    const row = this.bound(input);
+    let proof: (SettlementProof & {state: string}) | undefined;
+    if (["paid", "settled"].includes(row.state)) proof = this.proof(input);
+    return { operationKey: row.key, requestFingerprint: row.fingerprint, operation: row.operation,
+      request: row.request, financialState: row.state, proof: proof ?? null,
+      journal: this.journal(row.key) ?? null,
+      disposition: this.journal(row.key)?.terminal === "quarantined" ? "quarantined" : "unresolved",
+      audit: this.db.prepare("SELECT data FROM raid_reconciliation_audit WHERE operation_key=? ORDER BY id")
+        .all(row.key).map(entry => JSON.parse(String(entry.data))) };
+  }
+  journalPhase(input: unknown) {
+    const value = phaseInput.parse(input), row = this.bound({operationKey: value.operationKey, requestFingerprint: value.requestFingerprint});
+    this.db.exec("BEGIN IMMEDIATE");
+    try {
+      const old = this.journal(row.key);
+      if (old?.terminal) throw new Error("Terminal quarantine");
+      if (old && old.nativeSnapshot !== value.nativeSnapshot) throw new Error("Immutable snapshot conflict");
+      const index = phases.indexOf(value.phase), oldIndex = old ? phases.indexOf(old.phase!) : -1;
+      if (index > 0) {
+        const canonical = this.proof({operationKey: value.operationKey, requestFingerprint: value.requestFingerprint});
+        const {state: _state, ...expected} = canonical;
+        if (JSON.stringify(proofSchema.parse(value.proof)) !== JSON.stringify(proofSchema.parse(expected)))
+          throw new Error("Original proof required");
+      } else if (value.proof !== undefined) throw new Error("Unexpected snapshot proof");
+      if (index <= oldIndex) {
+        this.db.exec("COMMIT"); return old!;
+      }
+      if (index !== oldIndex + 1) throw new Error("Journal phase out of order");
+      const next: NativeJournal = { nativeSnapshot: value.nativeSnapshot, phase: value.phase,
+        ...(value.proof ? {proof: value.proof} : {}), updatedAt: new Date().toISOString() };
+      this.db.prepare("INSERT INTO raid_native_journal VALUES (?,?) ON CONFLICT(operation_key) DO UPDATE SET data=excluded.data")
+        .run(row.key, JSON.stringify(next));
+      this.audit(row.key, {kind: "native_phase", phase: value.phase, evidence: value.evidence, at: next.updatedAt});
+      this.db.exec("COMMIT"); return next;
+    } catch(error) { this.db.exec("ROLLBACK"); throw error; }
+  }
+  private audit(key: string, data: unknown) {
+    this.db.prepare("INSERT INTO raid_reconciliation_audit(operation_key,data) VALUES (?,?)").run(key, JSON.stringify(data));
+  }
+  async quarantine(input: unknown, api: RaidMoneyApi) {
+    const value = quarantineInput.parse(input);
+    return this.serialized(value.operationKey, async () => {
+      const row = this.bound({operationKey: value.operationKey, requestFingerprint: value.requestFingerprint});
+      // Lookup failure aborts terminalization. Absence is evidence only, never compensation authority.
+      const receipt = await api.byKey(row.key);
+      if (receipt) this.verify(row, receipt);
+      if (row.receipt && receipt && row.receipt.transaction_id !== receipt.transaction_id)
+        throw new Error("Canonical transaction conflict");
+      this.db.exec("BEGIN IMMEDIATE");
+      try {
+        const journal = this.journal(row.key);
+        const next = {...journal, terminal: "quarantined", updatedAt: new Date().toISOString()};
+        this.db.prepare("INSERT INTO raid_native_journal VALUES (?,?) ON CONFLICT(operation_key) DO UPDATE SET data=excluded.data")
+          .run(row.key, JSON.stringify(next));
+        if (receipt && !row.receipt) {
+          if (!this.transition(row, {...row, receipt, state: "paid"})) throw new Error("Concurrent financial transition");
+        }
+        this.audit(row.key, {kind: "manual_quarantine", ...value, at: next.updatedAt,
+          originalKeyLookup: receipt ? {status: "committed", receipt} : {status: "absent_not_authority"},
+          retainedProof: row.receipt ?? null });
+        this.db.exec("COMMIT");
+      } catch(error) {this.db.exec("ROLLBACK"); throw error;}
+      return this.journalRead({operationKey: value.operationKey, requestFingerprint: value.requestFingerprint});
+    });
+  }
   async execute(operation: RaidOperation, input: unknown, api: RaidMoneyApi, native: RaidNativeBridge): Promise<SettlementProof & { state: string }> {
+    const request = operation === "cashin" ? cashInRequestSchema.parse(input) : extractionRequestSchema.parse(input);
+    const key = raidOperationKey(this.serverId, operation, request.raidId, request.session.steamId64);
+    return this.serialized(key, () => this.executeOriginal(operation, input, api, native));
+  }
+  private async executeOriginal(operation: RaidOperation, input: unknown, api: RaidMoneyApi, native: RaidNativeBridge): Promise<SettlementProof & { state: string }> {
     let row = this.prepare(operation, input);
+    if (this.journal(row.key)?.terminal) throw new Error("Terminal quarantine");
     if (row.state === "manual") throw new Error("Manual reconciliation required");
     if (row.state === "prepared") {
       if (!await native.validateAndFreeze(row.key, row.operation, row.request)) throw new Error("Native session or snapshot rejected");
@@ -147,3 +238,17 @@ export class RaidLedger {
     return { ...proof, state: row.state };
   }
 }
+
+const journalIdentity = z.object({operationKey: z.string().min(8).max(128),
+  requestFingerprint: z.string().regex(/^[a-f0-9]{64}$/)}).strict();
+const proofSchema = z.object({operationKey: z.string(), operation: z.enum(["cashin", "extract"]),
+  requestFingerprint: z.string(), amountCents: z.number().int().nonnegative().safe(),
+  transactionId: z.string().uuid().nullable(), appUserId: z.string().uuid()}).strict();
+const phases = ["snapshot", "consumption_intent", "consumed", "cleanup_complete"] as const;
+const phaseInput = journalIdentity.extend({nativeSnapshot: z.string().min(1).max(131072),
+  phase: z.enum(phases), proof: proofSchema.optional(), evidence: z.string().min(1).max(4096)}).strict();
+const quarantineInput = journalIdentity.extend({operator: z.string().min(1).max(128),
+  reason: z.string().min(1).max(1024), evidence: z.string().min(1).max(4096),
+  isolationEvidence: z.string().min(1).max(4096)}).strict();
+type NativeJournal = {nativeSnapshot?: string; phase?: typeof phases[number]; proof?: SettlementProof;
+  terminal?: string; updatedAt: string};
