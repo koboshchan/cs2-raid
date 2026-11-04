@@ -47,6 +47,9 @@ public sealed partial class DebugPlugin
         if(!Config.ExtractHudExclusive||Config.ExtractHudRelease!="default-20261105"){
             c.ReplyToCommand("Requires explicit exclusive HUD channel approval and default-20261105 asset attestation.");return;
         }
+        if(WorldProbeGate.Requested(Enumerable.Range(1,c.ArgCount-1).Select(c.GetArg))){
+            c.ReplyToCommand(WorldProbeGate.Unavailable);return;
+        }
         if(c.ArgCount==2&&PreviewDismiss.ProbeDuration(c.GetArg(1))!=null){ClearProbe(p!,c.GetArg(1),c);return;}
         if(Enumerable.Range(1,c.ArgCount-1).Select(c.GetArg).Any(a=>a is "instructor" or "game_text" or "env_hudhint" or "roundclock")){
             c.ReplyToCommand("UNAVAILABLE: private full lifecycle/cleanup not verified for this mode; no entity or event spawned.");return;

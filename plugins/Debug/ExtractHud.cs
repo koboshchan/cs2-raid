@@ -127,3 +127,11 @@ public static class PreviewDispatch
         if(IsHtml(style))html(message!);else alert(message!);
     }
 }
+
+// No entity may be created until the complete native recipient/lifecycle audit is proven.
+// An explicit world request is recognized, but never falls through to HTML/alert.
+public static class WorldProbeGate
+{
+    public static bool Requested(IEnumerable<string> args)=>args.Contains("world",StringComparer.Ordinal);
+    public static string Unavailable=>"UNAVAILABLE: world probe recipient privacy is not proven before first transmit and across lifecycle races. No entity created; no broadcast.";
+}

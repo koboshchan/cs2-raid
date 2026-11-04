@@ -332,3 +332,9 @@ PreviewDispatch.Send("classes","test",_=>htmlCalls++,_=>alertCalls++);
 Check(htmlCalls==1&&alertCalls==3,"HTML path never alert");
 PreviewDispatch.Send("alert","",_=>htmlCalls++,_=>alertCalls++);
 Check(htmlCalls==1&&alertCalls==3,"empty dispatch no foreign surface");
+
+Check(WorldProbeGate.Requested(["15","world"]),"world explicit recognized unavailable");
+Check(WorldProbeGate.Requested(["world","15"]),"world either argument order gated");
+Check(!WorldProbeGate.Requested(["15","alert"]),"world gate does not change alert");
+Check(WorldProbeGate.Unavailable.StartsWith("UNAVAILABLE:")&&WorldProbeGate.Unavailable.Contains("No entity created"),"world honest fail closed");
+Check(PreviewArgs.Parse(["15","world"])==null,"world never falls through native render styles");
