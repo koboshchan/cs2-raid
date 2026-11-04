@@ -69,3 +69,14 @@ public static class RaidHudGuard
         catch{return false;}
     }
 }
+
+public sealed class PreviewNativeLifecycle
+{
+    public bool Available {get;private set;}
+    public void OnTick()=>Available=true;
+    public void Stop()=>Available=false;
+    public void Clear(Action nativeClear,Action managedClear){
+        if(Available)nativeClear();
+        managedClear();
+    }
+}

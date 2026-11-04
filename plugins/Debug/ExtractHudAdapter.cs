@@ -5,14 +5,27 @@ using CounterStrikeSharp.API.Modules.Menu;
 namespace Cs2Debug;
 public sealed partial class DebugPlugin
 {
-    private sealed record Preview(IntPtr Controller,uint Pawn,PreviewClock Clock,string Style);
+    private sealed record Preview(CCSPlayerController Player,IntPtr Controller,uint Pawn,PreviewClock Clock,string Style);
     private readonly Dictionary<ulong,Preview> previews=[];
+    private readonly PreviewNativeLifecycle previewNative=new();
     private static bool Same(CCSPlayerController p,Preview v)=>p.Handle==v.Controller&&p.PlayerPawn.Raw==v.Pawn;
     private void StopPreview(CCSPlayerController p){
+        if(!previewNative.Available)return;
         if(previews.Remove(p.SteamID,out var v)&&Same(p,v)&&v.Clock.Clear(MenuManager.GetActiveMenu(p)==null) is {} text)
             p.PrintToCenterHtml(text,1);
     }
-    private void ClearPreviews(){foreach(var p in Utilities.GetPlayers().Where(Human))StopPreview(p);previews.Clear();}
+    private void ClearPreviews(){
+        // Empty startup state and teardown require no globals, player enumeration or native reads.
+        if(previews.Count==0)return;
+        previewNative.Clear(()=>{
+        foreach(var v in previews.Values.ToArray()){
+            var p=v.Player;
+            if(Human(p)&&Same(p,v)&&v.Clock.Clear(MenuManager.GetActiveMenu(p)==null) is {} text)
+                p.PrintToCenterHtml(text,1);
+        }
+        }
+        ,()=>previews.Clear());
+    }
     private bool RaidInactiveForHud() => RaidHudGuard.ReadInactive(
         ()=>File.ReadAllText(Path.Combine(ModuleDirectory,"..","RaidPlugin","gameplay.json")),
         Config.ExtractHudOnly&&Config.ExtractHudVerifiedNoRaid);
@@ -24,7 +37,7 @@ public sealed partial class DebugPlugin
     }
     private bool HudReady => RaidInactiveForHud()&&(Config.ExtractHudOnly?HudOnlyReady():active);
     private void ExtractHudCommand(CCSPlayerController? p,CommandInfo c){
-        if(!HudReady||!Human(p)){ClearPreviews();c.ReplyToCommand("HUD mode unavailable or private scope not attested.");return;}
+        if(!previewNative.Available||!HudReady||!Human(p)){ClearPreviews();c.ReplyToCommand("HUD mode unavailable or private scope not attested.");return;}
         if(!Config.ExtractHudExclusive||Config.ExtractHudRelease!="default-20261105"){
             c.ReplyToCommand("Requires explicit exclusive HUD channel approval and default-20261105 asset attestation.");return;
         }
@@ -34,10 +47,11 @@ public sealed partial class DebugPlugin
         if(Server.MapName!="df_spaceport_player_scale_raytrace"||!p!.PawnIsAlive||p.TeamNum<2||p.PlayerPawn.Value is not {IsValid:true}){
             c.ReplyToCommand("Requires correct map and current living T/CT pawn.");return;
         }
-        previews[p.SteamID]=new(p.Handle,p.PlayerPawn.Raw,new PreviewClock(Environment.TickCount64,a.Seconds),a.Style);
+        previews[p.SteamID]=new(p,p.Handle,p.PlayerPawn.Raw,new PreviewClock(Environment.TickCount64,a.Seconds),a.Style);
         c.ReplyToCommand("Private live-position HTML capability probe started. CSS/image/layout support unverified; no raid timer or money changes.");
     }
     private void TickPreviews(){
+        previewNative.OnTick();
         if(!HudReady){ClearPreviews();return;}
         var now=Environment.TickCount64;
         foreach(var (id,v) in previews.ToArray()){

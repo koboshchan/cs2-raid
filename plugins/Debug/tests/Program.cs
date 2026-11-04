@@ -247,3 +247,13 @@ Check(blockedClock.Tick(1,2,RaidHudGuard.InactiveJson("{\"enabled\":true}"),true
 Check(blockedClock.Clear(true)==null,"transition clear idempotent");
 var menuClock=new PreviewClock(0,300);menuClock.Tick(0,2,true,true,"css");
 Check(menuClock.Tick(1,2,false,false,"css")==null,"active transition cannot clear menu");
+
+var lifecycle=new PreviewNativeLifecycle();int nativeCalls=0,managedCalls=0;
+lifecycle.Clear(()=>nativeCalls++,()=>managedCalls++);
+Check(nativeCalls==0&&managedCalls==1,"initial Load no globals/native cleanup");
+lifecycle.Stop();lifecycle.Clear(()=>nativeCalls++,()=>managedCalls++);
+Check(nativeCalls==0&&managedCalls==2,"error Unload no globals/native cleanup");
+lifecycle.OnTick();lifecycle.Clear(()=>nativeCalls++,()=>managedCalls++);
+Check(nativeCalls==1&&managedCalls==3,"native cleanup only after tick availability");
+lifecycle.Stop();lifecycle.Stop();lifecycle.Clear(()=>nativeCalls++,()=>managedCalls++);
+Check(nativeCalls==1&&managedCalls==4,"idempotent teardown no native call");
