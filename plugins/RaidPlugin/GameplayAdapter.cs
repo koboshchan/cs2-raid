@@ -252,7 +252,7 @@ public sealed partial class RaidPlugin
             }
         }
         if(game.Phase==GamePhase.Buy){SyncRaidBuyClock();SetCvar("mp_buy_anywhere",1);Server.PrintToChatAll("Buy guns and armor for 45s. Utility comes from character kits, not the shop.");}
-        if(game.Phase==GamePhase.Countdown){SetNativeBuyTime(raidBuyBaselines,0);SetCvar("mp_buy_anywhere",0);}
+        if(game.Phase==GamePhase.Countdown){RestoreRaidBuyRules();SetNativeBuyTime(raidBuyBaselines,0);SetCvar("mp_buy_anywhere",0);}
         if(game.Phase==GamePhase.Freeze) {
             foreach(var player in Utilities.GetPlayers().Where(Human).Where(p=>!FinancialFrozen(Id(p))&&game.Living(Id(p))))SpawnHealth(player);
             var spawns=gameplayConfig.Spawns.OrderBy(_=>random.Next()).ToArray();int index=0;

@@ -83,7 +83,7 @@ public sealed class GameplayState
     }
     public int? Tick(DateTimeOffset now, bool configured)
     {
-        if (!configured && Phase is not (GamePhase.Lobby or GamePhase.Closed or GamePhase.Buy)) return null; // adapter must halt on lost configuration
+        if (!configured && Phase is not (GamePhase.Lobby or GamePhase.Closed)) return null; // adapter must halt on lost configuration
         if (Phase==GamePhase.Lobby && configured && Players.Count>0 && Players.Values.All(x=>x.Team!=null))
             Phase=GamePhase.CharacterSelect;
         if (Phase==GamePhase.CharacterSelect && Players.Values.All(x=>x.Character!=null)) { Phase=GamePhase.Buy; StartsAt=now.AddSeconds(BuySeconds); }

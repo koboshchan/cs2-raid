@@ -39,7 +39,9 @@ public static class FlowTests
         Check(TonightRules.BuyRoundStart(130,now.AddSeconds(30),end)==anchor);
         Check(TonightRules.BuyRoundStart(145,now.AddSeconds(45),end)==anchor);
         Reject(()=>TonightRules.BuyRoundStart(146,now.AddSeconds(46),end));
-        boundary.Tick(now.AddSeconds(45),false); // lost readiness/disconnect cannot extend native Buy
+        boundary.Tick(now.AddSeconds(45),false); // preserve lost-readiness phase halt; absolute purchase deadline still closes
+        Check(boundary.Phase==GamePhase.Buy&&!boundary.BuyOpen(now.AddSeconds(45)));
+        boundary.Tick(now.AddSeconds(45),true);
         Check(boundary.Phase==GamePhase.Countdown&&!boundary.BuyOpen(now.AddSeconds(45)));
         var cutoff=boundary.StartsAt;
         boundary.Tick(now.AddSeconds(45),true);

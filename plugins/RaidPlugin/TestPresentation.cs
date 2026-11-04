@@ -166,6 +166,11 @@ public sealed partial class RaidPlugin
         Utilities.SetStateChanged(proxy,"CCSGameRulesProxy","m_pGameRules");
         SetNativeBuyTime(raidBuyBaselines,GameplayState.BuySeconds);
     }
+    private void RestoreRaidBuyRules(){
+        const string key="raid-buy-clock";
+        if(!raidBuyBaselines.TryGetValue(key,out var restore))return;
+        restore();raidBuyBaselines.Remove(key);
+    }
     private void RestoreRaidBuyClock(){
         TestModeState.RestoreEntries(raidBuyBaselines,(_,restore)=>restore(),
             ex=>Server.PrintToConsole("Raid buy baseline cleanup pending: "+ex.Message));
