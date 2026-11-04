@@ -1,5 +1,6 @@
 {
   "Enabled": true,
   "ReportDirectory": "/data/map-reports",
-  "ConfigVersion": 1
+  "ConfigVersion": 1,
+  "EveryoneIsAdmin": false
 }

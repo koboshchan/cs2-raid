@@ -1,6 +1,8 @@
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Commands;
+using CounterStrikeSharp.API.Modules.Admin;
+using CounterStrikeSharp.API.Modules.Entities;
 using CounterStrikeSharp.API.Modules.Cvars;
 using Microsoft.Extensions.Logging;
 
@@ -9,6 +11,8 @@ namespace Cs2Debug;
 public sealed class DebugConfig : BasePluginConfig
 {
     public bool Enabled { get; set; } = true;
+    // Opt-in only for isolated LAN map tests. Never enable on a public server.
+    public bool EveryoneIsAdmin { get; set; } = false;
     public string ReportDirectory { get; set; } = "/data/map-reports";
 }
 
@@ -25,6 +29,7 @@ public sealed class DebugPlugin : BasePlugin, IPluginConfig<DebugConfig>
     private readonly ReportLimiter listLimiter = new();
     private readonly ReportLimiter resetLimiter = new();
     private ReportStore? store;
+    private readonly HashSet<ulong> grantedAdmins = [];
     private bool loaded;
     private bool active;
     private ConVar<int>? buyAnywhere, maxMoney;
@@ -104,11 +109,13 @@ public sealed class DebugPlugin : BasePlugin, IPluginConfig<DebugConfig>
     }
     public override void Unload(bool hotReload)
     {
+        RevokeTestAdmins();
         active = false; loaded = false;
         RestoreCvars(); ClearState(); store?.Dispose(); store = null;
     }
     private void Reconfigure()
     {
+        RevokeTestAdmins();
         active = false;
         RestoreCvars(); ClearState(); store?.Dispose(); store = null;
         if (!Config.Enabled) return;
@@ -145,6 +152,7 @@ public sealed class DebugPlugin : BasePlugin, IPluginConfig<DebugConfig>
     }
     private void ForgetId(ulong id)
     {
+        if (grantedAdmins.Remove(id)) AdminManager.RemovePlayerPermissions(new SteamID(id), "@css/root");
         shots.Remove(id); reportLimiter.Remove(id);
         textureLimiter.Remove(id); listLimiter.Remove(id); resetLimiter.Remove(id);
     }
@@ -244,6 +252,20 @@ public sealed class DebugPlugin : BasePlugin, IPluginConfig<DebugConfig>
         catch (Exception e) { Logger.LogError("Could not restore mp_maxmoney ({Failure}).", e.GetType().Name); }
         haveSnapshot = false; buyAnywhere = null; buyTime = null; maxMoney = null;
     }
+    private void RevokeTestAdmins()
+    {
+        foreach (var id in grantedAdmins)
+            AdminManager.RemovePlayerPermissions(new SteamID(id), "@css/root");
+        grantedAdmins.Clear();
+    }
+    private void MaintainTestAdmin(CCSPlayerController p)
+    {
+        if (!Config.EveryoneIsAdmin || p.AuthorizedSteamID == null ||
+            AdminManager.PlayerHasPermissions(p, "@css/root")) return;
+        AdminManager.AddPlayerPermissions(p, "@css/root");
+        if (AdminManager.PlayerHasPermissions(p, "@css/root"))
+            grantedAdmins.Add(p.SteamID);
+    }
     private void Tick()
     {
         if (!active) return;
@@ -252,7 +274,9 @@ public sealed class DebugPlugin : BasePlugin, IPluginConfig<DebugConfig>
         var amount = Math.Max(maxMoney.Value, 0);
         foreach (var p in Utilities.GetPlayers())
         {
-            if (!Human(p) || p.InGameMoneyServices is not { } money || money.Account == amount) continue;
+            if (!Human(p)) continue;
+            MaintainTestAdmin(p);
+            if (p.InGameMoneyServices is not { } money || money.Account == amount) continue;
             money.Account = amount;
             Utilities.SetStateChanged(p, "CCSPlayerController", "m_pInGameMoneyServices");
         }
