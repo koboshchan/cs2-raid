@@ -16,6 +16,21 @@ public sealed class TestModeState
         var b=ip.GetAddressBytes();
         return b.Length==4 && (b[0]==10 || b[0]==127 || b[0]==192&&b[1]==168 || b[0]==172&&b[1]>=16&&b[1]<=31);
     }
+    public bool NativeActive => Enabled && Phase!=Stage.Closed;
+    public bool CallbackAllowed(int generation,bool unloaded) => !unloaded && Generation==generation;
+    public bool CanRespawn(bool enrolled) => NativeActive && Phase==Stage.Lobby && enrolled;
+    // Failed entries remain available for a later OFF retry. One failure never skips siblings.
+    public static void RestoreEntries<K,V>(Dictionary<K,V> entries,Action<K,V> restore,Action<Exception> report) where K:notnull
+    {
+        foreach(var (key,value) in entries.ToArray()) {
+            try { restore(key,value);entries.Remove(key); }
+            catch(Exception ex){try{report(ex);}catch{/* A failing logger must not abort teardown. */}}
+        }
+    }
+    public static void FinalizeAll(Action<Exception> report,params Action[] actions)
+    {
+        foreach(var action in actions)try{action();}catch(Exception ex){try{report(ex);}catch{/* A failing logger must not abort teardown. */}}
+    }
     public void Start(bool scope)
     {
         if(!scope || Enabled)throw new InvalidOperationException("Requires dedicated private LAN27016; already ON is rejected.");

@@ -120,7 +120,10 @@ public sealed partial class RaidPlugin : BasePlugin
                 current.PrintToChat(message);
         });
     }
-    public override void Unload(bool hotReload) { StopTestMode(); StopDeltaOpsBridge(); UnhookGameplay(); StopGameplay(); mapGeneration = Guid.NewGuid(); http.Dispose(); }
+    public override void Unload(bool hotReload) {
+        testUnloaded=true;mapGeneration=Guid.NewGuid();
+        TestModeState.FinalizeAll(TestCleanupError,StopTestMode,StopDeltaOpsBridge,UnhookGameplay,StopGameplay,http.Dispose);
+    }
     // TODO trusted map hooks call PullLever only on use within range, and Extract only
     // on living authorized player's zone entry. Persist bag + settlement outbox first.
     // TODO native pickup/drop tracking, corpse menu, strip default weapons, reconnect
