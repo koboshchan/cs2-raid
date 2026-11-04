@@ -24,10 +24,11 @@ test("HTTP authenticates, rejects Origin, and never invokes money movement",asyn
 });
 test("durable link hides token, throttles poll and checks debit scope",async(t)=>{
  let scopes:string[]=[];
+ const appUser=randomUUID(),grant=randomUUID();
  const link={request_id:randomUUID(),device_token:"s".repeat(43),user_code:"four test words here",verification_uri:"https://example.test/link",expires_at:new Date(Date.now()+600000).toISOString(),interval_seconds:5};
  const store=new LinkStore(":memory:","raid",{
  async createLink(){return link;},
- async pollLink(){return {state:"approved" as const,app_user_id:randomUUID(),grant_id:randomUUID(),granted_scopes:scopes};}
+ async pollLink(){return {state:"approved" as const,app_user_id:appUser,grant_id:grant,granted_scopes:scopes};}
  });
  try {
  assert.deepEqual(store.status(steam),{linked:false});
@@ -36,6 +37,9 @@ test("durable link hides token, throttles poll and checks debit scope",async(t)=
  const now=Date.now(); t.mock.method(Date,"now",()=>now+6000);
  await assert.rejects(store.poll(steam),/insufficient_scope/);
  scopes=["balance:debit"]; t.mock.method(Date,"now",()=>now+12000);
+ assert.equal((await store.poll(steam)).state,"approved");
+ assert.deepEqual(store.status(steam),{linked:true});
+ t.mock.method(Date,"now",()=>now+18000);
  assert.equal((await store.poll(steam)).state,"approved");
  assert.deepEqual(store.status(steam),{linked:true});
  }finally{store.close();}
