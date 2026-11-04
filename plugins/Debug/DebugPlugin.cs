@@ -119,6 +119,7 @@ public sealed partial class DebugPlugin : BasePlugin, IPluginConfig<DebugConfig>
         RegisterListener<Listeners.OnMapEnd>(() => { previewNative.Stop(); ClearState(); RestoreCvars(); });
         RegisterListener<Listeners.OnMapStart>(_ => { previewNative.Stop(); ClearState(); if (active) Server.NextFrame(ApplyCvars); });
         RegisterListener<Listeners.OnTick>(Tick);
+        InitLoot();
         Reconfigure();
     }
     public override void Unload(bool hotReload)
@@ -155,6 +156,7 @@ public sealed partial class DebugPlugin : BasePlugin, IPluginConfig<DebugConfig>
     private void ClearState()
     {
         ClearPreviews();
+        ClearLoot();
         shots.Clear(); reportLimiter.Clear(); textureLimiter.Clear(); listLimiter.Clear(); resetLimiter.Clear(); bannerLimiter.Clear();
     }
     private static bool Human(CCSPlayerController? p) => p is { IsValid: true, IsBot: false } && p.SteamID != 0;

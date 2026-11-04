@@ -6,4 +6,4 @@
   </PropertyGroup>
   <ItemGroup><EmbeddedResource Include="../ZoneProfile.json" Condition="Exists('../ZoneProfile.json')" LogicalName="SpaceportZoneProfile" /><EmbeddedResource Include="../../../config/spawns/spaceport-default-20261105.json" Condition="!Exists('../ZoneProfile.json')" LogicalName="SpaceportZoneProfile" /></ItemGroup>
   <ItemGroup><Compile Include="../ExtractHud.cs" Link="ExtractHud.cs" /><Compile Include="../DebugCore.cs" Link="DebugCore.cs" /></ItemGroup>
-</Project>
+<ItemGroup><EmbeddedResource Include="../LootPlacements.json" LogicalName="LootPlacements" /><EmbeddedResource Include="../LootResources.json" LogicalName="LootResources" /></ItemGroup><ItemGroup><Compile Include="../LootCatalog.cs" Link="LootCatalog.cs" /></ItemGroup></Project>

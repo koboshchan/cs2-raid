@@ -363,3 +363,12 @@ var minRenew=new PreviewClock(0,300,1);minRenew.Tick(0,2,true,true,"css");
 Check(minRenew.Tick(99,2,true,true,"css")==null&&minRenew.Tick(100,2,true,true,"css")!=null,"HTML minimum100ms clamp");
 var maxRenew=new PreviewClock(0,300,9999);maxRenew.Tick(0,2,true,true,"css");
 Check(maxRenew.Tick(499,2,true,true,"css")==null&&maxRenew.Tick(500,2,true,true,"css")!=null,"HTML maximum500ms clamp");
+
+Check(LootCatalog.Entries.Count==247,"loot active247 only");
+Check(LootCatalog.Entries.Select(e=>e.Id).Distinct().Count()==247,"loot unique ids");
+Check(LootCatalog.Entries.All(e=>e.Model==null),"loot unresolved paths never guessed");
+Check(LootCatalog.Entries.Select(e=>e.Asset).Distinct().Count()==17,"loot17 unresolved model assets");
+Check(LootCatalog.Entries[0].X==544.23495&&LootCatalog.Entries[0].Y==41.55400000000009,"loot full40 exact coordinates");
+Check(LootCatalog.MapAllowed("df_spaceport_player_scale_raytrace","default-20261105"),"loot exact binding");
+Check(!LootCatalog.MapAllowed("de_dust2","default-20261105")&&!LootCatalog.MapAllowed(LootCatalog.Map,"old"),"loot map release denied");
+Check(!LootCatalog.SafeModel("models/../bad.vmdl")&&!LootCatalog.SafeModel("models/bad.vmdl;quit")&&LootCatalog.SafeModel("models/test.vmdl"),"loot model path validation");

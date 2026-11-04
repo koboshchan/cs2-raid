@@ -54,7 +54,7 @@ public sealed partial class DebugPlugin
             c.ReplyToCommand("UNAVAILABLE: private full lifecycle/cleanup not verified for this mode; no entity or event spawned.");return;
         }
         var a=PreviewArgs.Parse(Enumerable.Range(1,c.ArgCount-1).Select(c.GetArg).ToArray());
-        if(a==null){c.ReplyToCommand("Usage: !extracthud [1..3600] [css|png|plain|tags|classes|alert] or !extracthud stop");return;}
+        if(a==null){c.ReplyToCommand("Usage: !extracthud [1..3600] [css|png|plain|tags|classes|alert|world] or !extracthud stop");return;}
         if(a.Style=="world"&&(!Config.ExtractHudOnly||!HudOnlyReady()||worldFault)){
             c.ReplyToCommand("World probe unavailable outside private HUD-only LAN scope or after entity failure.");return;
         }
@@ -66,6 +66,8 @@ public sealed partial class DebugPlugin
         c.ReplyToCommand(a.Style=="world"?"WORLD PROBE: world-visible, NOT private. Stops rendering if another human is present. Upper-view placement/appearance unverified. !extracthud stop removes owned entity.":a.Style=="alert"?"Private per-player alert probe started. Alert lifetime/dismissal and appearance unverified; no raid or money changes.":"Private live-position HTML capability probe started. CSS/image/layout support unverified; no raid timer or money changes.");
     }
     private void TickPreviews(){
+        if(lootOn&&!HudReady)ClearLoot();
+        if(lootFault&&lootOwned.Count>0)ClearLoot();
         DrainWorld();
         previewNative.OnTick();
         if(!HudReady){ClearPreviews();return;}

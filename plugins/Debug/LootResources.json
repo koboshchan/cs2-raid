@@ -1,0 +1,111 @@
+{
+  "sourceCommit": "03ac1cc3e88b4815c5c561929b97121abf4565d8",
+  "sourceSha256": "dd828996c27ecdc64feaec6565cffac1e5256f04bdfbf12992f9f81a1c038909",
+  "map": "df_spaceport_player_scale_raytrace",
+  "release": "default-20261105",
+  "vpkSha256": "9522f40e5c283361045ea7b4bec0639ef2c622a8deb3e14e0ee9c06c50e7855b",
+  "models": [
+    {
+      "asset": "Props_Collect_Box_543_3P",
+      "resourcePath": null,
+      "reason": "No matching named .vmdl_c resource in exact release directory inventory; hashed resource assignment not proven",
+      "affected": 16
+    },
+    {
+      "asset": "props_collect_983_3P",
+      "resourcePath": null,
+      "reason": "No matching named .vmdl_c resource in exact release directory inventory; hashed resource assignment not proven",
+      "affected": 11
+    },
+    {
+      "asset": "props_collect_SmallSafeBox_802_3P",
+      "resourcePath": null,
+      "reason": "No matching named .vmdl_c resource in exact release directory inventory; hashed resource assignment not proven",
+      "affected": 8
+    },
+    {
+      "asset": "props_collect_box_544_3P",
+      "resourcePath": null,
+      "reason": "No matching named .vmdl_c resource in exact release directory inventory; hashed resource assignment not proven",
+      "affected": 8
+    },
+    {
+      "asset": "props_collect_box_545_3P",
+      "resourcePath": null,
+      "reason": "No matching named .vmdl_c resource in exact release directory inventory; hashed resource assignment not proven",
+      "affected": 24
+    },
+    {
+      "asset": "props_collect_box_546_3P",
+      "resourcePath": null,
+      "reason": "No matching named .vmdl_c resource in exact release directory inventory; hashed resource assignment not proven",
+      "affected": 12
+    },
+    {
+      "asset": "props_collect_box_547_3P",
+      "resourcePath": null,
+      "reason": "No matching named .vmdl_c resource in exact release directory inventory; hashed resource assignment not proven",
+      "affected": 12
+    },
+    {
+      "asset": "props_collect_box_553_3P",
+      "resourcePath": null,
+      "reason": "No matching named .vmdl_c resource in exact release directory inventory; hashed resource assignment not proven",
+      "affected": 25
+    },
+    {
+      "asset": "props_collect_box_555_3P",
+      "resourcePath": null,
+      "reason": "No matching named .vmdl_c resource in exact release directory inventory; hashed resource assignment not proven",
+      "affected": 4
+    },
+    {
+      "asset": "props_collect_box_557_3P",
+      "resourcePath": null,
+      "reason": "No matching named .vmdl_c resource in exact release directory inventory; hashed resource assignment not proven",
+      "affected": 15
+    },
+    {
+      "asset": "props_collect_box_558B_3P",
+      "resourcePath": null,
+      "reason": "No matching named .vmdl_c resource in exact release directory inventory; hashed resource assignment not proven",
+      "affected": 19
+    },
+    {
+      "asset": "props_collect_box_559_3P",
+      "resourcePath": null,
+      "reason": "No matching named .vmdl_c resource in exact release directory inventory; hashed resource assignment not proven",
+      "affected": 18
+    },
+    {
+      "asset": "props_collect_box_683_3P",
+      "resourcePath": null,
+      "reason": "No matching named .vmdl_c resource in exact release directory inventory; hashed resource assignment not proven",
+      "affected": 16
+    },
+    {
+      "asset": "props_collect_computerbag_923_3P",
+      "resourcePath": null,
+      "reason": "No matching named .vmdl_c resource in exact release directory inventory; hashed resource assignment not proven",
+      "affected": 9
+    },
+    {
+      "asset": "props_collect_express_box_894_3P_Xmas",
+      "resourcePath": null,
+      "reason": "No matching named .vmdl_c resource in exact release directory inventory; hashed resource assignment not proven",
+      "affected": 21
+    },
+    {
+      "asset": "props_collect_flightcase_924_3P",
+      "resourcePath": null,
+      "reason": "No matching named .vmdl_c resource in exact release directory inventory; hashed resource assignment not proven",
+      "affected": 15
+    },
+    {
+      "asset": "props_collect_travellingbag_893_3P",
+      "resourcePath": null,
+      "reason": "No matching named .vmdl_c resource in exact release directory inventory; hashed resource assignment not proven",
+      "affected": 14
+    }
+  ]
+}
