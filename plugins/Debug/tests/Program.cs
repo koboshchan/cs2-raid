@@ -234,3 +234,16 @@ Check(!PreviewActivation.HudOnly(true,"",27016,true),"target attestation require
 Check(!PreviewActivation.Legacy(true,true),"HUD-only excludes legacy economy activation");
 Check(PreviewActivation.Legacy(true,false),"legacy consumer behavior preserved");
 Check(!PreviewActivation.Legacy(false,false),"legacy disabled preserved");
+
+Check(RaidHudGuard.InactiveJson("{\"enabled\":false}"),"explicit inactive raid allowed");
+foreach(var json in new[]{"{\"enabled\":true}","{}","[]","null","{","{\"enabled\":0}","{\"enabled\":false,\"Enabled\":true}"})
+ Check(!RaidHudGuard.InactiveJson(json),"unsafe raid configuration blocks");
+Check(!RaidHudGuard.ReadInactive(()=>throw new FileNotFoundException(),false),"missing not implicitly inactive");
+Check(RaidHudGuard.ReadInactive(()=>throw new FileNotFoundException(),true),"verified absent minimal loader allowed");
+Check(!RaidHudGuard.ReadInactive(()=>throw new UnauthorizedAccessException(),true),"permissions fail closed");
+Check(!RaidHudGuard.ReadInactive(()=>throw new IOException(),true),"IO failure not absent");
+var blockedClock=new PreviewClock(0,300);blockedClock.Tick(0,2,true,true,"css");
+Check(blockedClock.Tick(1,2,RaidHudGuard.InactiveJson("{\"enabled\":true}"),true,"css")=="","active transition owned clear");
+Check(blockedClock.Clear(true)==null,"transition clear idempotent");
+var menuClock=new PreviewClock(0,300);menuClock.Tick(0,2,true,true,"css");
+Check(menuClock.Tick(1,2,false,false,"css")==null,"active transition cannot clear menu");

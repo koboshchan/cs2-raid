@@ -13,15 +13,18 @@ public sealed partial class DebugPlugin
             p.PrintToCenterHtml(text,1);
     }
     private void ClearPreviews(){foreach(var p in Utilities.GetPlayers().Where(Human))StopPreview(p);previews.Clear();}
+    private bool RaidInactiveForHud() => RaidHudGuard.ReadInactive(
+        ()=>File.ReadAllText(Path.Combine(ModuleDirectory,"..","RaidPlugin","gameplay.json")),
+        Config.ExtractHudOnly&&Config.ExtractHudVerifiedNoRaid);
     private bool HudOnlyReady() {
         var port=CounterStrikeSharp.API.Modules.Cvars.ConVar<int>.Find("hostport");
         var lan=CounterStrikeSharp.API.Modules.Cvars.ConVar<bool>.Find("sv_lan");
         return PreviewActivation.HudOnly(Config.ExtractHudOnly,Config.ExtractHudPrivateTarget,
             port?.Value??0,lan?.Value??false);
     }
-    private bool HudReady => Config.ExtractHudOnly?HudOnlyReady():active;
+    private bool HudReady => RaidInactiveForHud()&&(Config.ExtractHudOnly?HudOnlyReady():active);
     private void ExtractHudCommand(CCSPlayerController? p,CommandInfo c){
-        if(!HudReady||!Human(p)){c.ReplyToCommand("HUD mode unavailable or private scope not attested.");return;}
+        if(!HudReady||!Human(p)){ClearPreviews();c.ReplyToCommand("HUD mode unavailable or private scope not attested.");return;}
         if(!Config.ExtractHudExclusive||Config.ExtractHudRelease!="default-20261105"){
             c.ReplyToCommand("Requires explicit exclusive HUD channel approval and default-20261105 asset attestation.");return;
         }
@@ -35,6 +38,7 @@ public sealed partial class DebugPlugin
         c.ReplyToCommand("Private live-position HTML capability probe started. CSS/image/layout support unverified; no raid timer or money changes.");
     }
     private void TickPreviews(){
+        if(!HudReady){ClearPreviews();return;}
         var now=Environment.TickCount64;
         foreach(var (id,v) in previews.ToArray()){
             var p=Utilities.GetPlayers().FirstOrDefault(p=>Human(p)&&p.SteamID==id);

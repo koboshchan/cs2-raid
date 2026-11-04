@@ -51,3 +51,21 @@ public static class PreviewActivation
         enabled&&target=="192.168.1.162:27016"&&port==27016&&lan;
     public static bool Legacy(bool enabled,bool hudOnly)=>enabled&&!hudOnly;
 }
+
+public static class RaidHudGuard
+{
+    public static bool InactiveJson(string json){
+        try{
+            using var doc=System.Text.Json.JsonDocument.Parse(json);
+            if(doc.RootElement.ValueKind!=System.Text.Json.JsonValueKind.Object)return false;
+            var enabled=doc.RootElement.EnumerateObject().Where(p=>p.Name.Equals("enabled",StringComparison.OrdinalIgnoreCase)).ToArray();
+            return enabled.Length==1&&enabled[0].Value.ValueKind==System.Text.Json.JsonValueKind.False;
+        }catch{return false;}
+    }
+    public static bool ReadInactive(Func<string> read,bool verifiedNoRaid){
+        try{return InactiveJson(read());}
+        catch(FileNotFoundException){return verifiedNoRaid;}
+        catch(DirectoryNotFoundException){return verifiedNoRaid;}
+        catch{return false;}
+    }
+}
