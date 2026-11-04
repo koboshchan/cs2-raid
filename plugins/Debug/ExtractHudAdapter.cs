@@ -56,8 +56,11 @@ public sealed partial class DebugPlugin
         if(Enumerable.Range(1,c.ArgCount-1).Select(c.GetArg).Any(a=>a is "instructor" or "game_text" or "env_hudhint" or "roundclock")){
             c.ReplyToCommand("UNAVAILABLE: private full lifecycle/cleanup not verified for this mode; no entity or event spawned.");return;
         }
+        if(Enumerable.Range(1,c.ArgCount-1).Select(c.GetArg).Any(a=>a is "css" or "png")){
+            c.ReplyToCommand("Unsupported mode: css/png background probes are retired. Use plain, tags, classes, or world. No fallback rendered.");return;
+        }
         var a=PreviewArgs.Parse(Enumerable.Range(1,c.ArgCount-1).Select(c.GetArg).ToArray());
-        if(a==null){c.ReplyToCommand("Usage: !extracthud [1..3600] [css|png|plain|tags|classes|alert|world] or !extracthud stop");return;}
+        if(a==null){c.ReplyToCommand("Usage: !extracthud [1..3600] [plain|tags|classes|alert|world] or !extracthud stop");return;}
         if(a.Style=="world"&&(!Config.ExtractHudOnly||!HudOnlyReady()||worldFault)){
             c.ReplyToCommand("World probe unavailable outside private HUD-only LAN scope or after entity failure.");return;
         }
@@ -66,7 +69,7 @@ public sealed partial class DebugPlugin
             c.ReplyToCommand("Requires correct map and current living T/CT pawn.");return;
         }
         previews[p.SteamID]=new(p,p.Handle,p.PlayerPawn.Raw,new PreviewClock(Environment.TickCount64,a.Seconds,Config.ExtractHudHtmlKeepaliveMs),a.Style);
-        c.ReplyToCommand(a.Style=="world"?"WORLD PROBE: world-visible, NOT private. Stops rendering if another human is present. Upper-view placement/appearance unverified. !extracthud stop removes owned entity.":a.Style=="alert"?"Private per-player alert probe started. Alert lifetime/dismissal and appearance unverified; no raid or money changes.":"Private live-position HTML capability probe started. CSS/image/layout support unverified; no raid timer or money changes.");
+        c.ReplyToCommand(a.Style=="world"?"WORLD PROBE: world-visible, NOT private. Stops rendering if another human is present. Upper-view placement/appearance unverified. !extracthud stop removes owned entity.":a.Style=="alert"?"Private per-player alert probe started. Alert lifetime/dismissal and appearance unverified; no raid or money changes.":"Private text-only HTML probe started. Native placement/lifetime unverified; no background or image rendering, no raid timer or money changes.");
     }
     private void TickPreviews(){
         WorldCleanup.Guard(TickPreviewsCore,()=>{worldFault=true;previewNative.Stop();ClearPreviews();});

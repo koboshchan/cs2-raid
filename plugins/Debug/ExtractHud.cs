@@ -3,11 +3,11 @@ namespace Cs2Debug;
 public sealed record PreviewArgs(int Seconds,string Style,bool Stop)
 {
     public static PreviewArgs? Parse(string[] args){
-        if(args.Length==1&&args[0]=="stop")return new(0,"css",true);
-        int seconds=300;string style="css";bool number=false,variant=false;
+        if(args.Length==1&&args[0]=="stop")return new(0,"plain",true);
+        int seconds=300;string style="plain";bool number=false,variant=false;
         foreach(var a in args){
             if(int.TryParse(a,NumberStyles.None,CultureInfo.InvariantCulture,out var n)&&!number&&n>=1&&n<=3600){seconds=n;number=true;}
-            else if((a=="css"||a=="png"||a=="plain"||a=="tags"||a=="classes"||a=="alert"||a=="world")&&!variant){style=a;variant=true;}
+            else if((a=="plain"||a=="tags"||a=="classes"||a=="alert"||a=="world")&&!variant){style=a;variant=true;}
             else return null;
         }
         return new(seconds,style,false);
@@ -53,19 +53,14 @@ public sealed class PreviewClock
         return markup;
     }
     public static string Markup(int n,bool red,string style){
+        if(style=="world")return WorldProbeGeometry.Text(n,red);
         if(style=="alert")return (red?"WARNING ":"EXTRACT ")+(n<=10?"[ "+n.ToString(CultureInfo.InvariantCulture)+" ]":(n/60).ToString("00",CultureInfo.InvariantCulture)+":"+(n%60).ToString("00",CultureInfo.InvariantCulture))+" Extracting";
         var c=red?"#FF0000":"#00FF00";
         var clock=n<=10?"[ "+n.ToString(CultureInfo.InvariantCulture)+" ]":(n/60).ToString("00",CultureInfo.InvariantCulture)+":"+(n%60).ToString("00",CultureInfo.InvariantCulture);
         if(style=="plain")return clock+"<br>Extracting";
         if(style=="tags")return "<font color='"+c+"'><b>"+clock+"</b><br>Extracting</font>";
         if(style=="classes")return "<font color='"+c+"' class='fontSize-xxl fontWeight-Bold'>"+clock+"</font><br><font color='"+c+"' class='fontSize-s'>Extracting</font>";
-        if(n<=10)return "<font color='"+c+"' size='48'>[ "+n.ToString(CultureInfo.InvariantCulture)+" ]</font><br><font color='"+c+"' size='20'>Extracting</font>";
-        var text="<font color='"+c+"' size='20'>Extracting</font><br><font color='"+c+"' size='48'>"+(n/60).ToString("00",CultureInfo.InvariantCulture)+":"+(n%60).ToString("00",CultureInfo.InvariantCulture)+"</font>";
-        // CSS is an explicit capability PROBE, not a promise of native support.
-        if(style=="css")return "<div style='border:1px solid "+c+";background-color:rgba("+(red?"80,10,10":"10,50,45")+",0.7);text-align:center'>"+text+"</div>";
-        // Fixed inline alpha PNG probe, no network/file path or user-controlled URL.
-        var asset=red?"iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4nGMI4OJaAAACFwEFt0Mz/QAAAABJRU5ErkJggg==":"iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4nGPgMtJdAAABvQEKvwgQ/QAAAABJRU5ErkJggg==";
-        return "<img src='data:image/png;base64,"+asset+"' width='240' height='100'><br>"+text;
+        throw new ArgumentException("Unsupported text preview mode",nameof(style));
     }
 }
 
@@ -128,10 +123,10 @@ public static class PreviewDismiss
 
 public static class PreviewDispatch
 {
-    public static bool IsHtml(string style)=>style!="alert";
+    public static bool IsHtml(string style)=>style is "plain" or "tags" or "classes";
     public static void Send(string style,string? message,Action<string> html,Action<string> alert){
         if(!PreviewDismiss.ShouldRender(message))return;
-        if(IsHtml(style))html(message!);else alert(message!);
+        if(IsHtml(style))html(message!);else if(style=="alert")alert(message!);else throw new ArgumentException("Unsupported preview dispatch mode",nameof(style));
     }
 }
 

@@ -198,26 +198,26 @@ try
 }
 finally { Directory.Delete(root, true); }
 Console.WriteLine($"ALL {checks} CHECKS PASSED");
-Check(PreviewArgs.Parse([])==new PreviewArgs(300,"css",false),"preview default");
-foreach(var bad in new[]{new[]{"red"},new[]{"15","red"},new[]{"css","png"},new[]{"15","16"},new[]{"0"},new[]{"3601"},new[]{"stop","css"}})
+Check(PreviewArgs.Parse([])==new PreviewArgs(300,"plain",false),"preview default");
+foreach(var bad in new[]{new[]{"red"},new[]{"15","red"},new[]{"plain","tags","classes"},new[]{"15","16"},new[]{"0"},new[]{"3601"},new[]{"stop","css"}})
  Check(PreviewArgs.Parse(bad)==null,"invalid preview args rejected");
-Check(PreviewArgs.Parse(["15","png"])==new PreviewArgs(15,"png",false),"canonical png");
+Check(PreviewArgs.Parse(["15","png"])==null&&PreviewArgs.Parse(["15","css"])==null,"retired backgrounds rejected no fallback");
 Check(PreviewArgs.Parse(["stop"])!.Stop,"canonical stop");
 var clock=new PreviewClock(0,15);
-Check(clock.Tick(0,0,true,true,"css")==null,"outside invisible");
+Check(clock.Tick(0,0,true,true,"tags")==null,"outside invisible");
 Check(clock.Remaining(4000)==11,"outside clock advances");
-Check(clock.Tick(4000,1,true,true,"css")!.Contains("00:11"),"reentry shortened box");
-Check(clock.Tick(4050,2,true,true,"css")!.Contains("#00FF00"),"real immediately green");
-Check(clock.Tick(5000,1,true,true,"css")!.Contains("[ 10 ]"),"ten bracket");
-Check(clock.Tick(14000,2,true,true,"css")!.Contains("[ 1 ]"),"one bracket");
-Check(clock.Tick(15000,2,true,true,"css")=="","zero clear");
-Check(clock.Tick(15001,2,true,true,"css")==null,"idempotent clear");
+Check(clock.Tick(4000,1,true,true,"tags")!.Contains("00:11"),"reentry shortened box");
+Check(clock.Tick(4050,2,true,true,"tags")!.Contains("#00FF00"),"real immediately green");
+Check(clock.Tick(5000,1,true,true,"tags")!.Contains("[ 10 ]"),"ten bracket");
+Check(clock.Tick(14000,2,true,true,"tags")!.Contains("[ 1 ]"),"one bracket");
+Check(clock.Tick(15000,2,true,true,"tags")=="","zero clear");
+Check(clock.Tick(15001,2,true,true,"tags")==null,"idempotent clear");
 foreach(var z in new[]{-1e200,0,1e200}){
  Check(PreviewClock.Zone(943.874,-6000,z)==2,"real edge priority");
  Check(PreviewClock.Zone(513.673,-6000,z)==1,"warning edge");
 }
 Check(PreviewClock.Zone(1100,-6000,double.NaN)==0,"nonfinite reject");
-foreach(var style in new[]{"css","png"}){
+foreach(var style in new[]{"plain","tags","classes"}){
  Check(PreviewClock.Markup(300,false,style).Contains("05:00"),"five minute format");
  Check(PreviewClock.Markup(264,false,style).Contains("04:24"),"reference format");
  var h=new PreviewClock(0,15);h.Tick(0,2,true,true,style);
@@ -242,10 +242,10 @@ Check(!RaidHudGuard.ReadInactive(()=>throw new FileNotFoundException(),false),"m
 Check(RaidHudGuard.ReadInactive(()=>throw new FileNotFoundException(),true),"verified absent minimal loader allowed");
 Check(!RaidHudGuard.ReadInactive(()=>throw new UnauthorizedAccessException(),true),"permissions fail closed");
 Check(!RaidHudGuard.ReadInactive(()=>throw new IOException(),true),"IO failure not absent");
-var blockedClock=new PreviewClock(0,300);blockedClock.Tick(0,2,true,true,"css");
-Check(blockedClock.Tick(1,2,RaidHudGuard.InactiveJson("{\"enabled\":true}"),true,"css")=="","active transition owned clear");
+var blockedClock=new PreviewClock(0,300);blockedClock.Tick(0,2,true,true,"tags");
+Check(blockedClock.Tick(1,2,RaidHudGuard.InactiveJson("{\"enabled\":true}"),true,"tags")=="","active transition owned clear");
 Check(blockedClock.Clear(true)==null,"transition clear idempotent");
-var menuClock=new PreviewClock(0,300);menuClock.Tick(0,2,true,true,"css");
+var menuClock=new PreviewClock(0,300);menuClock.Tick(0,2,true,true,"tags");
 Check(menuClock.Tick(1,2,false,false,"css")==null,"active transition cannot clear menu");
 
 var lifecycle=new PreviewNativeLifecycle();int nativeCalls=0,managedCalls=0;
@@ -347,7 +347,7 @@ Check(worldTimer.Remaining(6000)==9,"world outside timer continues");
 Check(WorldProbeGeometry.Text(worldTimer.Remaining(6000),false)=="[ 9 ]\nExtracting","world reentry actual remaining");
 worldTimer.Clear(false);Check(!worldTimer.Owned,"world clock managed cancellation");
 
-foreach(var mode in new[]{"css","png","plain","tags","classes"}){
+foreach(var mode in new[]{"plain","tags","classes"}){
  var renewClock=new PreviewClock(0,300,200);
  Check(renewClock.Tick(0,2,true,true,mode)!=null,"HTML first "+mode);
  Check(renewClock.Tick(199,2,true,true,mode)==null,"HTML deadline before "+mode);
@@ -359,10 +359,10 @@ foreach(var mode in new[]{"css","png","plain","tags","classes"}){
  Check(!PreviewDismiss.ShouldRender(renewClock.Tick(9001,0,true,true,mode)),"HTML outside no reopen "+mode);
  Check(!PreviewDismiss.ShouldRender(renewClock.Tick(9500,0,true,true,mode)),"HTML outside no renew "+mode);
 }
-var minRenew=new PreviewClock(0,300,1);minRenew.Tick(0,2,true,true,"css");
-Check(minRenew.Tick(99,2,true,true,"css")==null&&minRenew.Tick(100,2,true,true,"css")!=null,"HTML minimum100ms clamp");
-var maxRenew=new PreviewClock(0,300,9999);maxRenew.Tick(0,2,true,true,"css");
-Check(maxRenew.Tick(499,2,true,true,"css")==null&&maxRenew.Tick(500,2,true,true,"css")!=null,"HTML maximum500ms clamp");
+var minRenew=new PreviewClock(0,300,1);minRenew.Tick(0,2,true,true,"tags");
+Check(minRenew.Tick(99,2,true,true,"tags")==null&&minRenew.Tick(100,2,true,true,"tags")!=null,"HTML minimum100ms clamp");
+var maxRenew=new PreviewClock(0,300,9999);maxRenew.Tick(0,2,true,true,"tags");
+Check(maxRenew.Tick(499,2,true,true,"tags")==null&&maxRenew.Tick(500,2,true,true,"tags")!=null,"HTML maximum500ms clamp");
 
 Check(LootCatalog.Entries.Count==247,"loot active247 only");
 Check(LootCatalog.Entries.Select(e=>e.Id).Distinct().Count()==247,"loot unique ids");
@@ -395,4 +395,14 @@ Check(!LootCatalog.SafeModel("models/../bad.vmdl")&&!LootCatalog.SafeModel("mode
     var otherRemoved=0;
     foreach(var fail in new[]{true,false})WorldCleanup.Attempt(()=>true,()=>{if(fail)throw new Exception();},()=>otherRemoved++,()=>{});
     Check(otherRemoved==2,"WORLD disable failure continues other entities");
+}
+
+foreach(var unsupported in new[]{"css","png","unknown"}){
+    var rejected=false;try{PreviewClock.Markup(180,false,unsupported);}catch(ArgumentException){rejected=true;}
+    Check(rejected,"unsupported markup cannot fallback to white rectangle");
+    Check(!PreviewDispatch.IsHtml(unsupported),"unsupported HTML dispatch rejected");
+}
+foreach(var textStyle in new[]{"plain","tags","classes"}){
+    var markup=PreviewClock.Markup(180,false,textStyle);
+    Check(!markup.Contains("<img")&&!markup.Contains("<div")&&!markup.Contains("background")&&!markup.Contains("data:"),"text-only no images/background");
 }
