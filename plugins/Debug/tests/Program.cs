@@ -306,3 +306,12 @@ foreach(var z in new[]{double.MinValue,-1e100,0,1e100,double.MaxValue}){
  Check(PreviewClock.Zone(1158.975,Math.BitDecrement(-8489.547),z)==0,"bottom warning epsilon");
  Check(PreviewClock.Zone(1158.975,Math.BitIncrement(-3470.735),z)==0,"top warning epsilon");
 }
+
+Check(PreviewDismiss.ProbeDuration("clearblank")==1,"explicit blank Duration1 comparison");
+Check(PreviewDismiss.ProbeDuration("clearttl")==0,"explicit TTL0 comparison not hide promise");
+Check(PreviewDismiss.ProbeDuration("globalclear")==null,"no arbitrary dismiss event");
+Check(!PreviewDismiss.ShouldRender(null)&&!PreviewDismiss.ShouldRender(""),"automatic clear never reopens empty panel");
+Check(PreviewDismiss.ShouldRender("[ 10 ]"),"nonempty render retained");
+var dismissClock=new PreviewClock(0,15);dismissClock.Tick(0,2,true,true,"classes");
+Check(dismissClock.Clear(true)==""&&dismissClock.Clear(true)==null,"owned clear once");
+Check(!PreviewDismiss.ShouldRender(dismissClock.Tick(1,0,true,true,"classes")),"outside no repeated blank event");

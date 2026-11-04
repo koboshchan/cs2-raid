@@ -110,3 +110,10 @@ public static class PreviewCleanup
         if(errors!=null)throw new AggregateException("Owned preview cleanup failed after managed cancellation",errors);
     }
 }
+
+public static class PreviewDismiss
+{
+    // These are experiments, NOT claimed full-dismiss semantics.
+    public static int? ProbeDuration(string mode)=>mode=="clearblank"?1:mode=="clearttl"?0:null;
+    public static bool ShouldRender(string? text)=>!string.IsNullOrEmpty(text);
+}

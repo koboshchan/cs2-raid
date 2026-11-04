@@ -10,19 +10,27 @@ public sealed partial class DebugPlugin
     private readonly PreviewNativeLifecycle previewNative=new();
     private static bool Same(CCSPlayerController p,Preview v)=>p.Handle==v.Controller&&p.PlayerPawn.Raw==v.Pawn;
     private void StopPreview(CCSPlayerController p){
-        if(!previewNative.Available)return;
-        if(previews.Remove(p.SteamID,out var v)&&Same(p,v)&&v.Clock.Clear(MenuManager.GetActiveMenu(p)==null) is {} text)
-            p.PrintToCenterHtml(text,1);
+        // Blank HTML reopens/retains the native panel on the observed client.
+        // Until full-dismiss semantics are verified, cancel only and allow the last Duration2 to expire.
+        if(previews.Remove(p.SteamID,out var v))v.Clock.Clear(false);
     }
     private void ClearPreviews(){
-        // Empty startup state and teardown require no globals, player enumeration or native reads.
-        if(previews.Count==0)return;
         var detached=previews.Values.ToArray();
-        previewNative.Clear(()=>PreviewCleanup.Each(detached,v=>{
-            var p=v.Player;
-            if(Human(p)&&Same(p,v)&&v.Clock.Clear(MenuManager.GetActiveMenu(p)==null) is {} text)
-                p.PrintToCenterHtml(text,1);
-        }),()=>previews.Clear());
+        previews.Clear(); // Managed cancellation before any callbacks; never enumerate globals on teardown.
+        foreach(var v in detached)v.Clock.Clear(false);
+    }
+    private void ClearProbe(CCSPlayerController p,string mode,CommandInfo c){
+        if(!previews.TryGetValue(p.SteamID,out var v)||!Same(p,v)||!v.Clock.Owned||
+            MenuManager.GetActiveMenu(p)!=null||!p.PawnIsAlive||Server.MapName!="df_spaceport_player_scale_raytrace"){
+            c.ReplyToCommand("Clear probe requires your active owned HTML preview on this living pawn.");return;
+        }
+        previews.Remove(p.SteamID); // Detach before native call, no automatic retries or follow-up blank sends.
+        v.Clock.Clear(false);
+        var duration=PreviewDismiss.ProbeDuration(mode);
+        if(duration is not {} seconds)return;
+        var ev=new EventShowSurvivalRespawnStatus(true){LocToken="",Duration=seconds,Userid=p};
+        try{ev.FireEventToClient(p);}finally{ev.Free();}
+        c.ReplyToCommand("Private dismissal PROBE sent once. Full panel hiding is UNVERIFIED; report remaining bar and time to disappear.");
     }
     private bool RaidInactiveForHud() => RaidHudGuard.ReadInactive(
         ()=>File.ReadAllText(Path.Combine(ModuleDirectory,"..","RaidPlugin","gameplay.json")),
@@ -38,6 +46,10 @@ public sealed partial class DebugPlugin
         if(!previewNative.Available||!HudReady||!Human(p)){ClearPreviews();c.ReplyToCommand("HUD mode unavailable or private scope not attested.");return;}
         if(!Config.ExtractHudExclusive||Config.ExtractHudRelease!="default-20261105"){
             c.ReplyToCommand("Requires explicit exclusive HUD channel approval and default-20261105 asset attestation.");return;
+        }
+        if(c.ArgCount==2&&PreviewDismiss.ProbeDuration(c.GetArg(1))!=null){ClearProbe(p!,c.GetArg(1),c);return;}
+        if(Enumerable.Range(1,c.ArgCount-1).Select(c.GetArg).Any(a=>a is "alert" or "instructor" or "game_text" or "env_hudhint" or "roundclock")){
+            c.ReplyToCommand("UNAVAILABLE: private full lifecycle/cleanup not verified for this mode; no entity or event spawned.");return;
         }
         var a=PreviewArgs.Parse(Enumerable.Range(1,c.ArgCount-1).Select(c.GetArg).ToArray());
         if(a==null){c.ReplyToCommand("Usage: !extracthud [1..3600] [css|png|plain|tags|classes] or !extracthud stop");return;}
@@ -61,8 +73,8 @@ public sealed partial class DebugPlugin
             var origin=valid?p.PlayerPawn.Value!.AbsOrigin:null;
             var zone=origin==null?0:PreviewClock.Zone(origin.X,origin.Y,origin.Z);
             var text=v.Clock.Tick(now,zone,valid,MenuManager.GetActiveMenu(p)==null,v.Style);
-            if(text!=null){
-                try{p.PrintToCenterHtml(text,2);}
+            if(PreviewDismiss.ShouldRender(text)){
+                try{p.PrintToCenterHtml(text!,2);}
                 catch{previews.Remove(id);v.Clock.Clear(false);previewNative.Stop();throw;}
             }
             if(!valid||now>=v.Clock.End)previews.Remove(id);
