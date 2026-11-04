@@ -58,7 +58,7 @@ public sealed partial class DebugPlugin
             c.ReplyToCommand("Requires correct map and current living T/CT pawn.");return;
         }
         previews[p.SteamID]=new(p,p.Handle,p.PlayerPawn.Raw,new PreviewClock(Environment.TickCount64,a.Seconds),a.Style);
-        c.ReplyToCommand("Private live-position HTML capability probe started. CSS/image/layout support unverified; no raid timer or money changes.");
+        c.ReplyToCommand(a.Style=="alert"?"Private per-player alert probe started. Alert lifetime/dismissal and appearance unverified; no raid or money changes.":"Private live-position HTML capability probe started. CSS/image/layout support unverified; no raid timer or money changes.");
     }
     private void TickPreviews(){
         previewNative.OnTick();
