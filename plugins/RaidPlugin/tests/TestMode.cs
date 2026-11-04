@@ -43,6 +43,20 @@ static class TestModeTests
         Check(TestModeState.ExpireEntries(expired)==1&&expired.Count==0);
         TestModeState.RestoreEntries(expired,(_,touch)=>touch(),_=>throw new Exception());
         Check(TestModeState.ExpireEntries(expired)==0);
+        var cvars=new Dictionary<string,Action>();bool boolValue=true;int intValue=2;
+        TestModeState.SetCaptured(cvars,"bool",()=>boolValue,v=>boolValue=v,false);
+        TestModeState.SetCaptured(cvars,"int",()=>intValue,v=>intValue=v,0);
+        Check(!boolValue&&intValue==0&&cvars.Count==2);
+        TestModeState.SetCaptured(cvars,"bool",()=>boolValue,v=>boolValue=v,false);
+        TestModeState.RestoreEntries(cvars,(_,restore)=>restore(),_=>throw new Exception());
+        Check(boolValue&&intValue==2&&cvars.Count==0);
+        bool failWrite=true;
+        try{TestModeState.SetCaptured(cvars,"partial",()=>boolValue,v=>{if(failWrite)throw new InvalidOperationException();boolValue=v;},false);}catch(InvalidOperationException){}
+        Check(cvars.Count==1);
+        failWrite=false;TestModeState.RestoreEntries(cvars,(_,restore)=>restore(),_=>throw new Exception());
+        Check(boolValue&&cvars.Count==0);
+        try{TestModeState.SetCaptured<bool>(cvars,"badread",()=>throw new InvalidOperationException(),_=>{},false);}catch(InvalidOperationException){}
+        Check(cvars.Count==0);
         var state=new TestModeState();Check(!state.Enabled);
         Reject(()=>state.Start(false));Reject(()=>state.Join("a",true));
         state.Start(true);var gen=state.Generation;Reject(()=>state.Start(true));

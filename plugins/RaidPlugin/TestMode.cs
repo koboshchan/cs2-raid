@@ -19,7 +19,7 @@ public sealed partial class RaidPlugin
     private readonly Dictionary<string,uint> testRoamed=[];
     private readonly Dictionary<uint,(int Health,int Max,MoveType_t Move,MoveType_t Actual,Color Render,RenderMode_t Mode)> testPawns=[];
     private readonly Dictionary<uint,(byte Mode,bool Forced,uint Target)> testObservers=[];
-    private readonly Dictionary<string,int> testCvars=[];
+    private readonly Dictionary<string,Action> testCvars=[];
     private bool TestScope() => TestModeState.Scope(Environment.GetEnvironmentVariable("RAID_TEST_SERVER"),
         ConVar<bool>.Find("sv_lan")?.Value==true,ConVar<int>.Find("hostport")?.Value??0,
         ConVar<string>.Find("ip")?.Value);
@@ -137,16 +137,17 @@ public sealed partial class RaidPlugin
             throw new InvalidOperationException("Production config/session or pending bridge conflicts. Disable production gameplay first.");
         testMode.Start(TestScope());
         try {
-            TestCvar("mp_autoteambalance",0);TestCvar("mp_limitteams",0);
-            TestCvar("mp_ignore_round_win_conditions",1);
-            TestCvar("mp_respawn_on_death_t",0);TestCvar("mp_respawn_on_death_ct",0);
+            TestCvar("mp_autoteambalance",false);TestCvar("mp_limitteams",0);
+            TestCvar("mp_ignore_round_win_conditions",true);
+            TestCvar("mp_respawn_on_death_t",false);TestCvar("mp_respawn_on_death_ct",false);
             PatchExistingSpread();
         }catch{StopTestMode();throw;}
     }
     private string TestStatus()=>$"TEST {(testMode.Enabled?"ON":"OFF")} | MONEY {(TestServer?"HARD OFF":"production gates")} | phase {testMode.Phase} | {testMode.Participants.Count} opted-in | 200HP saved-pawns={testPawns.Count} / spread 0.5 baselines={spreadOriginals.Count} shared SERVER-WIDE / CHASE living duo else ROAMING death+64 observers={testObservers.Count} | KIT STUB labels only, NO DeltaOps | native T/CT damage rules (NOT duo combat acceptance) | no teleport insertion, no loot/economy/session | pending-cvars={testCvars.Count} | generation {testMode.Generation}";
-    private void TestCvar(string name,int value){
-        var cv=ConVar<int>.Find(name)??throw new InvalidOperationException("Missing "+name);
-        testCvars.TryAdd(name,cv.Value);cv.Value=value;
+    private void TestCvar<T>(string name,T value){
+        var cv=ConVar<T>.Find(name)??throw new InvalidOperationException("Missing "+name);
+        TestModeState.SetCaptured(testCvars,name,()=>cv.Value,
+            saved=>(ConVar<T>.Find(name)??throw new InvalidOperationException("Missing restore cvar "+name)).Value=saved,value);
     }
     private void SaveTestPawn(CCSPlayerController p){
         if(p.PlayerPawn.Value is not {IsValid:true} pawn)return;
@@ -223,9 +224,7 @@ public sealed partial class RaidPlugin
                 baseline.Data.InaccuracyJumpApex=baseline.JumpApex;
                 baseline.Data.InaccuracyReload=baseline.Reload;
             },TestCleanupError);},
-            ()=>TestModeState.RestoreEntries(testCvars,(name,value)=>{
-                var cv=ConVar<int>.Find(name)??throw new InvalidOperationException("Missing restore cvar "+name);cv.Value=value;
-            },TestCleanupError));
+            ()=>TestModeState.RestoreEntries(testCvars,(_,restore)=>restore(),TestCleanupError));
     }
     private void StopTestMode(){
         testMode.Stop(); // Fence all callbacks before touching native resources.

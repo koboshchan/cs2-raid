@@ -27,6 +27,12 @@ public sealed class TestModeState
             catch(Exception ex){try{report(ex);}catch{/* A failing logger must not abort teardown. */}}
         }
     }
+    // Capture before mutation, with identical generic type for read, write and restoration.
+    // A failed setter retains the original restoration action for OFF cleanup.
+    public static void SetCaptured<T>(Dictionary<string,Action> saved,string name,Func<T> read,Action<T> write,T value){
+        if(!saved.ContainsKey(name)){var original=read();saved.Add(name,()=>write(original));}
+        write(value);
+    }
     // Expiration abandons opaque native pointers without invoking any restore/dereference callback.
     public static int ExpireEntries<K,V>(Dictionary<K,V> entries) where K:notnull {var count=entries.Count;entries.Clear();return count;}
     public static void FinalizeAll(Action<Exception> report,params Action[] actions)
