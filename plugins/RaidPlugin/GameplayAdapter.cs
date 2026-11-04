@@ -14,6 +14,9 @@ public sealed partial class RaidPlugin
 {
     private GameplayConfig gameplayConfig = new();
     private GameplayState game = new();
+    private SpawnProfile? selectedSpawnProfile;
+    private bool SpawnBindingReady => string.IsNullOrEmpty(gameplayConfig.SpawnProfile) ||
+        selectedSpawnProfile?.Matches(gameplayConfig.SpawnProfile,Server.MapName,gameplayConfig.MapRelease)==true;
     private RaidOutcomes raidOutcomes = new();
     // Unwired until actual private MVP/card/reset support is verified in-game.
     private Action<RaidEndProjection>? presentRaidEnd = null;
@@ -41,6 +44,15 @@ public sealed partial class RaidPlugin
         var path=Path.Combine(ModuleDirectory,"gameplay.json");
         if(File.Exists(path)) gameplayConfig=JsonSerializer.Deserialize<GameplayConfig>(File.ReadAllText(path),new JsonSerializerOptions { PropertyNameCaseInsensitive=true }) ?? new();
         gameplayConfig.Validate();
+        if(!string.IsNullOrEmpty(gameplayConfig.SpawnProfile)) {
+            // Explicit fixed selection only. Never load arbitrary paths or overwrite legacy spawns.
+            gameplayConfig.Spawns=[];
+            if(gameplayConfig.SpawnProfile==SpawnProfile.Selection) {
+                var profilePath=Path.Combine(ModuleDirectory,"spawns","spaceport-default-20261105.json");
+                try{selectedSpawnProfile=SpawnProfile.Parse(File.ReadAllText(profilePath));}
+                catch(Exception ex){Server.PrintToConsole("Raid spawn profile unavailable: "+ex.GetType().Name);}
+            }
+        }
         if(TestServer || !gameplayConfig.Enabled) return;
         RegisterDeltaOpsBridge(); RegisterPartnerVisuals(); RegisterPricing(); RegisterTonightGameplay();RegisterSettlementBridge();
         VirtualFunctions.CCSPlayer_WeaponServices_CanUseFunc.Hook(BlockGroundPickup,HookMode.Pre);
@@ -121,7 +133,9 @@ public sealed partial class RaidPlugin
         sessionLoaded=false;
         if(!raidBuyOwnership.BeginReset(RestoreRaidBuyClock,()=>raidBuyBaselines.Count!=0,RaidBuyError))return;
         InvalidateFinancialMatch();ClearPartnerVisuals();ClearLoot();ClearTonightMatch();raidOutcomes=new();game=new();observedWeapons.Clear();nativeProjections.Clear();lastCountdown=-1;
-        sessionLoaded=gameplayConfig.Ready(0);
+        if(selectedSpawnProfile!=null)
+            gameplayConfig.Spawns=selectedSpawnProfile.Select(gameplayConfig.SpawnProfile,Server.MapName,gameplayConfig.MapRelease);
+        sessionLoaded=SpawnBindingReady && gameplayConfig.Ready(0);
         if(!sessionLoaded){Server.PrintToChatAll("Raid disabled until map coordinates and native flow QA are confirmed.");return;}
         SetCvar("mp_autoteambalance",0);SetCvar("mp_limitteams",0);SetCvar("mp_ignore_round_win_conditions",1);
         SetCvar("mp_teammates_are_enemies",1);SetCvar("mp_friendlyfire",1);SetCvar("mp_death_drop_gun",1);
@@ -198,7 +212,7 @@ public sealed partial class RaidPlugin
         }
         if(game.Phase==GamePhase.Lobby && !deltaOpsCharactersReady)deltaOpsCharactersReady=ResetDeltaOpsCharacters();
         var previous=game.Phase;
-        var count=game.Tick(now,deltaOpsCharactersReady && gameplayConfig.Ready(game.Players.Values.Select(x=>x.Team).Distinct().Count()));
+        var count=game.Tick(now,deltaOpsCharactersReady && SpawnBindingReady && (selectedSpawnProfile==null || SpawnProfile.LayoutReady(game.Players.Values)) && gameplayConfig.Ready(game.Players.Values.Select(x=>x.Team).Distinct().Count()));
         if(game.Phase!=previous && !raidBuyOwnership.Apply(OnPhaseChanged,CleanupRaidBuyFailure,()=>raidBuyBaselines.Count!=0,RaidBuyError,game.Phase==GamePhase.Buy)){sessionLoaded=false;return;}
         if(count is int n && n!=lastCountdown){lastCountdown=n;Server.PrintToChatAll(game.Phase+" "+n+"s");}
         if(game.Phase==GamePhase.Closed) {
@@ -273,7 +287,7 @@ public sealed partial class RaidPlugin
             var spawns=gameplayConfig.Spawns.OrderBy(_=>random.Next()).ToArray();int index=0;
             foreach(var team in game.Players.Values.GroupBy(x=>x.Team)){
                 var pos=spawns[index++];int member=0;
-                foreach(var m in team){var p=Find(m.Id);if(p!=null && !FinancialFrozen(m.Id))Place(p,pos with {X=pos.X+member++*48});}
+                foreach(var m in team){var p=Find(m.Id);if(p!=null && !FinancialFrozen(m.Id))Place(p,selectedSpawnProfile==null?pos with {X=pos.X+member++*48}:pos);}
             }
         }
         if(game.Phase==GamePhase.Active){SpawnLoot();Server.PrintToChatAll("Raid started. 30 minutes. Press E for loot; hold E for safes.");}
@@ -318,6 +332,7 @@ public sealed partial class RaidPlugin
     {
         if(raidBuyOwnership.Blocked)return;
         if(!sessionLoaded)return;
+        if(!SpawnBindingReady){StopGameplay();return;}
         UpdatePartnerVisuals();
         UpdateSpectators();
         foreach(var p in Utilities.GetPlayers().Where(Human)) {

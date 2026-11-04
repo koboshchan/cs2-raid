@@ -1,0 +1,24 @@
+{
+  "enabled": false,
+  "nativeFlowVerified": false,
+  "coordinatesConfirmed": false,
+  "customPricingEnabled": false,
+  "lobby": {
+    "x": 0,
+    "y": 0,
+    "z": 0
+  },
+  "readyPlatform": {
+    "x": 0,
+    "y": 0,
+    "z": 0
+  },
+  "spawns": [],
+  "mapLoot": [],
+  "levers": [],
+  "extractionTrigger": "",
+  "extractionCenter": null,
+  "extractionRadius": 0,
+  "spawnProfile": "spaceport-default-20261105",
+  "mapRelease": "default-20261105"
+}

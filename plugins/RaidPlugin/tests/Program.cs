@@ -35,3 +35,5 @@ ReloadPolicyTests.Run();
 PrivateLinkTests.Run();
 
 RaidOutcomeTests.Run();
+
+SpawnProfileTests.Run();

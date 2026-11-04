@@ -182,6 +182,8 @@ public sealed class GameplayConfig
     public Position Lobby { get; set; } = new(0,0,0);
     public Position ReadyPlatform { get; set; } = new(0,0,0);
     public Position[] Spawns { get; set; } = [];
+    public string SpawnProfile { get; set; } = "";
+    public string MapRelease { get; set; } = "";
     public MapLoot[] MapLoot { get; set; } = [];
     public MapLever[] Levers { get; set; } = [];
     public string ExtractionTrigger { get; set; } = "";
