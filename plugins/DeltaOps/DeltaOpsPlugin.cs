@@ -219,6 +219,9 @@ public sealed partial class DeltaOpsPlugin : BasePlugin, IPluginConfig<DeltaOpsC
     public override void Load(bool hotReload)
     {
         ConfigureRaidBridge();
+        // Unaccepted fixture provider exposes status/policy only; never register legacy
+        // native lifecycle handlers (global reset, deferred passive grants, or cooldown resets).
+        if (_fixtureMode) return;
         RegisterEventHandler<EventPlayerSpawn>(OnPlayerSpawn);
         RegisterEventHandler<EventPlayerTeam>(OnPlayerTeam);
         RegisterEventHandler<EventRoundStart>(OnRoundStart);
@@ -247,11 +250,13 @@ public sealed partial class DeltaOpsPlugin : BasePlugin, IPluginConfig<DeltaOpsC
     public override void Unload(bool hotReload)
     {
         _bridgeLoaded = false;
+        if (_fixtureMode) return;
         ResetAllPlayersAndState("插件卸载", broadcast: false);
     }
 
     private HookResult OnPlayerSpawn(EventPlayerSpawn @event, GameEventInfo info)
     {
+        if (_fixtureMode) return HookResult.Continue;
         var player = @event.Userid;
         if (player == null || !IsHumanController(player))
         {
@@ -284,6 +289,7 @@ public sealed partial class DeltaOpsPlugin : BasePlugin, IPluginConfig<DeltaOpsC
 
     private HookResult OnPlayerTeam(EventPlayerTeam @event, GameEventInfo info)
     {
+        if (_fixtureMode) return HookResult.Continue;
         if (@event.Disconnect || @event.Team is not (2 or 3) ||
             @event.Userid == null || !IsHumanController(@event.Userid))
         {
@@ -311,6 +317,7 @@ public sealed partial class DeltaOpsPlugin : BasePlugin, IPluginConfig<DeltaOpsC
 
     private HookResult OnRoundStart(EventRoundStart @event, GameEventInfo info)
     {
+        if (_fixtureMode) return HookResult.Continue;
         _roundNumber++;
         ClearTemporarySpeedEffects();
         ClearAllLunaDots();
@@ -855,6 +862,7 @@ public sealed partial class DeltaOpsPlugin : BasePlugin, IPluginConfig<DeltaOpsC
     [ConsoleCommand("css_ops_assign", "服务器控制台：css_ops_assign <slot> <1-6>")]
     public void OnServerAssignOperatorCommand(CCSPlayerController? player, CommandInfo command)
     {
+        if(_fixtureMode){command.ReplyToCommand("UNAVAILABLE: fixture native kit acceptance BLOCKED.");return;}
         if (player != null)
         {
             player.PrintToChat(" [三角洲模式] 仅服务器控制台可执行干员测试。");
@@ -1173,7 +1181,7 @@ public sealed partial class DeltaOpsPlugin : BasePlugin, IPluginConfig<DeltaOpsC
         OperatorDefinition definition,
         bool automatic)
     {
-        if (_raidMode && !_bridgeAssigning) return;
+        if (_fixtureMode || _raidMode && !_bridgeAssigning) return;
         var state = GetOrCreateState(player, key);
         if (state.Operator.HasValue && state.Operator.Value != definition.Id)
         {
@@ -2619,87 +2627,10 @@ public sealed partial class DeltaOpsPlugin : BasePlugin, IPluginConfig<DeltaOpsC
         CCSPlayerController victim,
         int damage)
     {
-        if (!IsEnemy(attacker, victim)) return;
-        var attackerPawn = attacker.PlayerPawn.Value;
-        var victimPawn = victim.PlayerPawn.Value;
-        if (attackerPawn == null || victimPawn == null ||
-            !attackerPawn.IsValid || !victimPawn.IsValid ||
-            !attacker.PawnIsAlive || !victim.PawnIsAlive)
-        {
-            return;
-        }
-
-        var damageInfoSize = Schema.GetClassSize("CTakeDamageInfo");
-        var damageInfoPtr = Marshal.AllocHGlobal(damageInfoSize);
-        var damageResultSize = Schema.GetClassSize("CTakeDamageResult");
-        var damageResultPtr = Marshal.AllocHGlobal(damageResultSize);
-        try
-        {
-            for (var i = 0; i < damageInfoSize; i++)
-            {
-                Marshal.WriteByte(damageInfoPtr, i, 0);
-            }
-            for (var i = 0; i < damageResultSize; i++)
-            {
-                Marshal.WriteByte(damageResultPtr, i, 0);
-            }
-
-            var damageInfo = new CTakeDamageInfo(damageInfoPtr);
-            var attackerInfo = new AttackerInfo_t
-            {
-                AttackerPawn = attacker.Pawn.Raw,
-                AttackerPlayerSlot = attacker.Slot,
-                IsPawn = true,
-                NeedInit = true
-            };
-            Marshal.StructureToPtr(
-                attackerInfo,
-                new IntPtr(damageInfoPtr.ToInt64() + 0x88),
-                false);
-
-            Schema.SetSchemaValue(
-                damageInfo.Handle,
-                "CTakeDamageInfo",
-                "m_hInflictor",
-                attackerPawn.EntityHandle.Raw);
-            Schema.SetSchemaValue(
-                damageInfo.Handle,
-                "CTakeDamageInfo",
-                "m_hAttacker",
-                attackerPawn.EntityHandle.Raw);
-
-            damageInfo.Damage = damage;
-            damageInfo.OriginalDamage = damage;
-            damageInfo.TotalledDamage = damage;
-            damageInfo.BitsDamageType = DamageTypes_t.DMG_ENERGYBEAM;
-            damageInfo.DamageFlags = TakeDamageFlags_t.DFLAG_IGNORE_ARMOR;
-
-            var damageResult = new CTakeDamageResult(damageResultPtr);
-            Schema.SetSchemaValue(
-                damageResult.Handle,
-                "CTakeDamageResult",
-                "m_pOriginatingInfo",
-                damageInfo.Handle);
-            damageResult.HealthBefore = victimPawn.Health;
-            damageResult.HealthLost = damage;
-            damageResult.DamageDealt = damage;
-            damageResult.PreModifiedDamage = damage;
-            damageResult.TotalledHealthLost = damage;
-            damageResult.TotalledDamageDealt = damage;
-            damageResult.WasDamageSuppressed = false;
-
-#pragma warning disable CS0618
-            VirtualFunctions.CBaseEntity_TakeDamageOldFunc.Invoke(
-                victimPawn,
-                damageInfo,
-                damageResult);
-#pragma warning restore CS0618
-        }
-        finally
-        {
-            Marshal.FreeHGlobal(damageInfoPtr);
-            Marshal.FreeHGlobal(damageResultPtr);
-        }
+        // DISABLED in every mode. The former 0x88 attacker layout and obsolete native
+        // TakeDamage ABI have not been validated for the installed engine.
+        // Policy permission is not evidence that an unsafe native call is correct.
+        return;
     }
 
     private void ShowOutline(CCSPlayerController player, float? duration = null)
