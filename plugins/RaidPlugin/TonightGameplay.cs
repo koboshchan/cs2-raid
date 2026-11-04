@@ -101,8 +101,7 @@ public sealed partial class RaidPlugin
             pawn.ArmorValue=0;
             if(pawn.ItemServices is {} items)items.As<CCSPlayer_ItemServices>().HasHelmet=false;
         }
-        try { ShowRaidResult(p,false); }
-        catch(Exception ex) { Logger.LogError(ex,"Private raid loss banner failed"); }
+
     }
     // Invoke win ONLY after trusted backend receipt confirmation, never on an intent.
     private void ShowRaidResult(CCSPlayerController p,bool won)

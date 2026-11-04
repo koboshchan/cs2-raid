@@ -33,3 +33,5 @@ NativeBuyPolicyTests.Run();
 ReloadPolicyTests.Run();
 
 PrivateLinkTests.Run();
+
+RaidOutcomeTests.Run();

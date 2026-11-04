@@ -14,6 +14,9 @@ public sealed partial class RaidPlugin
 {
     private GameplayConfig gameplayConfig = new();
     private GameplayState game = new();
+    private RaidOutcomes raidOutcomes = new();
+    // Unwired until actual private MVP/card/reset support is verified in-game.
+    private Action<RaidEndProjection>? presentRaidEnd = null;
     private readonly Random random = new();
     private readonly Dictionary<uint,(string Owner,string Entity)> observedWeapons = [];
     private readonly Dictionary<string,uint> lootEntities = [];
@@ -61,15 +64,15 @@ public sealed partial class RaidPlugin
         RegisterListener<Listeners.OnMapStart>(_=>{StopGameplay();AbandonExpiredSpread();spreadMapEnded=false;game=new();});
         RegisterListener<Listeners.OnMapEnd>(()=>{try{StopGameplay();}finally{spreadMapEnded=true;AbandonExpiredSpread();}});
         RegisterEventHandler<EventRoundStart>((e,i)=>{ResetLobby();return HookResult.Continue;});
-        RegisterEventHandler<EventPlayerDisconnect>((e,i)=>{if(Human(e.Userid))game.Leave(Id(e.Userid));return HookResult.Continue;},HookMode.Pre);
+        RegisterEventHandler<EventPlayerDisconnect>((e,i)=>{if(Human(e.Userid)){raidOutcomes.Disconnect(Id(e.Userid));game.Leave(Id(e.Userid));}return HookResult.Continue;},HookMode.Pre);
         RegisterEventHandler<EventPlayerDeath>((e,i)=>{
             if(Human(e.Userid)) {
                 if(FinancialFrozen(Id(e.Userid))) {InvalidateFinancialPlayer(Id(e.Userid));if(IsFinancialActorBlocked(Id(e.Userid)))TryIsolateFinancialActor(e.Userid);return HookResult.Continue;}
                 ObserveNativeSpend(e.Userid);
                 var pos=Location(e.Userid);
                 if(sessionLoaded && game.Living(Id(e.Userid)))RememberDeath(e.Userid,pos);
-                if(pos!=null && game.DieWithBag(Id(e.Userid),pos))Server.NextFrame(UpdateSpectators);
-                else game.Kill(Id(e.Userid),null);
+                var killed=pos!=null ? game.DieWithBag(Id(e.Userid),pos) : game.Kill(Id(e.Userid),null);
+                if(killed)BeginRaidOutcome(e.Userid,false);
             }
             return HookResult.Continue;
         });
@@ -116,7 +119,7 @@ public sealed partial class RaidPlugin
         if(TestServer)return;
         sessionLoaded=false;
         if(!raidBuyOwnership.BeginReset(RestoreRaidBuyClock,()=>raidBuyBaselines.Count!=0,RaidBuyError))return;
-        InvalidateFinancialMatch();ClearPartnerVisuals();ClearLoot();ClearTonightMatch();game=new();observedWeapons.Clear();nativeProjections.Clear();lastCountdown=-1;
+        InvalidateFinancialMatch();ClearPartnerVisuals();ClearLoot();ClearTonightMatch();raidOutcomes=new();game=new();observedWeapons.Clear();nativeProjections.Clear();lastCountdown=-1;
         sessionLoaded=gameplayConfig.Ready(0);
         if(!sessionLoaded){Server.PrintToChatAll("Raid disabled until map coordinates and native flow QA are confirmed.");return;}
         SetCvar("mp_autoteambalance",0);SetCvar("mp_limitteams",0);SetCvar("mp_ignore_round_win_conditions",1);
@@ -198,16 +201,23 @@ public sealed partial class RaidPlugin
         if(game.Phase!=previous && !raidBuyOwnership.Apply(OnPhaseChanged,CleanupRaidBuyFailure,()=>raidBuyBaselines.Count!=0,RaidBuyError,game.Phase==GamePhase.Buy)){sessionLoaded=false;return;}
         if(count is int n && n!=lastCountdown){lastCountdown=n;Server.PrintToChatAll(game.Phase+" "+n+"s");}
         if(game.Phase==GamePhase.Closed) {
+            raidOutcomes.Close(now);
             foreach(var m in game.Players.Values.Where(x=>!x.Extracted)){
                 var p=Find(m.Id);if(p==null)continue;
                 if(IsFinancialActorBlocked(m.Id)){TryIsolateFinancialActor(p);continue;}
                 if(FinancialFrozen(m.Id)){HoldFinancialInventory(p);continue;}
-                try {ShowRaidResult(p,false);} catch(Exception) { /* UI must not prevent closing a raid. */ }
+                BeginRaidOutcome(p,false);
                 if(p.PawnIsAlive)p.CommitSuicide(false,true);
             }
-            ResetLobby();
+            if(raidOutcomes.ReadyToFinish(now)) {
+                foreach(var projection in raidOutcomes.Finish(game,now))
+                    try{presentRaidEnd?.Invoke(projection);}catch(Exception ex){RaidBuyError(ex);}
+                // Do not manufacture a native global winner, music or private full card.
+                ResetLobby();
+            }
         }
     }
+
     private void ProcessExtractionDeadline(DateTimeOffset now)
     {
         if(game.Phase!=GamePhase.Active || game.ExtractionAt is not {} at || now<at)return;
@@ -308,6 +318,7 @@ public sealed partial class RaidPlugin
         if(raidBuyOwnership.Blocked)return;
         if(!sessionLoaded)return;
         UpdatePartnerVisuals();
+        UpdateSpectators();
         foreach(var p in Utilities.GetPlayers().Where(Human)) {
             if(IsFinancialActorBlocked(Id(p))){TryIsolateFinancialActor(p);continue;}
             if(FinancialFrozen(Id(p))) {HoldFinancialInventory(p);continue;}
@@ -362,12 +373,25 @@ public sealed partial class RaidPlugin
             }
         }
     }
+    private void BeginRaidOutcome(CCSPlayerController p,bool extracted)
+    {
+        if(!raidOutcomes.Record(Id(p),extracted,DateTimeOffset.UtcNow))return;
+        try{ShowRaidResult(p,extracted);}catch(Exception ex){RaidBuyError(ex);}
+    }
     private void UpdateSpectators()
     {
         if(!sessionLoaded)return;
-        foreach(var m in game.Players.Values.Where(x=>!x.Alive)) {
+        foreach(var m in game.Players.Values.Where(x=>!x.Alive || x.Extracted)) {
             var p=Find(m.Id);if(p==null)continue;
+            if(!raidOutcomes.CanObserve(m.Id,DateTimeOffset.UtcNow))continue;
+            if(raidOutcomes.TakeCamera(m.Id,DateTimeOffset.UtcNow)) {
+                // Source-supported private cleanup request only, NOT guaranteed panel/audio reset.
+                var reset=new EventRoundStart(true);
+                try{reset.FireEventToClient(p);}catch(Exception ex){RaidBuyError(ex);}finally{reset.Free();}
+            }
             var mate=game.Spectate(m.Id);var target=mate==null?null:Find(mate);
+            // Resolve connected living partner NOW, not at death/extraction.
+            if(target is not {PawnIsAlive:true})target=null;
             var pawn=p.ObserverPawn.Value;
             var observer=pawn?.ObserverServices;
             if(pawn is not {IsValid:true} || observer==null)continue;
@@ -398,6 +422,7 @@ public sealed partial class RaidPlugin
     }
     private void StopGameplay()
     {
+        raidOutcomes=new();
         var wasLoaded=sessionLoaded;
         RaidGameplayStop.Run(raidBuyOwnership,()=>sessionLoaded=false,
             CleanupRaidBuyFailure,()=>raidBuyBaselines.Count!=0,RaidBuyError,

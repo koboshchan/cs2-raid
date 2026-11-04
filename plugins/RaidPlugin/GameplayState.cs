@@ -9,6 +9,8 @@ public sealed class Member(string id)
     public bool Alive { get; internal set; } = true;
     public bool Extracted { get; internal set; }
     public long Cash { get; internal set; }
+    public long MoneyExtractedCents { get; internal set; }
+    public long ExtractedOrder { get; internal set; }
 }
 public enum LootKind { Item, Safe, MoneyBag, Equipment }
 public sealed record GroundLoot(string Id, Position Position, LootKind Kind, long Min, long Max, double HoldSeconds = 0);
@@ -28,6 +30,7 @@ public sealed class GameplayState
     private readonly HashSet<int> levers = [];
     private readonly Dictionary<string,ExtractionIntent> extractionIntents = [];
     private int nextTeam;
+    private long extractionOrder;
     private readonly HashSet<string> cashIns=[];
     public string ExtractionWindowId { get; private set; } = "";
     internal bool ApplyCashIn(string id,long dollars) {
@@ -35,9 +38,9 @@ public sealed class GameplayState
         Players[id].Cash=dollars;return true;
     }
     internal bool IsIssuedExtraction(ExtractionIntent intent) => extractionIntents.TryGetValue(intent.Player,out var issued) && issued==intent;
-    internal bool ConfirmVerifiedExtraction(ExtractionIntent intent) {
-        if(Phase!=GamePhase.Active || !IsIssuedExtraction(intent) || !Living(intent.Player) || Players[intent.Player].Cash!=intent.Cash || ExtractionAt==null)return false;
-        var p=Players[intent.Player];p.Extracted=true;p.Cash=0;holds.Remove(p.Id);extractionIntents.Remove(p.Id);return true;
+    internal bool ConfirmVerifiedExtraction(ExtractionIntent intent,long? verifiedMoneyCents=null) {
+        if(verifiedMoneyCents is <0 || Phase!=GamePhase.Active || !IsIssuedExtraction(intent) || !Living(intent.Player) || Players[intent.Player].Cash!=intent.Cash || ExtractionAt==null)return false;
+        var p=Players[intent.Player];p.MoneyExtractedCents=verifiedMoneyCents??checked(intent.Cash*100);p.ExtractedOrder=++extractionOrder;p.Extracted=true;p.Cash=0;holds.Remove(p.Id);extractionIntents.Remove(p.Id);return true;
     }
     public GamePhase Phase { get; private set; }
     public DateTimeOffset? StartsAt { get; private set; }

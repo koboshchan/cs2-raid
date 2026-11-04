@@ -299,8 +299,9 @@ public sealed partial class RaidPlugin
             if(recovery.Phase==RecoveryPhase.ProofRecorded) {
                 if(!NativeSnapshotMatches(s,current)){InvalidateFinancialPlayer(s.Steam);return false;}
                 settlementRecovery.StartConsumption(key); // fsync BEFORE economic mutation, never replay after restart
-                var consumed=s.Operation=="cashin" ? game.ApplyCashIn(s.Steam,SettlementProtocol.Dollars(proof.AmountCents)) : s.Intent!=null && game.ConfirmVerifiedExtraction(s.Intent);
+                var consumed=s.Operation=="cashin" ? game.ApplyCashIn(s.Steam,SettlementProtocol.Dollars(proof.AmountCents)) : s.Intent!=null && game.ConfirmVerifiedExtraction(s.Intent,proof.AmountCents);
                 if(!consumed){InvalidateFinancialPlayer(s.Steam);return false;}
+                if(s.Operation=="extract")BeginRaidOutcome(current,true);
                 settlementRecovery.MarkConsumed(key); // economic commit is separate from fallible presentation
             }
             if(settlementRecovery.Records[key].Phase!=RecoveryPhase.Consumed)return false;
@@ -316,7 +317,7 @@ public sealed partial class RaidPlugin
             settlementRecovery.MarkCleanupComplete(key);
             var complete=entry.Complete(proof,()=>true);
             // Durable outbox in TickSettlementRecovery mirrors cleanup until acknowledged, including after restart.
-            if(s.Operation=="extract")try{ShowRaidResult(current,true);}catch{}
+            // Outcome was latched at consumption, never replayed during cleanup retries.
             return complete;
         }catch {
             // A failed fsync at the consumption boundary is ambiguous. Never replay it.
