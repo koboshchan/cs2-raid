@@ -35,7 +35,7 @@ public sealed partial class RaidPlugin
         var path=Path.Combine(ModuleDirectory,"gameplay.json");
         if(File.Exists(path)) gameplayConfig=JsonSerializer.Deserialize<GameplayConfig>(File.ReadAllText(path),new JsonSerializerOptions { PropertyNameCaseInsensitive=true }) ?? new();
         gameplayConfig.Validate();
-        if(!gameplayConfig.Enabled) return;
+        if(TestServer || !gameplayConfig.Enabled) return;
         RegisterDeltaOpsBridge(); RegisterPartnerVisuals(); RegisterPricing(); RegisterTonightGameplay();RegisterSettlementBridge();
         VirtualFunctions.CCSPlayer_WeaponServices_CanUseFunc.Hook(BlockGroundPickup,HookMode.Pre);
         VirtualFunctions.CBaseTrigger_StartTouchFunc.Hook(ExtractionTouchStart,HookMode.Post);
@@ -107,6 +107,7 @@ public sealed partial class RaidPlugin
     }
     private void ResetLobby()
     {
+        if(TestServer)return;
         InvalidateFinancialMatch();ClearPartnerVisuals();ClearLoot();ClearTonightMatch();game=new();observedWeapons.Clear();nativeProjections.Clear();lastCountdown=-1;
         sessionLoaded=gameplayConfig.Ready(0);
         if(!sessionLoaded){Server.PrintToChatAll("Raid disabled until map coordinates and native flow QA are confirmed.");return;}
@@ -248,7 +249,7 @@ public sealed partial class RaidPlugin
     }
     private void SetMoney(CCSPlayerController p,long value)
     {
-        if(p.InGameMoneyServices is not {} money)return;
+        if(TestServer || p.InGameMoneyServices is not {} money)return;
         money.Account=TonightRules.Hud(value);nativeProjections[Id(p)]=money.Account;
         Utilities.SetStateChanged(p,"CCSPlayerController","m_pInGameMoneyServices");
     }

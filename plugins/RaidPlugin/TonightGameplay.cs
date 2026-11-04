@@ -51,7 +51,7 @@ public sealed partial class RaidPlugin
          data.InaccuracyLand,data.InaccuracyLadder,data.InaccuracyFire,data.InaccuracyMove];
     private void PatchSpread(CCSWeaponBase weapon)
     {
-        if(!sessionLoaded || PriceItem(weapon.DesignerName) is not {IsGun:true} || weapon.VData is not {} data || data.Handle==nint.Zero)return;
+        if((!sessionLoaded && !testMode.Enabled) || PriceItem(weapon.DesignerName) is not {IsGun:true} || weapon.VData is not {} data || data.Handle==nint.Zero)return;
         if(!spreadOriginals.TryGetValue(data.Handle,out var baseline)) {
             baseline=new(data,SpreadModes(data).Select(x=>x.Values.ToArray()).ToArray(),
                 data.InaccuracyJumpInitial,data.InaccuracyJumpApex,data.InaccuracyReload);

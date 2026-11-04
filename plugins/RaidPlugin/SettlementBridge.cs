@@ -29,7 +29,7 @@ public sealed partial class RaidPlugin
     private bool nativeBridgeStopped=true;
     private string nativeConsumer=Guid.NewGuid().ToString("N");
     private static bool FinancialEnvironment => Environment.GetEnvironmentVariable("RAID_FINANCIAL_ENABLED")=="1";
-    private bool FinancialReady => sessionLoaded && gameplayConfig.FinancialNativeVerified && FinancialEnvironment && !nativeBridgeStopped;
+    private bool FinancialReady => !TestServer && sessionLoaded && gameplayConfig.FinancialNativeVerified && FinancialEnvironment && !nativeBridgeStopped;
     private bool PendingSettlement => nativeSettlements.Values.Any(s=>settlementFence.Find(s.Key)?.Completed==null);
     private bool FinancialFrozen(string steam)=>nativeSettlements.Values.Any(s=>s.Steam==steam && (s.Tombstoned || settlementFence.Find(s.Key)?.Completed==null));
     private RaidSession CurrentSession(CCSPlayerController p)
@@ -159,6 +159,7 @@ public sealed partial class RaidPlugin
     private static string ServerIdentity()=>Environment.GetEnvironmentVariable("SERVER_ID")??"raid-friends";
     private void IssueSettlement(CCSPlayerController p,string key,string operation,object request,long cents,string fingerprint,ExtractionIntent? intent,NativeInventory[]? inventory=null)
     {
+        if(TestServer)return;
         var snapshot=inventory??SnapshotInventory(p);
         settlementFence.Issue(key,operation,fingerprint,cents,NativeSnapshot(snapshot));
         var s=new NativeSettlement(key,operation,request,Id(p),CurrentSession(p),game.Players[Id(p)].Cash,snapshot,intent);
@@ -167,11 +168,12 @@ public sealed partial class RaidPlugin
     }
     private void SubmitSettlement(NativeSettlement s)
     {
-        if(s.Submitted || s.Tombstoned || settlementFence.Find(s.Key)?.Completed!=null)return;
+        if(TestServer || s.Submitted || s.Tombstoned || settlementFence.Find(s.Key)?.Completed!=null)return;
         s.Submitted=true;_ = SendSettlement(s.Key,s.Operation,s.Request);
     }
     private HttpRequestMessage BridgeRequest(string route,object body)
     {
+        if(TestServer)throw new InvalidOperationException("MONEY HARD OFF");
         if(Environment.GetEnvironmentVariable("RAID_BACKEND_URL")!="http://backend:3000" || (Environment.GetEnvironmentVariable("BRIDGE_TOKEN")??"").Length<32)
             throw new InvalidOperationException("Bridge configuration");
         var req=new HttpRequestMessage(HttpMethod.Post,"http://backend:3000"+route);
@@ -212,6 +214,7 @@ public sealed partial class RaidPlugin
     }
     private bool ApplyNativeCallback(JsonElement job)
     {
+        if(TestServer)return false;
         var key=job.GetProperty("operationKey").GetString()??"";
         if(!nativeSettlements.TryGetValue(key,out var s) || job.GetProperty("operation").GetString()!=s.Operation)return false;
         var entry=settlementFence.Find(key);if(entry==null)return false;

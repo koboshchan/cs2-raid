@@ -14,12 +14,13 @@ public sealed partial class RaidPlugin : BasePlugin
     public override string ModuleDescription => "7-player FFA extraction scaffold; map and money delivery fail closed";
     private RaidState raid = new();
     private ShopItem[] catalog = [];
-    private readonly HttpClient http = new() { Timeout = TimeSpan.FromSeconds(15) };
+    private readonly HttpClient http = new(new MoneyOffHandler()) { Timeout = TimeSpan.FromSeconds(15) };
     private Guid mapGeneration = Guid.NewGuid();
     private readonly HashSet<string> linking = [];
     public override void Load(bool hotReload)
     {
         LoadGameplay();
+        RegisterTestMode();
         catalog = JsonSerializer.Deserialize<ShopItem[]>(File.ReadAllText(Path.Combine(ModuleDirectory, "prices.json")),
             new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? throw new InvalidOperationException("Missing prices");
         // Never launch a partially configured raid or resume an in-memory raid after reload.
@@ -37,6 +38,7 @@ public sealed partial class RaidPlugin : BasePlugin
         // Server console ONLY. No client can trigger levers, extraction or start by spoofing chat.
         AddCommand("css_raid_start", "Console-only start scaffold", (p,c) => {
             if (p != null) { c.ReplyToCommand("Server console only"); return; }
+            if (TestServer) { c.ReplyToCommand("TEST SERVER: real raid disabled, MONEY HARD OFF."); return; }
             if (gameplayConfig.Enabled) { c.ReplyToCommand("Legacy start disabled in gameplay mode"); return; }
             if (Environment.GetEnvironmentVariable("RAID_ENABLE_SCAFFOLD") != "1") {
                 c.ReplyToCommand("Disabled. Space City entity integration and gameplay QA required."); return;
@@ -72,6 +74,7 @@ public sealed partial class RaidPlugin : BasePlugin
     }
     private void BeginLink(CCSPlayerController? p, bool poll)
     {
+        if(TestServer)return;
         if (p is not { IsValid: true, IsBot: false } || p.AuthorizedSteamID == null || p.UserId is not { } userId) return;
         var steam = p.SteamID.ToString();
         if (!linking.Add(steam)) { p.PrintToChat("A link request is already in progress."); return; }
@@ -80,6 +83,7 @@ public sealed partial class RaidPlugin : BasePlugin
     }
     private async Task LinkAsync(string steam, int userId, Guid generation, bool poll)
     {
+        if(TestServer)return;
         string message;
         try {
             var origin = Environment.GetEnvironmentVariable("RAID_BACKEND_URL");
@@ -116,7 +120,7 @@ public sealed partial class RaidPlugin : BasePlugin
                 current.PrintToChat(message);
         });
     }
-    public override void Unload(bool hotReload) { StopDeltaOpsBridge(); UnhookGameplay(); StopGameplay(); mapGeneration = Guid.NewGuid(); http.Dispose(); }
+    public override void Unload(bool hotReload) { StopTestMode(); StopDeltaOpsBridge(); UnhookGameplay(); StopGameplay(); mapGeneration = Guid.NewGuid(); http.Dispose(); }
     // TODO trusted map hooks call PullLever only on use within range, and Extract only
     // on living authorized player's zone entry. Persist bag + settlement outbox first.
     // TODO native pickup/drop tracking, corpse menu, strip default weapons, reconnect
