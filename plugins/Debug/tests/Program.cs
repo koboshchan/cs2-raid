@@ -12,6 +12,11 @@ foreach (var team in new[] { 2, 3 })
     Check(RoundBanner.TryCreate(team, BannerResult.Win, out var win) && win.Winner == team, $"team {team} win uses own native team");
     Check(RoundBanner.TryCreate(team, BannerResult.Lose, out var lose) && lose.Winner == 5 - team, $"team {team} loss uses opposite native team");
     Check(RoundBanner.TryCreate(team, BannerResult.Draw, out var draw) && draw == new RoundBanner(0, 10, "#SFUI_Notice_Round_Draw"), $"team {team} draw has no winner");
+    foreach (var result in new[] { BannerResult.Win, BannerResult.Lose, BannerResult.Draw })
+    {
+        RoundBanner.TryCreate(team, result, out var panelBanner);
+        Check(panelBanner.PanelFinalEvent == panelBanner.Reason && panelBanner.PanelFinalEvent is 8 or 9 or 10, $"team {team} {result} panel has explicit end reason");
+    }
     foreach (var result in new[] { BannerResult.Win, BannerResult.Lose })
     {
         RoundBanner.TryCreate(team, result, out var banner);
