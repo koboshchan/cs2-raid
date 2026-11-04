@@ -26,6 +26,8 @@ public sealed class TestFlow
         return from!=to&&(BotLiving(from)||Teams.Living(from))&&(BotLiving(to)||Teams.Living(to))&&
             (Bots.ContainsKey(from)||Bots.ContainsKey(to)||Teams.CanDamage(from,to));
     }
+    public static bool LobbyBotCombat(bool lobby,bool enrolledVictim,bool enrolledAttacker,bool victimBot,bool attackerBot,bool victimAlive,bool attackerAlive)
+        => lobby&&enrolledVictim&&enrolledAttacker&&(victimBot||attackerBot)&&victimAlive&&attackerAlive;
     public bool Manual {get;set;}
     public bool Join(string id){if(Teams.Phase!=GamePhase.Lobby||!Teams.Join(id))return false;Wallet.Add(id,Credits);return true;}
     // Single game-thread transaction; native setup occurs only AFTER all policy stores agree.

@@ -51,3 +51,10 @@ Dedicated cs2-raid Docker daemon, SDK 10.0.403 and pinned CSS 1.0.379. Two Relea
 - [x] Gated extraction adapter calls private ShowRaidResult(player,true) only after proof and logical/native consumption; rendering failure does not retry payment. Native runtime and partial-consumption recovery remain blocked.
 - [ ] Live native QA of 200 HP, both-team weapon buys, same-side strangers/opposite-side duos, all gun spread modes, predicted client impacts, private banners and two-user death/freecam transitions.
 - [ ] No production or native engine acceptance is implied by compiler/pure-model tests.
+
+## Urgent private bot combat fixture
+Source-only isolated raid-bot-combat-v1 from deployed aecc49c. Stage2 retained separately untouched.
+Typed captured mp_do_warmup_period=false, mp_freezetime=0, roundtime/defuse/hostage=30f; existing ignore-round-win=true. ON executes constant mp_warmup_end after scope and captures; elapsed warmup cannot be restored, but cvar baselines restore OFF/unload. No fake restoration promise.
+Console inspect now accepts bots and shows native HP, max, team, alive, move/actualmove/flags, bot/enrollment/solo-id and phase. trace 0..32 prints damage policy decisions console-only, reset on OFF/round. No health-delta acceptance implied.
+Lobby now allows enrolled living human-bot and bot-bot damage; human-human retains no-damage mutual-shot pairing. Selection/Buy/Countdown/Freeze remain protected; Active custom-duo immunity/FFA unchanged. No silent advance after !team single: selection still required; use !characterselect 1..6 and normal automatic phases. Live real health deltas BOTH directions, bot AI target behavior, freeze flags and cvar types still owner-native QA.
+Stage3 utility from proven ability-kit provenance remains allowed as future scope; only BUY-menu utility prohibited. Stage2 inactive policy has no runtime integration.

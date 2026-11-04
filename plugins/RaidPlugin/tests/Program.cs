@@ -23,3 +23,5 @@ FlowTests.Run();
 
 SettlementTests.Run();
 TestModeTests.Run();
+
+BotCombatTests.Run();

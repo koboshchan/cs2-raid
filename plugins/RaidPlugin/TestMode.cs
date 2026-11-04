@@ -16,6 +16,7 @@ public sealed partial class RaidPlugin
     private static bool TestServer => Environment.GetEnvironmentVariable("RAID_TEST_SERVER")=="1";
     private readonly TestModeState testMode=new();
     private bool testUnloaded;
+    private int testTraceRemaining;
     private TestFlow testFlow=new();
     private readonly List<Position> testSpawns=[];
     private readonly HashSet<uint> testWeapons=[];
@@ -70,9 +71,14 @@ public sealed partial class RaidPlugin
                         return player;
                     }
                     switch(op){
+                        case "trace":
+                            if(c.ArgCount!=3||!int.TryParse(c.GetArg(2),out var count)||count<0||count>32)throw new InvalidOperationException("trace 0..32, bounded console-only damage decisions.");
+                            testTraceRemaining=count;c.ReplyToCommand($"Trace armed {count} decisions; cleared on OFF/round.");break;
                         case "inspect":
-                            var inspected=Participant(2);var native=inspected.PlayerPawn.Value;
-                            c.ReplyToCommand($"NATIVE userid={inspected.UserId} team={inspected.TeamNum} alive={inspected.PawnIsAlive} health={native?.Health} max={native?.MaxHealth}");
+                            if(c.ArgCount!=3||!int.TryParse(c.GetArg(2),out var inspectUser))throw new InvalidOperationException("inspect engine userid");
+                            var inspected=Utilities.GetPlayerFromUserid(inspectUser);
+                            if(inspected is not {IsValid:true})throw new InvalidOperationException("Valid native controller required.");var native=inspected.PlayerPawn.Value;
+                            c.ReplyToCommand($"NATIVE userid={inspected.UserId} team={inspected.TeamNum} alive={inspected.PawnIsAlive} health={native?.Health} max={native?.MaxHealth} bot={inspected.IsBot} enrolled={TestParticipant(inspected)||TestBot(inspected)} solo-id={(inspected.IsBot?BotId(inspected):Id(inspected))} phase={testMode.Phase} generation={testMode.Generation} move={native?.MoveType} actualmove={native?.ActualMoveType} flags={native?.Flags}");
                             if(!spreadMapEnded && native?.WeaponServices?.ActiveWeapon.Value is CCSWeaponBase gun && gun.VData is {} vd && spreadOriginals.TryGetValue(vd.Handle,out var original)){
                                 var current=SpreadModes(vd);
                                 for(var mode=0;mode<current.Length;mode++)
@@ -233,6 +239,8 @@ public sealed partial class RaidPlugin
         try {
             TestCvar("mp_autoteambalance",false);TestCvar("mp_limitteams",0);
             TestCvar("mp_ignore_round_win_conditions",true);
+            TestCvar("mp_do_warmup_period",false);TestCvar("mp_freezetime",0);
+            TestCvar("mp_roundtime",30f);TestCvar("mp_roundtime_defuse",30f);TestCvar("mp_roundtime_hostage",30f);
             TestCvar("mp_teammates_are_enemies",true);TestCvar("mp_friendlyfire",true);
             TestCvar("ff_damage_reduction_bullets",1f);TestCvar("ff_damage_reduction_other",1f);
             TestCvar("ff_damage_reduction_grenade",1f);
@@ -240,6 +248,9 @@ public sealed partial class RaidPlugin
             TestCvar("mp_respawn_on_death_t",false);TestCvar("mp_respawn_on_death_ct",false);
             PatchExistingSpread();
             QueueTestEnrollment();
+            // Irreversible engine transition: cvar baselines restore, elapsed warmup does not.
+            // Constant server command, ONLY after dedicated/private scope and typed capture succeed.
+            Server.ExecuteCommand("mp_warmup_end");
         }catch{StopTestMode();throw;}
     }
     private string TestStatus()=>$"TEST {(testMode.Enabled?"ON":"OFF")} | MONEY {(TestServer?"HARD OFF":"production gates")} | phase {testMode.Phase} | {testMode.Participants.Count} opted-in | 200HP saved-pawns={testPawns.Count} / spread 0.5 baselines={spreadOriginals.Count} shared SERVER-WIDE / CHASE living duo else ROAMING death+64 observers={testObservers.Count} | solo-enemy bots={testFlow.Bots.Count}/{TestFlow.BotCapacity} (no wallet/selection) | KIT STUB labels only, NO DeltaOps | custom duo immunity / same-side FFA (native QA pending) | native-map/captured insertion, finite TEST credits only; no loot/SSG/session | flow={(testFlow.Manual?"MANUAL QA":"AUTO")} / spawns={testSpawns.Count} / ledger={testFlow.Ledger.Count} pending-cvars={testCvars.Count} | generation {testMode.Generation}";
@@ -383,18 +394,29 @@ public sealed partial class RaidPlugin
         var enrolledVictim=TestParticipant(victim)||TestBot(victim);var enrolledAttacker=TestParticipant(attacker)||TestBot(attacker);
         if(!enrolledVictim&&!enrolledAttacker)return HookResult.Continue;
         // No cross-fixture damage (including bots/unenrolled humans). World damage only in Active.
-        if(!enrolledVictim || !enrolledAttacker&&!actualWorld)return HookResult.Handled;
+        HookResult Decision(bool allow,string reason){
+            if(testTraceRemaining>0){
+                testTraceRemaining--;
+                Server.PrintToConsole($"TEST DAMAGE {(allow?"ALLOW":"BLOCK")} reason={reason} phase={testMode.Phase} gen={testMode.Generation} victim={victim?.UserId} vbot={victim?.IsBot} venrolled={enrolledVictim} attacker={attacker?.UserId} abot={attacker?.IsBot} aenrolled={enrolledAttacker} world={actualWorld} preHP={victim?.PlayerPawn.Value?.Health} damage={info.Damage} remaining={testTraceRemaining}");
+            }return allow?HookResult.Continue:HookResult.Handled;
+        }
+        if(!enrolledVictim || !enrolledAttacker&&!actualWorld)return Decision(false,"cross-fixture-or-unknown-owner");
         if(testMode.Phase==TestModeState.Stage.Lobby){
+            // Explicit dedicated Lobby combat exception for enrolled bot enemies only.
+            // Human-human bullets retain mutual pairing and zero damage, regardless native T/CT.
+            if(TestFlow.LobbyBotCombat(testMode.Phase==TestModeState.Stage.Lobby,enrolledVictim,enrolledAttacker,
+                TestBot(victim),TestBot(attacker),victim?.PawnIsAlive==true,attacker?.PawnIsAlive==true))
+                return Decision(true,"lobby-enrolled-bot-combat");
             if(TestParticipant(attacker)&&TestParticipant(victim)&&info.Damage>0&&(info.BitsDamageType&DamageTypes_t.DMG_BULLET)!=0){
                 if(testFlow.Teams.ShootRequest(Id(attacker!),Id(victim!))){
                     SyncTestTeams();TestAnnounce(SafeName(attacker!.PlayerName)+" and "+SafeName(victim!.PlayerName)+" duo ready.");
                 }else attacker!.PrintToChat("TEST team request sent if both unpaired; the other player must shoot back.");
-            }return HookResult.Handled;
+            }return Decision(false,"lobby-human-pairing-or-dead");
         }
-        return TestFlow.DamageAllowed(testMode.Phase==TestModeState.Stage.Active,enrolledVictim,enrolledAttacker,actualWorld,
+        return Decision(TestFlow.DamageAllowed(testMode.Phase==TestModeState.Stage.Active,enrolledVictim,enrolledAttacker,actualWorld,
             TestBot(victim)?testFlow.BotLiving(BotId(victim!)):testFlow.Teams.Living(Id(victim!)),
             enrolledAttacker&&testFlow.EnemyDamage(TestBot(attacker)?BotId(attacker!):Id(attacker!),TestBot(victim)?BotId(victim!):Id(victim!)))
-            ?HookResult.Continue:HookResult.Handled;
+            , "active-enemy-or-phase-duo-living-policy");
     }
     private void TestSecond(){
         if(!testMode.NativeActive||testUnloaded)return;
@@ -490,6 +512,7 @@ public sealed partial class RaidPlugin
             ()=>TestModeState.RestoreEntries(testCvars,(_,restore)=>restore(),TestCleanupError));
     }
     private void StopTestMode(){
+        testTraceRemaining=0;
         testMode.Stop(); // Fence all callbacks before touching native resources.
         try{CleanupTestNative();}
         finally{testFlow.Bots.Clear();testControllers.Clear();testDeaths.Clear();testRoamed.Clear();testSpawns.Clear();}
