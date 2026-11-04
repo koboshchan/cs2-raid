@@ -19,7 +19,7 @@ assert 'end.Winner = banner.Winner;' in handler and 'end.Reason = banner.Reason;
 code = '\n'.join(line.split('//')[0] for line in handler.splitlines())
 for forbidden in ('FireEvent(', 'TerminateRound(', 'PrintToChatAll(', 'Server.', 'Utilities.', 'TeamNum =', 'GameRules', 'requestedColor'):
     assert forbidden not in code, forbidden
-assert 'ModuleVersion => "0.1.6"' in source
+assert 'ModuleVersion => "0.1.7"' in source
 print("PASS private invoker delivery, allocation cleanup, parser wiring, native reason and no round termination/broadcast structural guards")
 
 reset = source[source.index("    private void BannerResetCommand"):source.index("    private void SimpleBannerCommand")]
@@ -43,3 +43,24 @@ before = subprocess.check_output(['git', 'show', '34fa384e67cdfc7d0e01a922fbd585
 old = before[before.index('    private void SimpleBannerCommand'):before.index('    private static bool TryPose')]
 assert handler[handler.index('    private void BannerCommand'):] == old[old.index('    private void BannerCommand'):]
 print("PASS reset human/active/arity/rate gates, invoker-only delivery, finally-free, cleanup, no shared writes; canonical reset and optional alias share private reset; existing preview sender identical")
+
+# Native event routing is structurally checked, not a substitute for two-client QA.
+mvp = source[source.index("    private void MvpCommand"):source.index("    private void BannerResetCommand")]
+assert 'AddCommand("css_mvp", "Preview your private native round MVP panel", MvpCommand);' in source
+assert 'if (!Ready(p, c)) return;' in mvp and 'if (c.ArgCount != 1)' in mvp
+assert mvp.index('if (c.ArgCount != 1)') < mvp.index('RoundBanner.TryCreate') < mvp.index('mvpLimiter.Allow') < mvp.index('new EventRoundEnd')
+assert 'BannerResult.Win' in mvp
+assert mvp.count('.FireEventToClient(p);') == 3
+for name in ('end', 'mvp', 'panel'):
+    assert 'finally { ' + name + '.Free(); }' in mvp
+assert mvp.index('end.FireEventToClient') < mvp.index('mvp.FireEventToClient') < mvp.index('panel.FireEventToClient')
+for assignment in ('mvp.Userid = p;', 'mvp.Reason = kills > 0 ? 1 : 7;', 'mvp.Value = kills;', 'mvp.Musickitid = musicId;', 'mvp.Musickitmvps = musicMvps;', 'mvp.Nomusic = noMusic;'):
+    assert assignment in mvp
+for read in ('p.ActionTrackingServices?.NumRoundKills ?? 0', 'p.MusicKitID', 'p.MusicKitMVPs', 'p.MvpNoMusic'):
+    assert read in mvp
+code = '\n'.join(line.split('//')[0] for line in mvp.splitlines())
+for forbidden in ('FireEvent(', 'TerminateRound(', 'PrintToChatAll(', 'Server.', 'Utilities.', 'GameRules', 'p.MVPs =', 'p.MusicKitID =', 'p.MusicKitMVPs =', 'p.MvpNoMusic =', 'NumRoundKills =', 'InventoryServices', 'ExecuteClientCommand', 'SetStateChanged'):
+    assert forbidden not in code, forbidden
+assert 'mvpLimiter.Clear();' in source and 'mvpLimiter.Remove(id);' in source
+assert 'banner/MVP reset notification sent' in reset
+print('PASS MVP enabled/human/arity/team/rate gates, real-stat reads, three private sends/finally-free, no shared stats/music/round writes; reset shares existing private cleanup')

@@ -19,7 +19,7 @@ public sealed class DebugConfig : BasePluginConfig
 public sealed class DebugPlugin : BasePlugin, IPluginConfig<DebugConfig>
 {
     public override string ModuleName => "Map Debug";
-    public override string ModuleVersion => "0.1.6";
+    public override string ModuleVersion => "0.1.7";
     public override string ModuleAuthor => "koboshchan";
     public override string ModuleDescription => "Debug economy and durable map issue reports";
     public DebugConfig Config { get; set; } = new();
@@ -30,6 +30,7 @@ public sealed class DebugPlugin : BasePlugin, IPluginConfig<DebugConfig>
     private readonly ReportLimiter resetLimiter = new();
     private readonly ReportLimiter bannerLimiter = new();
     private readonly ReportLimiter bannerResetLimiter = new();
+    private readonly ReportLimiter mvpLimiter = new();
     private ReportStore? store;
     private readonly HashSet<ulong> grantedAdmins = [];
     private bool loaded;
@@ -48,6 +49,7 @@ public sealed class DebugPlugin : BasePlugin, IPluginConfig<DebugConfig>
     public override void Load(bool hotReload)
     {
         loaded = true;
+        AddCommand("css_mvp", "Preview your private native round MVP panel", MvpCommand);
         AddCommand("css_bannerreset", "Reset your private native banner preview", BannerResetCommand);
         AddCommand("css_banner", "Private native banner: win|lose|draw|reset", SimpleBannerCommand);
         AddCommand("css_testwin", "Preview a private native round-win banner", (p, c) => BannerCommand(p, c, BannerResult.Win));
@@ -144,7 +146,7 @@ public sealed class DebugPlugin : BasePlugin, IPluginConfig<DebugConfig>
     }
     private void ClearState()
     {
-        shots.Clear(); reportLimiter.Clear(); textureLimiter.Clear(); listLimiter.Clear(); resetLimiter.Clear(); bannerLimiter.Clear(); bannerResetLimiter.Clear();
+        shots.Clear(); reportLimiter.Clear(); textureLimiter.Clear(); listLimiter.Clear(); resetLimiter.Clear(); bannerLimiter.Clear(); bannerResetLimiter.Clear(); mvpLimiter.Clear();
     }
     private static bool Human(CCSPlayerController? p) => p is { IsValid: true, IsBot: false } && p.SteamID != 0;
     private ShotTracker Tracker(CCSPlayerController p)
@@ -161,13 +163,76 @@ public sealed class DebugPlugin : BasePlugin, IPluginConfig<DebugConfig>
     {
         if (grantedAdmins.Remove(id)) AdminManager.RemovePlayerPermissions(new SteamID(id), "@css/root");
         shots.Remove(id); reportLimiter.Remove(id);
-        textureLimiter.Remove(id); listLimiter.Remove(id); resetLimiter.Remove(id); bannerLimiter.Remove(id); bannerResetLimiter.Remove(id);
+        textureLimiter.Remove(id); listLimiter.Remove(id); resetLimiter.Remove(id); bannerLimiter.Remove(id); bannerResetLimiter.Remove(id); mvpLimiter.Remove(id);
     }
     private bool Ready(CCSPlayerController? p, CommandInfo c)
     {
         if (!active) { c.ReplyToCommand("Map Debug is disabled."); return false; }
         if (!Human(p)) { c.ReplyToCommand("A connected human player is required."); return false; }
         return true;
+    }
+    private void MvpCommand(CCSPlayerController? p, CommandInfo c)
+    {
+        if (!Ready(p, c)) return;
+        if (c.ArgCount != 1)
+        { c.ReplyToCommand("Usage: !mvp"); return; }
+        if (!RoundBanner.TryCreate(p!.TeamNum, BannerResult.Win, out var banner))
+        { c.ReplyToCommand("Join T or CT before testing an MVP panel."); return; }
+        if (!mvpLimiter.Allow(p.SteamID, Environment.TickCount64, 3000))
+        { c.ReplyToCommand("Wait three seconds between MVP previews."); return; }
+        try
+        {
+            // Snapshot real read-only values. Never award an MVP or modify inventory/stats.
+            var kills = Math.Max(0, p.ActionTrackingServices?.NumRoundKills ?? 0);
+            var musicId = Math.Max(0, p.MusicKitID);
+            var musicMvps = Math.Max(0, p.MusicKitMVPs);
+            var noMusic = p.MvpNoMusic ? 1 : 0;
+            // Same native cosmetic context as !banner win, private to this connection.
+            var end = new EventRoundEnd(true);
+            try
+            {
+                end.Winner = banner.Winner;
+                end.Reason = banner.Reason;
+                end.Message = banner.Message;
+                end.Nomusic = 1;
+                end.PlayerCount = 1;
+                end.Time = 0;
+                end.Legacy = 0;
+                end.FireEventToClient(p);
+            }
+            finally { end.Free(); }
+            var mvp = new EventRoundMvp(true);
+            try
+            {
+                mvp.Userid = p;
+                // 1 = kills; 7 = generic winner (Valve HudWinPanel._SetMVP).
+                // Do not invent kills when testing alone with bots disabled.
+                mvp.Reason = kills > 0 ? 1 : 7;
+                mvp.Value = kills;
+                mvp.Musickitid = musicId;
+                mvp.Musickitmvps = musicMvps;
+                mvp.Nomusic = noMusic;
+                mvp.FireEventToClient(p);
+            }
+            finally { mvp.Free(); }
+            var panel = new EventCsWinPanelRound(true);
+            try
+            {
+                panel.FinalEvent = banner.PanelFinalEvent;
+                panel.FunfactToken = "";
+                panel.ShowTimerAttack = false;
+                panel.ShowTimerDefend = false;
+                panel.TimerTime = 0;
+                panel.FireEventToClient(p);
+            }
+            finally { panel.Free(); }
+            c.ReplyToCommand("Private MVP preview notification sent. Card/music depend on the client and equipped kit; no real MVP awarded. Use !banner reset to request cleanup.");
+        }
+        catch (Exception e)
+        {
+            Logger.LogError(e, "Private MVP preview failed.");
+            c.ReplyToCommand("MVP preview failed; use !banner reset if partially displayed and check the Debug plugin log.");
+        }
     }
     private void BannerResetCommand(CCSPlayerController? p, CommandInfo c)
     {
@@ -189,7 +254,7 @@ public sealed class DebugPlugin : BasePlugin, IPluginConfig<DebugConfig>
             var reset = new EventRoundStart(true);
             try { reset.FireEventToClient(p); }
             finally { reset.Free(); }
-            c.ReplyToCommand("Private banner reset notification sent. The real round is unchanged.");
+            c.ReplyToCommand("Private banner/MVP reset notification sent. Visual/audio cleanup depends on the client; the real round is unchanged.");
         }
         catch (Exception e)
         {
