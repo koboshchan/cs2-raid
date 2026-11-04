@@ -22,7 +22,7 @@ const raidIdentity = {
 export const cashInRequestSchema = z.object({
   ...raidIdentity,
   // Integer SSG cents, not native HUD dollars. One immutable operation per raid/player.
-  amountCents: z.number().int().positive().safe().max(MAX_RAID_CASH_IN_CENTS),
+  amountCents: z.number().int().positive().safe().max(MAX_RAID_CASH_IN_CENTS).refine(value => value % 100 === 0, "Whole native dollars required"),
 }).strict();
 const inventoryItem = z.object({
   instanceId: z.string().uuid(),
@@ -48,7 +48,7 @@ function digest(value: unknown) {
   return createHash("sha256").update(JSON.stringify(value)).digest("hex");
 }
 // A retry cannot choose a new key by changing amount, session, window or inventory.
-// A future durable journal MUST reject changed fingerprints under this same key.
+// The durable journal rejects changed fingerprints under this same key.
 export function raidOperationKey(serverId: string, operation: RaidOperation, raidId: string, steamId64: string) {
   z.string().regex(/^[a-zA-Z0-9_-]{1,32}$/).parse(serverId);
   z.enum(["cashin", "extract"]).parse(operation);

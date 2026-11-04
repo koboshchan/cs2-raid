@@ -60,7 +60,7 @@ test("stable operation key is retry identity, distinct across server, raid, play
 test("changing cash-in amount/session changes fingerprint, never operation key", () => {
   const fingerprint = cashInFingerprint(cashin);
   assert.equal(fingerprint, cashInFingerprint(JSON.parse(JSON.stringify(cashin))));
-  assert.notEqual(fingerprint, cashInFingerprint({ ...cashin, amountCents: 1 }));
+  assert.notEqual(fingerprint, cashInFingerprint({ ...cashin, amountCents: 100 }));
   assert.notEqual(fingerprint, cashInFingerprint({ ...cashin, session: { ...session, pawnGeneration: "pawn-2" } }));
 });
 test("inventory ordering is irrelevant; content, window, intent, cash and session are immutable", () => {

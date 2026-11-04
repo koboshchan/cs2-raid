@@ -1,5 +1,6 @@
 import Fastify from "fastify";
-import type { RaidLedger, RaidMoneyApi, RaidNativeBridge } from "./raid-ledger";
+import { RaidLedger, type RaidMoneyApi, type RaidNativeBridge } from "./raid-ledger";
+import { NativeHttpBridge } from "./native-http";
 import { timingSafeEqual } from "node:crypto";
 import { mkdirSync } from "node:fs";
 import { join } from "node:path";
@@ -31,6 +32,12 @@ export function createServer(token: string, catalog: Catalog, links: Pick<LinkSt
   // Caller MUST be trusted server plugin using an engine-authenticated SteamID, never a client supplied ID.
   app.post("/link", async req => links.create(identity(req.body)));
   app.post("/link/poll", async req => links.poll(identity(req.body)));
+  if (raid?.native instanceof NativeHttpBridge) {
+    const native = raid.native;
+    app.post("/native/next", async req => native.next(req.body));
+    app.post("/native/reply", async req => native.reply(req.body));
+    app.addHook("onClose", async () => native.close());
+  }
   // Read-only persistent proof lookup. Never accepts a receipt or triggers native completion.
   app.post("/settlement/proof", async (req, reply) => {
     if (!raid) return reply.code(503).send({ error: "native_session_bridge_not_ready" });
@@ -50,8 +57,13 @@ async function main() {
   const dir = process.env.DATA_DIR ?? "/data";
   mkdirSync(dir, { recursive: true, mode: 0o700 });
   const catalog = loadCatalog(process.env.CATALOG_PATH ?? "/app/config/prices.json");
-  const links = new LinkStore(join(dir, "raid.sqlite"), process.env.SERVER_ID ?? "raid", SsgClient.fromEnv());
-  const server = createServer(process.env.BRIDGE_TOKEN ?? "", catalog, links);
+  const api = SsgClient.fromEnv(), serverId = process.env.SERVER_ID ?? "raid";
+  const path = join(dir, "raid.sqlite");
+  const links = new LinkStore(path, serverId, api);
+  const raid = process.env.RAID_FINANCIAL_ENABLED === "1"
+    ? { ledger: new RaidLedger(path, serverId, catalog), api, native: new NativeHttpBridge() } : undefined;
+  const server = createServer(process.env.BRIDGE_TOKEN ?? "", catalog, links, raid);
+  if (raid) server.addHook("onClose", async () => raid.ledger.close());
   server.addHook("onClose", async () => links.close());
   for (const signal of ["SIGTERM", "SIGINT"] as const) process.once(signal, () => { void server.close(); });
   await server.listen({ host: "0.0.0.0", port: Number(process.env.PORT ?? 3000) });

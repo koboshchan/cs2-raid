@@ -54,7 +54,7 @@ test("cash-in durable debit max15k and replay never debit/native-add twice",asyn
  assert.equal(proof.state,"settled");assert.equal(proof.amountCents,1500000);
  f.reopen();assert.deepEqual(await f.ledger.execute("cashin",input,f.api,f.native),proof);
  assert.equal(f.calls,1);assert.equal(f.finals,1);
- await assert.rejects(f.ledger.execute("cashin",{...input,amountCents:1},f.api,f.native),/Idempotency/);
+ await assert.rejects(f.ledger.execute("cashin",{...input,amountCents:100},f.api,f.native),/Idempotency/);
  await assert.rejects(f.ledger.execute("cashin",{...cashin(),amountCents:1500001},f.api,f.native));
  }finally{f.cleanup();}
 });
