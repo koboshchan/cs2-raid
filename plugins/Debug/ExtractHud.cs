@@ -42,7 +42,7 @@ public sealed class PreviewClock
     }
     public static string Markup(int n,bool red){
         var clock=(n/60).ToString("00",CultureInfo.InvariantCulture)+":"+(n%60).ToString("00",CultureInfo.InvariantCulture);
-        return (red?"WARNING ":"EXTRACT ")+clock;
+        return red?"WARNING "+clock:clock+" Extracting";
     }
 }
 
