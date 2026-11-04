@@ -3,6 +3,9 @@ namespace Cs2Raid;
 // Isolated fixture policy. This object NEVER receives the production game or a money bridge.
 public sealed class TestFlow
 {
+    internal static bool LobbyRecovery(bool callbackAllowed,bool lobby,bool scope,bool enrolled,bool alive)
+        =>callbackAllowed&&lobby&&scope&&enrolled&&!alive;
+
     public GameplayState Teams { get; } = new();
     public const int Credits=15000;
     public static readonly IReadOnlyDictionary<string,int> Prices=new Dictionary<string,int>(StringComparer.Ordinal){

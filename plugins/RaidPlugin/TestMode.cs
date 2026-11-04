@@ -37,11 +37,13 @@ public sealed partial class RaidPlugin
     private CCSPlayerController? TestController(CBaseEntity entity)=>Utilities.GetPlayers().FirstOrDefault(p=>p.IsValid&&(p.EntityHandle.Raw==entity.EntityHandle.Raw||p.PlayerPawn.Raw==entity.EntityHandle.Raw));
     private void AutoEnrollTestBots(){
         if(!testMode.AutoEnrollAllowed(TestServer,TestScope(),true,testUnloaded))return;
+        try{
         foreach(var p in Utilities.GetPlayers().Where(p=>p.IsValid&&p.IsBot)){
             if(!testFlow.EnrollBot(BotId(p),true,true))continue;
             if(!p.PawnIsAlive){if(p.TeamNum is not (2 or 3))p.SwitchTeam(CsTeam.CounterTerrorist);p.Respawn();}
             else{TestHealth(p);ApplyTestPresentation(p);}
         }
+        }catch(Exception ex){FailTestNative(ex);}
     }
     private sealed class TestStartup { public bool DefaultEnabled {get;set;} }
     private void RegisterTestMode()
@@ -50,16 +52,27 @@ public sealed partial class RaidPlugin
         var startup=File.Exists(path)?JsonSerializer.Deserialize<TestStartup>(File.ReadAllText(path),new JsonSerializerOptions{PropertyNameCaseInsensitive=true}):null;
         var startupGeneration=testMode.Generation;
         if(startup?.DefaultEnabled==true)Server.NextFrame(()=>{
+try{
             if(!testMode.CallbackAllowed(startupGeneration,testUnloaded))return;
             try { StartTestMode();Server.PrintToConsole(TestStatus()); }
             catch(Exception ex){Server.PrintToConsole("TEST startup rejected: "+ex.Message);}
-        });
+        
+}catch(Exception ex){FailTestNative(ex);}
+});
         AddCommand("css_raid_test","Console-only: on/off/status/join/spawn/duo/character/next",(p,c)=>{
             if(p!=null){c.ReplyToCommand("Server console only.");return;}
             try {
                 var op=c.ArgCount>1?c.GetArg(1):"status";
                 if(op=="off"){StopTestMode();c.ReplyToCommand(TestStatus());return;}
                 if(op=="status"){c.ReplyToCommand(TestStatus());return;}
+                if(op=="state"){
+                    if(!TestServer||!TestScope())throw new InvalidOperationException("Private dedicated scope required.");
+                    var proxy=Utilities.FindAllEntitiesByDesignerName<CCSGameRulesProxy>("cs_gamerules").FirstOrDefault(x=>x.IsValid);
+                    var rules=proxy?.GameRules;
+                    if(rules==null||rules.Handle==IntPtr.Zero)c.ReplyToCommand("GameRules unavailable; warmup/freeze UNKNOWN.");
+                    else c.ReplyToCommand($"NATIVE RULES unixMs={DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()} time={Server.CurrentTime} warmup={rules.WarmupPeriod} warmupEnd={rules.WarmupPeriodEnd} freeze={rules.FreezePeriod} roundTime={rules.RoundTime} restartRoundTime={rules.RestartRoundTime} fixturePhase={testMode.Phase} generation={testMode.Generation}");
+                    return;
+                }
                 if(op=="on"){
                     StartTestMode();
                 } else {
@@ -167,9 +180,12 @@ public sealed partial class RaidPlugin
             if(!testMode.NativeActive || !e.DesignerName.StartsWith("weapon_",StringComparison.Ordinal))return;
             var raw=e.EntityHandle.Raw;var generation=testMode.Generation;
             Server.NextFrame(()=>{
+try{
                 if(!testMode.NativeActive || !testMode.CallbackAllowed(generation,testUnloaded))return;
                 if(new CHandle<CCSWeaponBase>(raw).Value is {IsValid:true} w)PatchSpread(w);
-            });
+            
+}catch(Exception ex){FailTestNative(ex);}
+});
         });
         // Native round start USED TO unconditionally StopTestMode, clearing all enrollment.
         // Team elimination/restart can cause this event even with custom flow enabled.
@@ -186,10 +202,13 @@ public sealed partial class RaidPlugin
             if(TestServer&&testMode.Enabled&&e.Userid is {IsValid:true,IsBot:false} connected){
                 var generation=testMode.Generation;var raw=connected.EntityHandle.Raw;
                 Server.NextFrame(()=>{
+try{
                     if(!testMode.CallbackAllowed(generation,testUnloaded))return;
                     var current=Utilities.GetPlayers().FirstOrDefault(p=>p.IsValid&&p.EntityHandle.Raw==raw);
                     if(Human(current)&&current.Connected==PlayerConnectedState.Connected)AutoEnrollTestHumans();
-                });
+                
+}catch(Exception ex){FailTestNative(ex);}
+});
             }
             return HookResult.Continue;
         });
@@ -197,16 +216,20 @@ public sealed partial class RaidPlugin
             if(testMode.NativeActive&&TestBot(e.Userid)){
                 var raw=e.Userid!.EntityHandle.Raw;var generation=testMode.Generation;
                 Server.NextFrame(()=>{
+try{
                     if(!testMode.NativeActive||!testMode.CallbackAllowed(generation,testUnloaded)||!TestScope())return;
                     var bot=Utilities.GetPlayers().FirstOrDefault(p=>p.IsValid&&p.EntityHandle.Raw==raw);
                     if(!TestBot(bot))return;
                     if(!testFlow.BotLiving(BotId(bot!))){bot!.ChangeTeam(CsTeam.Spectator);return;}
                     TestHealth(bot!);ApplyTestPresentation(bot!);
-                });
+                
+}catch(Exception ex){FailTestNative(ex);}
+});
             }
             if(testMode.NativeActive&&TestParticipant(e.Userid)){
                 var id=Id(e.Userid!);var generation=testMode.Generation;
                 Server.NextFrame(()=>{
+try{
                     if(!testMode.NativeActive||!testMode.CallbackAllowed(generation,testUnloaded))return;
                     var p=Find(id);if(!TestParticipant(p))return;
                     testDeaths.Remove(id);testRoamed.Remove(id);if(testMode.Phase==TestModeState.Stage.Lobby)PrepareTestLobby(p!);
@@ -215,11 +238,28 @@ public sealed partial class RaidPlugin
                         TestHealth(p!);ApplyTestPresentation(p!);
                     }
 
-                });
+                
+}catch(Exception ex){FailTestNative(ex);}
+});
             }return HookResult.Continue;
         });
         RegisterEventHandler<EventPlayerDeath>((e,i)=>{
             if(testMode.NativeActive&&TestBot(e.Userid)&&testMode.Phase==TestModeState.Stage.Active)testFlow.KillBot(BotId(e.Userid!));
+            if(testMode.NativeActive&&testMode.Phase==TestModeState.Stage.Lobby&&(TestParticipant(e.Userid)||TestBot(e.Userid))){
+                var raw=e.Userid!.EntityHandle.Raw;var generation=testMode.Generation;
+                Server.NextFrame(()=>{
+try{
+                        if(!testMode.CallbackAllowed(generation,testUnloaded)||testMode.Phase!=TestModeState.Stage.Lobby||!TestScope())return;
+                        var current=Utilities.GetPlayers().FirstOrDefault(x=>x.IsValid&&x.EntityHandle.Raw==raw);
+                        if(current==null||!TestFlow.LobbyRecovery(testMode.CallbackAllowed(generation,testUnloaded),testMode.Phase==TestModeState.Stage.Lobby,TestScope(),TestParticipant(current)||TestBot(current),current.PawnIsAlive))return;
+                        // Preserve controller-bound human teams, wallet and selection; no Enroll/rebuild here.
+                        if(current.TeamNum is not (2 or 3))current.SwitchTeam(current.IsBot?CsTeam.CounterTerrorist:CsTeam.Terrorist);
+                        current.Respawn();
+                
+}catch(Exception ex){FailTestNative(ex);}
+});
+                return HookResult.Continue;
+            }
             if(testMode.NativeActive&&TestParticipant(e.Userid)){
                 var p=e.Userid!;testFlow.Teams.Kill(Id(p),null);if(Location(p) is {} pos)testDeaths[Id(p)]=pos;testRoamed.Remove(Id(p));
             }return HookResult.Continue;
@@ -239,6 +279,7 @@ public sealed partial class RaidPlugin
         try {
             TestCvar("mp_autoteambalance",false);TestCvar("mp_limitteams",0);
             TestCvar("mp_ignore_round_win_conditions",true);
+            TestCvar("mp_maxrounds",0);TestCvar("mp_endmatch_votenextmap",false);
             // Installed engine may omit this legacy cvar. Absence is optional, a type mismatch is NOT.
             if(ConVar<bool>.Find("mp_do_warmup_period")!=null)TestCvar("mp_do_warmup_period",false);
             else Server.PrintToConsole("TEST optional mp_do_warmup_period absent; using mp_warmup_end only.");
@@ -300,9 +341,12 @@ public sealed partial class RaidPlugin
     private void QueueTestEnrollment(){
         var generation=testMode.Generation;
         Server.NextFrame(()=>{
+try{
             if(!testMode.CallbackAllowed(generation,testUnloaded))return;
             AutoEnrollTestHumans();AutoEnrollTestBots();
-        });
+        
+}catch(Exception ex){FailTestNative(ex);}
+});
     }
     private void AutoEnrollTestHumans(){
         if(!testMode.AutoEnrollAllowed(TestServer,TestScope(),true,testUnloaded))return;
@@ -513,6 +557,11 @@ public sealed partial class RaidPlugin
                 baseline.Data.InaccuracyReload=baseline.Reload;
             },TestCleanupError);},
             ()=>TestModeState.RestoreEntries(testCvars,(_,restore)=>restore(),TestCleanupError));
+    }
+    private void FailTestNative(Exception ex){
+        // Fence/cleanup first even if console logging itself fails.
+        try{StopTestMode();}
+        finally{try{Server.PrintToConsole("TEST native setup failed closed OFF: "+ex.Message);}catch{}}
     }
     private void StopTestMode(){
         testTraceRemaining=0;
