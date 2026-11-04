@@ -48,7 +48,7 @@ Dedicated cs2-raid Docker daemon, SDK 10.0.403 and pinned CSS 1.0.379. Two Relea
 - [x] Shared VData half-spread/inaccuracy baselines are saved once and restored on map end/unload; new guns patched on spawn.
 - [x] HUD clamp is projection only; full long ledger survives collection, money bag death/drop and overflow rejection.
 - [x] Private loss banners on death; private win helper available for trusted receipt completion only.
-- [x] Gated extraction adapter calls private ShowRaidResult(player,true) only after proof and logical/native consumption; rendering failure does not retry payment. Native runtime and partial-consumption recovery remain blocked.
+- [x] Gated extraction adapter latches a private win request at trusted logical consumption before fallible native cleanup; rendering failure does not retry payment. Native runtime and partial-consumption recovery remain blocked.
 - [ ] Live native QA of 200 HP, both-team weapon buys, same-side strangers/opposite-side duos, all gun spread modes, predicted client impacts, private banners and two-user death/freecam transitions.
 - [ ] No production or native engine acceptance is implied by compiler/pure-model tests.
 
@@ -61,3 +61,10 @@ Stage3 utility from proven ability-kit provenance remains allowed as future scop
 
 - [x] Offline 45-second Buy model, deadline admission, fixed engine clock anchor, typed scoped mp_buytime capture/restore; current-engine seconds receipt documented.
 - [ ] Native45 HUD/menu runtime acceptance on both T/CT, exact boundary, phase transitions and lifecycle restoration on an explicitly approved isolated runtime. Keep every existing native/financial proof gate OFF.
+
+
+Nov4 offline five-second outcome work
+
+The match-local pure coordinator and production adapter now defer plugin observer retargeting until the exact five-second deadline, isolate duplicate/death/extract races, cancel disconnected identities and replace all state on map/reset/stop. Trusted receipt final money and authoritative extraction sequence produce one global MVP independent of each private custom-duo/solo projection. Empty extracted roster produces no MVP and all lose. Closed-match projection is once-only after outstanding deadlines. Existing cash/consumption barriers remain authoritative and no financial gate was enabled.
+
+Still required before runtime acceptance are actual private panel duration and reset behavior, preventing native automatic early death camera, extracted-player immediate isolation versus delayed camera, full MVP card/music, custom-duo identity rendering and native round termination/broadcast arbitration. The final projection delegate is intentionally unwired. No screen or music is claimed implemented. No extraction freecam coordinate was guessed. Approved live tests must cover two recipients with same native team but different raid duos, solos, disconnection/reconnection/new pawns, round/map/unload, partner death during the five seconds, simultaneous close/expiry/extraction and backend cleanup failures. Exact physical/native behavior is not proven by model tests or compilation.
