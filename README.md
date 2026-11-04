@@ -4,14 +4,15 @@ Space City seven-player FFA extraction scaffold and DeltaOps 1.3.2 operator abil
 
 Builds
 
-All build and operational logic is inline in the single root Dockerfile. No committed host build/launch/configuration scripts exist. Use Linux AMD64 with modern Docker BuildKit. Plugin targets share only a pinned SDK/API dependency stage; deltaops-build and raid-build are sibling stages and neither depends on the other's source or compilation.
+All build and operational logic is inline in the single root Dockerfile. No committed host build/launch/configuration scripts exist. Use Linux AMD64 with modern Docker BuildKit. Plugin targets share only a pinned SDK/API dependency stage; deltaops-build, raid-build and debug-build are sibling stages and neither depends on the other's source or compilation.
 
-From the repository root, these exact commands independently compile twice, compare DLL/deps/PDB hashes and export separate artifacts. RaidPlugin also runs all 19 pure rules checks twice. Compilation steps have networking disabled and run as UID 1000; Docker must be isolated from production. Untrusted source compilation is still not a guarantee against hostile compiler inputs.
+From the repository root, the DeltaOps and Raid targets independently compile twice, compare DLL/deps/PDB hashes and export separate artifacts. Debug independently compiles and runs its pure tests. RaidPlugin also runs all 19 pure rules checks twice. Compilation steps have networking disabled and all three plugin builds run as UID 1000; Docker must be isolated from production. Untrusted source compilation is still not a guarantee against hostile compiler inputs.
 
     docker build --platform=linux/amd64 --target deltaops-artifacts --output type=local,dest=/tmp/cs2-DeltaOps-artifacts .
     docker build --platform=linux/amd64 --target raid-artifacts --output type=local,dest=/tmp/cs2-RaidPlugin-artifacts .
+    docker build --platform=linux/amd64 --target debug-artifacts --output type=local,dest=/tmp/cs2-Debug-artifacts .
 
-For compiler-stage-only checks, use docker build --platform=linux/amd64 --target deltaops-build . or docker build --platform=linux/amd64 --target raid-build . . Use fresh output directories. Each export contains build logs, SHA256SUMS, source hashes, receipt.json and a deterministic tar.gz. Never commit the exports. CI uses the same independent artifact targets.
+For compiler-stage-only checks, use docker build --platform=linux/amd64 --target deltaops-build . or docker build --platform=linux/amd64 --target raid-build . . Use fresh output directories. The Debug export additionally includes SHA256SUMS for its DLL/deps/PDB. The DeltaOps and Raid exports contain build logs, SHA256SUMS, source hashes, receipt.json and a deterministic tar.gz. Debug exports its compiled assembly. Never commit the exports. CI uses the same independent artifact targets.
 
 The verified build host uses a dedicated daemon, so the equivalent executed commands prefix docker with sudo docker -H unix:///var/run/cs2-raid/docker.sock and use /home/kit/plugin-artifacts/root-final-DeltaOps and root-final-RaidPlugin as output paths. Both plugin targets passed with zero warnings/errors and identical clean-build hashes. SDK workload verification may emit an informational notice; upstream also suppresses obsolete native damage warnings. Compilation does not prove game compatibility.
 
@@ -23,15 +24,15 @@ Server image, not yet accepted
 
     docker build --platform=linux/amd64 --target server -t cs2-raid:local .
 
-Do not run this command just to test plugin compilation. The server target downloads the mutable CS2 app 730 through SteamCMD during image build, downloads the hash-locked map, installs Metamod/CSS and both built plugin assemblies, and defines the Docker-only startup command. It has NOT been built or gameplay-tested in this task because CS2 download/start was not authorized. Its packages, Steam self-updates and app content are not fully reproducible despite pinned framework and base-image checksums. No CS2 server was downloaded or started during acceptance.
+Do not run this command just to test plugin compilation. The server target downloads the mutable CS2 app 730 through SteamCMD during image build, resolves the selected GitHub map release, verifies its checksums and installs Metamod/CSS and all three built plugin assemblies, and defines the Docker-only startup command. It has NOT been built or gameplay-tested in this task because CS2 download/start was not authorized. Its packages, Steam self-updates and app content are not fully reproducible despite pinned framework and base-image checksums. No CS2 server was downloaded or started during acceptance.
 
-For private map-release access, pass --secret id=github_token,env=GITHUB_TOKEN to the server build. Authentication uses a BuildKit secret mount only, never ARG/ENV or a committed token. Anonymous download works for the currently public repo. Do not put credentials in build arguments, URLs, Compose output or logs.
+Map release selection uses MAP_REPO (default koboshchan/cs2-raid) and MAP_TAG (default latest). See docs/map-build.md for the release contract, caching and checksum rules. Release checks happen during image builds, not continuously inside a running server. Build a new image and restart it to pick up a changed map.
 
-Copy .env.example to an owner-readable .env and fill separate random SERVER_PASSWORD, RCON_PASSWORD and BRIDGE_TOKEN values, an appropriate GSLT, and an approved SSG app credential. Compose is optional and targets server/backend in the same root Dockerfile. Starting it is a deployment, not part of build acceptance. The server image defines tini/inline startup logic, validates MAP/passwords, prepares gameinfo.gi and private cfg files, refreshes both plugin assemblies, and launches the map/cfg. A2S health only proves server response, not plugin correctness. Protect RCON and host process access; GSLT may appear in CS2 process arguments.
+Copy .env.example to an owner-readable .env and fill separate random SERVER_PASSWORD, RCON_PASSWORD and BRIDGE_TOKEN values, an appropriate GSLT, and an approved SSG app credential. Compose is optional and targets server/backend in the same root Dockerfile. Starting it is a deployment, not part of build acceptance. The server image defines tini/inline startup logic, validates MAP/passwords, prepares gameinfo.gi and private cfg files, refreshes all three plugin assemblies and the selected map, and launches the map/cfg. A2S health only proves server response, not plugin correctness. Protect RCON and host process access; GSLT may appear in CS2 process arguments.
 
 The cs2-data volume retains installation and configs. New volumes inherit the image's baked install; existing volumes may need an explicit operator-controlled Steam update. INSTALL_ON_START and UPDATE_ON_START default off. Never remove the volume to update casually. Framework updates can break engine signatures.
 
-Both plugins will be installed by the requested server architecture, but that is NOT an integration safety approval. DeltaOps still treats TeamNum as alliance membership in FFA and grants free utility; inspect plugins/DeltaOps/INTEGRATION.md before any real use. No extraction/lever bridge exists between them. Enable neither spending nor real gameplay before that review and engine QA.
+All three plugins will be installed by the requested server architecture, but that is NOT an integration safety approval. DeltaOps still treats TeamNum as alliance membership in FFA and grants free utility; inspect plugins/DeltaOps/INTEGRATION.md before any real use. No extraction/lever bridge exists between them. Enable neither spending nor real gameplay before that review and engine QA.
 
 Included rules
 
@@ -42,6 +43,10 @@ config/prices.json contains all 42 supplied prices in simulation dollars. Backen
 The C# plugin loads the JSON shop, provides !shop, !raid_status, !link and !linkpoll, and records death/disconnect in the active model. !link shows the four-word code privately to the authenticated player, and !linkpoll checks approval through the backend. No native controller/event handle crosses an asynchronous boundary. The internal bridge token is a trusted-server credential, not a player credential, and must never be sent to a client. !buy always refuses without making a charge.
 
 Native testing commands css_raid_start and css_raid_lever are server-console-only. Start additionally requires RAID_ENABLE_SCAFFOLD=1, which is intentionally off in Compose. They exercise the model, not map extraction. There is no client cheat command for pulling levers, looting or extracting.
+
+Debug map reporting
+
+The independent plugins/Debug plugin is enabled by default for map QA only. It grants maximum in-game money and unrestricted buying while enabled. This deliberately bypasses normal native buy rules, so disable it before economy or raid acceptance. It does not mint SSG currency. See plugins/Debug/README.md for configuration, marking and durable report access. Reports live in the map-reports named volume at /data/map-reports; back up that volume before deleting it. Never assume compilation proves game event ordering or native cvar behavior.
 
 Remaining work
 
@@ -61,4 +66,4 @@ The live API confirmed koboshchan/cs2-raid is PUBLIC, not private as earlier not
 
 License
 
-The whole project is licensed under the [MIT License](LICENSE), including both plugins, backend, build/configuration files, documentation and retained legacy project source. Existing author credits are preserved. Third-party dependencies and downloaded assets, including CounterStrikeSharp, Metamod, SteamCMD/CS2 and map assets, retain their own licenses and are not relicensed by this notice.
+The whole project is licensed under the [MIT License](LICENSE), including all three plugins, backend, build/configuration files, documentation and retained legacy project source. Existing author credits are preserved. Third-party dependencies and downloaded assets, including CounterStrikeSharp, Metamod, SteamCMD/CS2 and map assets, retain their own licenses and are not relicensed by this notice.

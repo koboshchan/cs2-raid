@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework><ImplicitUsings>enable</ImplicitUsings><Nullable>enable</Nullable>
+    <AssemblyName>Debug</AssemblyName><CopyLocalLockFileAssemblies>false</CopyLocalLockFileAssemblies>
+    <CSS_API_DIR Condition="'$(CSS_API_DIR)' == ''">/deps/css/addons/counterstrikesharp/api</CSS_API_DIR>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Remove="tests/**/*.cs" />
+    <Reference Include="CounterStrikeSharp.API"><HintPath>$(CSS_API_DIR)/CounterStrikeSharp.API.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="Microsoft.Extensions.Logging.Abstractions"><HintPath>$(CSS_API_DIR)/Microsoft.Extensions.Logging.Abstractions.dll</HintPath><Private>false</Private></Reference>
+  </ItemGroup>
+</Project>

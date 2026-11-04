@@ -3,6 +3,9 @@ services:
     build:
       context: .
       target: server
+      args:
+        MAP_REPO: ${MAP_REPO:-koboshchan/cs2-raid}
+        MAP_TAG: ${MAP_TAG:-latest}
     image: cs2-raid:local
     platform: linux/amd64
     restart: unless-stopped
@@ -24,6 +27,7 @@ services:
       - "${PORT:-27015}:27015/tcp"
     volumes:
       - cs2-data:/home/steam/cs2
+      - map-reports:/data/map-reports
     depends_on:
       backend:
         condition: service_healthy
@@ -64,6 +68,7 @@ services:
       options: {max-size: 10m, max-file: "3"}
 volumes:
   cs2-data:
+  map-reports:
   backend-data:
 networks:
   bridge:
