@@ -19,7 +19,7 @@ public sealed class DebugConfig : BasePluginConfig
 public sealed class DebugPlugin : BasePlugin, IPluginConfig<DebugConfig>
 {
     public override string ModuleName => "Map Debug";
-    public override string ModuleVersion => "0.1.1";
+    public override string ModuleVersion => "0.1.2";
     public override string ModuleAuthor => "koboshchan";
     public override string ModuleDescription => "Debug economy and durable map issue reports";
     public DebugConfig Config { get; set; } = new();
@@ -192,7 +192,7 @@ public sealed class DebugPlugin : BasePlugin, IPluginConfig<DebugConfig>
             var panel = new EventCsWinPanelRound(true);
             try
             {
-                panel.FinalEvent = 0; // Not a match-final panel.
+                panel.FinalEvent = banner.PanelFinalEvent; // RoundEndReason, NOT a match-final boolean.
                 panel.FunfactToken = "";
                 panel.ShowTimerAttack = false;
                 panel.ShowTimerDefend = false;

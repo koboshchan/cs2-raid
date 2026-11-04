@@ -165,6 +165,8 @@ public sealed class ReportStore : IDisposable
 public enum BannerResult { Win, Lose, Draw }
 public readonly record struct RoundBanner(int Winner, int Reason, string Message)
 {
+    // cs_win_panel_round.final_event carries the end reason; zero means Unknown.
+    public int PanelFinalEvent => Reason;
     public static bool TryCreate(int nativeTeam, BannerResult result, out RoundBanner banner)
     {
         banner = default;

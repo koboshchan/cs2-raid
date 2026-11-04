@@ -28,3 +28,5 @@ Chat commands `!testwin`, `!testlose`, and `!testdraw` require an enabled Debug 
 These commands do not broadcast events, end the real round, change scores, change teams, or write game rules. Client rendering is experimental until checked in game. Test all three while another player watches, verify only the invoker sees the banner and the real timer, scores and movement continue. Reconnect if a client's cosmetic panel gets stuck. The server may replicate real round-end state over the fake preview; no shared state is changed to force the UI.
 
 API references: https://docs.cssharp.dev/api/CounterStrikeSharp.API.Core.EventRoundEnd.html and https://docs.cssharp.dev/api/CounterStrikeSharp.API.Modules.Events.GameEvent.html .
+
+Native panel previews set cs_win_panel_round.final_event to the same RoundEndReason as round_end (8 CT, 9 T, 10 draw). It is not a match-final boolean; Unknown=0 can produce an empty panel. No replicated CCSGameRules fields are changed. Client rendering still requires in-game acceptance.
