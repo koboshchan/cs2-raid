@@ -138,6 +138,27 @@ static class TestModeTests
         Check(TestFlow.DamageAllowed(true,true,true,false,true,true)); // enrolled enemy
         Check(!TestFlow.DamageAllowed(true,false,true,false,true,true)); // cross-fixture victim
         Check(!TestFlow.DamageAllowed(true,true,false,true,false,false)); // dead victim
+        var lifecycle=new TestModeState();
+        Check(!lifecycle.RebuildRound(true,true,false));
+        Check(!lifecycle.AutoEnrollAllowed(true,true,true,false));
+        lifecycle.Start(true);
+        Check(lifecycle.RebuildRound(true,true,false));
+        Check(!lifecycle.RebuildRound(false,true,false)&&!lifecycle.RebuildRound(true,false,false)&&!lifecycle.RebuildRound(true,true,true));
+        Check(lifecycle.AutoEnrollAllowed(true,true,true,false));
+        Check(!lifecycle.AutoEnrollAllowed(true,true,false,false)&&!lifecycle.AutoEnrollAllowed(false,true,true,false));
+        Check(!lifecycle.AutoEnrollAllowed(true,false,true,false)&&!lifecycle.AutoEnrollAllowed(true,true,true,true));
+        for(int round=0;round<5;round++){
+            var oldGeneration=lifecycle.Generation;var roundFlow=new TestFlow();
+            Check(roundFlow.Enroll(lifecycle,"human",true));
+            lifecycle.Advance();
+            Check(lifecycle.RebuildRound(true,true,false)&&!lifecycle.AutoEnrollAllowed(true,true,true,false));
+            lifecycle.Stop();Check(!lifecycle.CallbackAllowed(oldGeneration,false));
+            lifecycle.Start(true);var rebuilt=new TestFlow();
+            Check(rebuilt.Enroll(lifecycle,"human",true)&&rebuilt.Wallet["human"]==15000);
+            Check(lifecycle.Enabled&&lifecycle.Phase==TestModeState.Stage.Lobby);
+            lifecycle.Stop();lifecycle.Start(true);
+        }
+        lifecycle.Stop();Check(!lifecycle.RebuildRound(true,true,false)); // explicit OFF/map end never auto-ON
         var oldServer=Environment.GetEnvironmentVariable("RAID_TEST_SERVER");
         var oldMoney=Environment.GetEnvironmentVariable("RAID_FINANCIAL_ENABLED");
         var oldScaffold=Environment.GetEnvironmentVariable("RAID_ENABLE_SCAFFOLD");

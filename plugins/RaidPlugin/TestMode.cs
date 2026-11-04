@@ -154,7 +154,28 @@ public sealed partial class RaidPlugin
                 if(new CHandle<CCSWeaponBase>(raw).Value is {IsValid:true} w)PatchSpread(w);
             });
         });
-        RegisterEventHandler<EventRoundStart>((e,i)=>{StopTestMode();return HookResult.Continue;},HookMode.Pre);
+        // Native round start USED TO unconditionally StopTestMode, clearing all enrollment.
+        // Team elimination/restart can cause this event even with custom flow enabled.
+        RegisterEventHandler<EventRoundStart>((e,i)=>{
+            if(!testMode.RebuildRound(TestServer,TestScope(),testUnloaded))return HookResult.Continue;
+            // Fence old spawn/timer callbacks, restore prior resources, then rebuild a fresh fixture.
+            // Round restart discards TEST credits/teams only, never production economic state.
+            StopTestMode();
+            try{StartTestMode();}
+            catch(Exception ex){Server.PrintToConsole("TEST round rebuild failed closed: "+ex.Message);}
+            return HookResult.Continue;
+        },HookMode.Pre);
+        RegisterEventHandler<EventPlayerConnectFull>((e,i)=>{
+            if(TestServer&&testMode.Enabled&&e.Userid is {IsValid:true,IsBot:false} connected){
+                var generation=testMode.Generation;var raw=connected.EntityHandle.Raw;
+                Server.NextFrame(()=>{
+                    if(!testMode.CallbackAllowed(generation,testUnloaded))return;
+                    var current=Utilities.GetPlayers().FirstOrDefault(p=>p.IsValid&&p.EntityHandle.Raw==raw);
+                    if(Human(current)&&current.Connected==PlayerConnectedState.Connected)AutoEnrollTestHumans();
+                });
+            }
+            return HookResult.Continue;
+        });
         RegisterEventHandler<EventPlayerSpawn>((e,i)=>{
             if(testMode.NativeActive&&TestParticipant(e.Userid)){
                 var id=Id(e.Userid!);var generation=testMode.Generation;
@@ -195,6 +216,7 @@ public sealed partial class RaidPlugin
             TestCvar("mp_playercashawards",false);TestCvar("mp_teamcashawards",false);
             TestCvar("mp_respawn_on_death_t",false);TestCvar("mp_respawn_on_death_ct",false);
             PatchExistingSpread();
+            QueueTestEnrollment();
         }catch{StopTestMode();throw;}
     }
     private string TestStatus()=>$"TEST {(testMode.Enabled?"ON":"OFF")} | MONEY {(TestServer?"HARD OFF":"production gates")} | phase {testMode.Phase} | {testMode.Participants.Count} opted-in | 200HP saved-pawns={testPawns.Count} / spread 0.5 baselines={spreadOriginals.Count} shared SERVER-WIDE / CHASE living duo else ROAMING death+64 observers={testObservers.Count} | KIT STUB labels only, NO DeltaOps | custom duo immunity / same-side FFA (native QA pending) | native-map/captured insertion, finite TEST credits only; no loot/SSG/session | flow={(testFlow.Manual?"MANUAL QA":"AUTO")} / spawns={testSpawns.Count} / ledger={testFlow.Ledger.Count} pending-cvars={testCvars.Count} | generation {testMode.Generation}";
@@ -235,6 +257,35 @@ public sealed partial class RaidPlugin
             Utilities.SetStateChanged(pawn,"CBasePlayerPawn","m_pObserverServices");
             if(target==null&&testRoamed.GetValueOrDefault(id)!=pawn.EntityHandle.Raw){
                 pawn.Teleport(new Vector(death.X,death.Y,death.Z+64),new QAngle(0,death.Yaw,0),new Vector(0,0,0));testRoamed[id]=pawn.EntityHandle.Raw;
+            }
+        }
+    }
+    private void QueueTestEnrollment(){
+        var generation=testMode.Generation;
+        Server.NextFrame(()=>{
+            if(!testMode.CallbackAllowed(generation,testUnloaded))return;
+            AutoEnrollTestHumans();
+        });
+    }
+    private void AutoEnrollTestHumans(){
+        if(!testMode.AutoEnrollAllowed(TestServer,TestScope(),true,testUnloaded))return;
+        foreach(var p in Utilities.GetPlayers().Where(p=>Human(p)&&p.Connected==PlayerConnectedState.Connected)){
+            if(TestParticipant(p))continue;
+            try{
+                if(!testFlow.Enroll(testMode,Id(p),Human(p))){
+                    // Extras remain entirely outside participants/wallet/teams; no per-second chat spam.
+                    continue;
+                }
+                testControllers[Id(p)]=p.EntityHandle.Raw;
+                if(!p.PawnIsAlive){
+                    if(p.TeamNum is not (2 or 3))p.SwitchTeam(CsTeam.Terrorist);
+                    p.Respawn(); // spawn callback is generation/connection fenced
+                }else PrepareTestLobby(p);
+            }catch(Exception ex){
+                // A native setup failure must not silently leave an unprepared participant.
+                try{Server.PrintToConsole("TEST automatic enrollment failed: "+ex.Message);}
+                finally{StopTestMode();}
+                return;
             }
         }
     }
@@ -326,6 +377,9 @@ public sealed partial class RaidPlugin
         try{
             if(!TestScope()||sessionLoaded){StopTestMode();return;}
             if(testFlow.Manual)return;
+            // Full-connect may precede Steam authorization; retry only in Lobby, no mid-match credit grants.
+            AutoEnrollTestHumans();
+            if(!testMode.NativeActive)return;
             var live=testMode.Participants.Keys.All(id=>Find(id) is {} p&&TestParticipant(p)&&p.PawnIsAlive);
             // Do not let readiness/selection clocks start while an enrolled player cannot spawn.
             var phase=testFlow.Teams.Phase;
