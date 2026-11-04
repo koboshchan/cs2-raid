@@ -24,7 +24,7 @@ public sealed class FixtureAbilityPolicyV2
     private readonly Dictionary<uint,(uint Owner,uint Pawn,bool Consumed)> utility=[];
     public bool Begin(long generation)
     {
-        if(generation<=Generation)return false; // Duplicate reset cannot mint kits/reset cooldowns.
+        if(generation<=Generation || quarantined.Count!=0 || utility.Values.Any(g=>!g.Consumed))return false; // Duplicate reset cannot mint kits/reset cooldowns.
         Generation=generation;kits.Clear();utility.Clear();quarantined.Clear();completed.Clear();return true;
     }
     public bool ReserveKit(long generation,uint controller,uint pawn,int character,bool human,bool selection)

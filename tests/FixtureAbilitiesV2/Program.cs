@@ -20,7 +20,7 @@ Check(!p.Consume(1,12,21,31));Check(!p.Consume(1,11,22,31));
 Check(!p.Redeemable(31));Check(!p.BuyUtilityAllowed);
 Check(p.Consume(1,11,21,31));Check(!p.Consume(1,11,21,31));
 Check(p.RecordUtility(1,11,21,32,true));
-Check(!p.Revoke(1,11,21,_=>false));
+Check(!p.Begin(2));Check(!p.Revoke(1,11,21,_=>false));
 Check(!p.Revoke(1,11,21,_=>throw new Exception()));
 Check(p.Revoke(1,11,21,_=>true));
 Check(!p.RecordUtility(1,11,21,32,true));
@@ -33,7 +33,7 @@ Check(p.ReserveKit(2,65547,23,1,true,true)); // same slot bits, different serial
 var q=new FixtureAbilityPolicyV2();Check(q.Begin(1));var deliveries=0;
 Check(!q.CommitKit(1,10,20,1,true,true,false,()=>{deliveries++;return true;}));Check(deliveries==0);
 Check(!q.CommitKit(1,10,20,1,true,true,true,()=>{deliveries++;return false;}));
-Check(q.Quarantined(10));
+Check(q.Quarantined(10));Check(!q.Begin(2));
 Check(!q.CommitKit(1,10,20,1,true,true,true,()=>{deliveries++;return true;}));Check(deliveries==1);
 Check(q.CommitKit(1,12,22,1,true,true,true,()=>{deliveries++;return true;}));
 Check(q.CommitKit(1,12,22,1,true,true,true,()=>{deliveries++;return true;}));Check(deliveries==2);
