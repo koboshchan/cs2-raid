@@ -27,7 +27,7 @@ for n in 1 2; do
   dotnet build /work/run$n/src/DeltaOps.csproj -c Release --configfile /work/NuGet.Config \
     -o /work/artifacts/build-$n -p:CSS_API_DIR=/deps/css/addons/counterstrikesharp/api \
     -p:Deterministic=true -p:ContinuousIntegrationBuild=true -p:PathMap=/work/run$n/src=/_/deltaops \
-    -p:UseSharedCompilation=false -p:TreatWarningsAsErrors=true > /work/artifacts/build-$n.log 2>&1
+    -p:UseSharedCompilation=false -p:TreatWarningsAsErrors=true > /work/artifacts/build-$n.log 2>&1 || { cat /work/artifacts/build-$n.log; exit 1; }
   cat /work/artifacts/build-$n.log
   grep -q '0 Warning(s)' /work/artifacts/build-$n.log
   grep -q '0 Error(s)' /work/artifacts/build-$n.log
@@ -71,7 +71,7 @@ COPY --from=deltaops-build /work/artifacts/ /
 FROM dependencies AS raid-build
 ENV HOME=/work/home DOTNET_CLI_HOME=/work/home NUGET_PACKAGES=/work/nuget
 RUN --network=none mkdir /work && chown 1000:1000 /work
-COPY --chown=1000:1000 plugins/RaidPlugin/RaidPlugin.csproj plugins/RaidPlugin/RaidPlugin.cs plugins/RaidPlugin/RaidState.cs plugins/RaidPlugin/source.sha256 /input/
+COPY --chown=1000:1000 plugins/RaidPlugin/RaidPlugin.csproj plugins/RaidPlugin/RaidPlugin.cs plugins/RaidPlugin/RaidState.cs plugins/RaidPlugin/GameplayState.cs plugins/RaidPlugin/GameplayAdapter.cs plugins/RaidPlugin/PartnerVisuals.cs plugins/RaidPlugin/source.sha256 /input/
 COPY --chown=1000:1000 plugins/RaidPlugin/tests/ /input/tests/
 USER 1000:1000
 WORKDIR /work
@@ -86,11 +86,11 @@ cat > /work/NuGet.Config <<'EOF'
 EOF
 for n in 1 2; do
   mkdir -p /work/run$n/src /work/artifacts/build-$n
-  cp /input/RaidPlugin.csproj /input/RaidPlugin.cs /input/RaidState.cs /work/run$n/src/; cp -R /input/tests /work/run$n/src/
+  cp /input/RaidPlugin.csproj /input/RaidPlugin.cs /input/RaidState.cs /input/GameplayState.cs /input/GameplayAdapter.cs /input/PartnerVisuals.cs /work/run$n/src/; cp -R /input/tests /work/run$n/src/
   dotnet build /work/run$n/src/RaidPlugin.csproj -c Release --configfile /work/NuGet.Config \
     -o /work/artifacts/build-$n -p:CSS_API_DIR=/deps/css/addons/counterstrikesharp/api \
     -p:Deterministic=true -p:ContinuousIntegrationBuild=true -p:PathMap=/work/run$n/src=/_/raidplugin \
-    -p:UseSharedCompilation=false -p:TreatWarningsAsErrors=true > /work/artifacts/build-$n.log 2>&1
+    -p:UseSharedCompilation=false -p:TreatWarningsAsErrors=true > /work/artifacts/build-$n.log 2>&1 || { cat /work/artifacts/build-$n.log; exit 1; }
   cat /work/artifacts/build-$n.log
   grep -q '0 Warning(s)' /work/artifacts/build-$n.log
   grep -q '0 Error(s)' /work/artifacts/build-$n.log
@@ -98,6 +98,7 @@ for n in 1 2; do
   dotnet build /work/run$n/src/tests/RaidState.Tests.csproj -c Release --no-restore -p:TreatWarningsAsErrors=true >> /work/artifacts/build-$n.log 2>&1
   dotnet /work/run$n/src/tests/bin/Release/net10.0/RaidState.Tests.dll >> /work/artifacts/build-$n.log 2>&1
   grep '19 raid rule checks passed' /work/artifacts/build-$n.log
+  grep 'gameplay checks passed' /work/artifacts/build-$n.log
 done
 for ext in dll deps.json pdb; do
   cmp /work/artifacts/build-1/RaidPlugin.$ext /work/artifacts/build-2/RaidPlugin.$ext
@@ -119,6 +120,7 @@ cat > receipt.json <<EOF
   "errors_per_build": 0,
   "deterministic_match": true,
   "raid_rule_checks_per_build": 19,
+  "gameplay_checks_per_build": 10072,
   "archive_sha256": "$(sha256sum RaidPlugin-build.tar.gz | cut -d ' ' -f1)",
   "dll_sha256": "$(sha256sum build-1/RaidPlugin.dll | cut -d ' ' -f1)",
   "deps_json_sha256": "$(sha256sum build-1/RaidPlugin.deps.json | cut -d ' ' -f1)",
@@ -445,6 +447,7 @@ plugin="$root/game/csgo/addons/counterstrikesharp/plugins/RaidPlugin"
 mkdir -p "$plugin"
 cp /opt/deltaops/plugins/RaidPlugin/* "$plugin/"
 cp /opt/deltaops/config/prices.json "$plugin/prices.json"
+[[ -f "$plugin/gameplay.json" ]] || cp /opt/deltaops/config/gameplay.example.json "$plugin/gameplay.json"
 operator="$root/game/csgo/addons/counterstrikesharp/plugins/DeltaOps"
 mkdir -p "$operator"
 cp /opt/deltaops/plugins/DeltaOps/* "$operator/"

@@ -6,7 +6,7 @@ using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Timers;
 namespace Cs2Raid;
 
-public sealed class RaidPlugin : BasePlugin
+public sealed partial class RaidPlugin : BasePlugin
 {
     public override string ModuleName => "CS2 Raid";
     public override string ModuleVersion => "0.1.0";
@@ -19,6 +19,7 @@ public sealed class RaidPlugin : BasePlugin
     private readonly HashSet<string> linking = [];
     public override void Load(bool hotReload)
     {
+        LoadGameplay();
         catalog = JsonSerializer.Deserialize<ShopItem[]>(File.ReadAllText(Path.Combine(ModuleDirectory, "prices.json")),
             new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? throw new InvalidOperationException("Missing prices");
         // Never launch a partially configured raid or resume an in-memory raid after reload.
@@ -36,6 +37,7 @@ public sealed class RaidPlugin : BasePlugin
         // Server console ONLY. No client can trigger levers, extraction or start by spoofing chat.
         AddCommand("css_raid_start", "Console-only start scaffold", (p,c) => {
             if (p != null) { c.ReplyToCommand("Server console only"); return; }
+            if (gameplayConfig.Enabled) { c.ReplyToCommand("Legacy start disabled in gameplay mode"); return; }
             if (Environment.GetEnvironmentVariable("RAID_ENABLE_SCAFFOLD") != "1") {
                 c.ReplyToCommand("Disabled. Space City entity integration and gameplay QA required."); return;
             }
@@ -114,7 +116,7 @@ public sealed class RaidPlugin : BasePlugin
                 current.PrintToChat(message);
         });
     }
-    public override void Unload(bool hotReload) { mapGeneration = Guid.NewGuid(); http.Dispose(); }
+    public override void Unload(bool hotReload) { StopGameplay(); mapGeneration = Guid.NewGuid(); http.Dispose(); }
     // TODO trusted map hooks call PullLever only on use within range, and Extract only
     // on living authorized player's zone entry. Persist bag + settlement outbox first.
     // TODO native pickup/drop tracking, corpse menu, strip default weapons, reconnect

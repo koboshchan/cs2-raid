@@ -112,6 +112,16 @@ public sealed class DebugPlugin : BasePlugin, IPluginConfig<DebugConfig>
         active = false;
         RestoreCvars(); ClearState(); store?.Dispose(); store = null;
         if (!Config.Enabled) return;
+        // Debug's unlimited-money/Glock markers and gameplay are mutually exclusive.
+        var raidConfig = Path.Combine(ModuleDirectory, "..", "RaidPlugin", "gameplay.json");
+        if (File.Exists(raidConfig))
+        {
+            try {
+                using var doc = System.Text.Json.JsonDocument.Parse(File.ReadAllText(raidConfig));
+                if (doc.RootElement.EnumerateObject().Any(p => p.Name.Equals("enabled", StringComparison.OrdinalIgnoreCase) && p.Value.ValueKind == System.Text.Json.JsonValueKind.True))
+                { Logger.LogInformation("Map Debug disabled while Raid gameplay is enabled. Reload both plugins after mode changes."); return; }
+            } catch (Exception e) { Logger.LogError("Map Debug disabled: cannot read gameplay mode ({Failure}).", e.GetType().Name); return; }
+        }
         store = new ReportStore(Config.ReportDirectory);
         if (!store.Available)
             Logger.LogError("Map Debug reports unavailable ({Failure}); check configured directory permissions. No reports will be acknowledged.", store.Failure);

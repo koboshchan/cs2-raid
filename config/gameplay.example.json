@@ -1,0 +1,74 @@
+{
+  "enabled": false,
+  "coordinatesConfirmed": false,
+  "lobby": {
+    "x": 0,
+    "y": 0,
+    "z": 0
+  },
+  "readyPlatform": {
+    "x": 0,
+    "y": 0,
+    "z": 0
+  },
+  "spawns": [
+    {
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    {
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    {
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    {
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    {
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    {
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    {
+      "x": 0,
+      "y": 0,
+      "z": 0
+    }
+  ],
+  "tiers": {
+    "common": {
+      "min": 100,
+      "max": 500
+    },
+    "rare": {
+      "min": 1000,
+      "max": 3000
+    }
+  },
+  "loot": [
+    {
+      "id": "replace-safe-1",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "tier": "common"
+    }
+  ],
+  "lootSpawnChance": 0.01,
+  "lootModel": "models/props/de_dust/hr_dust/dust_crates/dust_crate_style_01_64x64x64.vmdl"
+}

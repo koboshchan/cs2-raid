@@ -221,6 +221,16 @@ public sealed class DeltaOpsPlugin : BasePlugin, IPluginConfig<DeltaOpsConfig>
 
     public override void Load(bool hotReload)
     {
+        // Legacy operator ally checks/free utilities are unsafe in custom-team raid mode.
+        var raidConfig = Path.Combine(ModuleDirectory, "..", "RaidPlugin", "gameplay.json");
+        if (File.Exists(raidConfig))
+        {
+            try {
+                using var doc = System.Text.Json.JsonDocument.Parse(File.ReadAllText(raidConfig));
+                if (doc.RootElement.EnumerateObject().Any(p => p.Name.Equals("enabled", StringComparison.OrdinalIgnoreCase) && p.Value.ValueKind == System.Text.Json.JsonValueKind.True))
+                { Logger.LogInformation("DeltaOps disabled in Raid gameplay mode pending custom-team integration."); return; }
+            } catch (Exception e) { Logger.LogError("DeltaOps disabled: gameplay config unreadable ({Failure}).", e.GetType().Name); return; }
+        }
         RegisterEventHandler<EventPlayerSpawn>(OnPlayerSpawn);
         RegisterEventHandler<EventPlayerTeam>(OnPlayerTeam);
         RegisterEventHandler<EventRoundStart>(OnRoundStart);

@@ -67,3 +67,7 @@ The live API confirmed koboshchan/cs2-raid is PUBLIC, not private as earlier not
 License
 
 The whole project is licensed under the [MIT License](LICENSE), including all three plugins, backend, build/configuration files, documentation and retained legacy project source. Existing author credits are preserved. Third-party dependencies and downloaded assets, including CounterStrikeSharp, Metamod, SteamCMD/CS2 and map assets, retain their own licenses and are not relicensed by this notice.
+
+## Opt-in custom-team raid gameplay
+
+See [gameplay configuration, rule reconciliation and acceptance limits](plugins/RaidPlugin/docs/GAMEPLAY.md). The shipped example is disabled with unconfirmed placeholder coordinates. Gameplay mode fences off the incompatible legacy DeltaOps and Map Debug plugins until their integrations are reviewed. No live server acceptance has been performed.
