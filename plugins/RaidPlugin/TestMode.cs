@@ -239,7 +239,10 @@ public sealed partial class RaidPlugin
         try {
             TestCvar("mp_autoteambalance",false);TestCvar("mp_limitteams",0);
             TestCvar("mp_ignore_round_win_conditions",true);
-            TestCvar("mp_do_warmup_period",false);TestCvar("mp_freezetime",0);
+            // Installed engine may omit this legacy cvar. Absence is optional, a type mismatch is NOT.
+            if(ConVar.Find("mp_do_warmup_period")!=null)TestCvar("mp_do_warmup_period",false);
+            else Server.PrintToConsole("TEST optional mp_do_warmup_period absent; using mp_warmup_end only.");
+            TestCvar("mp_freezetime",0);
             TestCvar("mp_roundtime",30f);TestCvar("mp_roundtime_defuse",30f);TestCvar("mp_roundtime_hostage",30f);
             TestCvar("mp_teammates_are_enemies",true);TestCvar("mp_friendlyfire",true);
             TestCvar("ff_damage_reduction_bullets",1f);TestCvar("ff_damage_reduction_other",1f);
