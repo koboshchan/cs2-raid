@@ -4,7 +4,7 @@ services:
       context: .
       target: server
       args:
-        MAP_REPO: ${MAP_REPO:-koboshchan/cs2-raid}
+        MAP_REPO: ${MAP_REPO:-oceanwang525-creator/df-spaceport-map}
         MAP_TAG: ${MAP_TAG:-latest}
     image: cs2-raid:local
     platform: linux/amd64

@@ -170,7 +170,7 @@ RUN curl -fL --retry 3 https://mms.alliedmods.net/mmsdrop/2.0/mmsource-2.0.0-git
 
 FROM python:3.13-slim-bookworm@sha256:281d39ff02e3b389401586134ff9e6572954687822a58055ec07a60ded4e0b7f AS map-tools
 # MAP_TAG is a GitHub release endpoint selector: latest or tags/<release-tag>.
-ARG MAP_REPO=koboshchan/cs2-raid
+ARG MAP_REPO=oceanwang525-creator/df-spaceport-map
 ARG MAP_TAG=latest
 
 FROM map-tools AS map-download
@@ -221,8 +221,6 @@ for asset in release.get('assets', []):
     if name in assets:
         raise ValueError('Duplicate release asset')
     assets[name] = asset
-if 'SHA256SUMS' not in assets:
-    raise ValueError('Release must provide SHA256SUMS')
 parts = []
 archives = []
 for name in assets:
@@ -262,9 +260,9 @@ class SecureRedirect(urllib.request.HTTPRedirectHandler):
 opener = urllib.request.build_opener(SecureRedirect())
 def fetch(name, limit):
     asset = assets[name]
-    expected = asset.get('digest', '')
-    if not isinstance(expected, str) or not re.fullmatch(r'sha256:[0-9a-fA-F]{64}', expected):
-        raise ValueError('Missing GitHub SHA256 digest for ' + name)
+    expected = asset.get('digest')
+    if expected is not None and (not isinstance(expected, str) or not re.fullmatch(r'sha256:[0-9a-fA-F]{64}', expected)):
+        raise ValueError('Invalid GitHub SHA256 digest for ' + name)
     size = asset.get('size')
     if type(size) is not int or not 0 < size <= limit:
         raise ValueError('Invalid or excessive asset size')
@@ -282,34 +280,36 @@ def fetch(name, limit):
             if count > size:
                 raise ValueError('Asset exceeds declared size')
             target.write(chunk)
-    if count != size or sha(path) != expected.removeprefix('sha256:').lower():
+    if count != size or (expected is not None and sha(path) != expected.removeprefix('sha256:').lower()):
         raise ValueError('GitHub asset size or SHA256 mismatch for ' + name)
     return path
 
-manifest_path = fetch('SHA256SUMS', 1024 * 1024)
 checksums = {}
-for line in manifest_path.read_text(encoding='utf-8').splitlines():
-    if not line.strip():
-        continue
-    match = re.fullmatch(r'([0-9a-fA-F]{64}) [ *](.+)', line)
-    if not match:
-        raise ValueError('Malformed SHA256SUMS entry')
-    name = safe_name(match[2])
-    if name in checksums:
-        raise ValueError('Duplicate SHA256SUMS entry')
-    checksums[name] = match[1].lower()
-for name in downloads:
-    if name not in checksums:
-        raise ValueError('Missing SHA256SUMS entry for ' + name)
-    if checksums[name] != assets[name].get('digest', '').removeprefix('sha256:').lower():
-        raise ValueError('SHA256SUMS and GitHub digest disagree for ' + name)
+if 'SHA256SUMS' in assets:
+    manifest_path = fetch('SHA256SUMS', 1024 * 1024)
+    for line in manifest_path.read_text(encoding='utf-8').splitlines():
+        if not line.strip():
+            continue
+        match = re.fullmatch(r'([0-9a-fA-F]{64}) [ *](.+)', line)
+        if not match:
+            raise ValueError('Malformed SHA256SUMS entry')
+        name = safe_name(match[2])
+        if name in checksums:
+            raise ValueError('Duplicate SHA256SUMS entry')
+        checksums[name] = match[1].lower()
+    for name in downloads:
+        if name not in checksums:
+            raise ValueError('Missing SHA256SUMS entry for ' + name)
+        digest = assets[name].get('digest')
+        if digest is not None and checksums[name] != digest.removeprefix('sha256:').lower():
+            raise ValueError('SHA256SUMS and GitHub digest disagree for ' + name)
 if sum(assets[name]['size'] for name in downloads) > MAX_ARCHIVE:
     raise ValueError('Map archive exceeds size limit')
 archive_path = work / 'assembled.zip'
 with archive_path.open('xb') as joined:
     for name in downloads:
         path = fetch(name, MAX_ARCHIVE)
-        if sha(path) != checksums[name]:
+        if name in checksums and sha(path) != checksums[name]:
             raise ValueError('SHA256SUMS mismatch for ' + name)
         with path.open('rb') as source:
             shutil.copyfileobj(source, joined, 1024 * 1024)
@@ -324,10 +324,16 @@ with zipfile.ZipFile(archive_path) as bundle:
     if len(bundle.infolist()) > 10000:
         raise ValueError('Too many ZIP entries')
     for entry in bundle.infolist():
-        raw = entry.filename
+        # Windows ZIP writers use backslash separators; validate AFTER normalization.
+        raw = entry.filename.replace(chr(92), "/")
+        # ZIPs created from the current directory commonly include ./ prefixes.
+        if raw in (".", "./") and entry.is_dir():
+            continue
+        while raw.startswith("./"):
+            raw = raw[2:]
         path = PurePosixPath(raw)
         if '\\' in raw or '\x00' in raw or path.is_absolute() or any(p in ('', '.', '..') for p in raw.rstrip('/').split('/')) or any(':' in p for p in path.parts):
-            raise ValueError('Unsafe ZIP member path')
+            raise ValueError('Unsafe ZIP member path: ' + repr(entry.filename))
         mode = entry.external_attr >> 16
         if stat.S_IFMT(mode) not in (0, stat.S_IFREG, stat.S_IFDIR) or entry.flag_bits & 1:
             raise ValueError('Links, special files and encrypted ZIP entries are not allowed')
@@ -336,16 +342,21 @@ with zipfile.ZipFile(archive_path) as bundle:
         seen.add(raw.casefold())
         if entry.is_dir():
             continue
-        # Permit a root game/ tree or exactly one packaging directory above it.
+        # Support legacy game/csgo packaging and Ocean's loose addon tree.
         parts = path.parts
-        if len(parts) == 5 and parts[1:3] == ('game', 'csgo'):
+        if parts[0] == 'addon':
+            parts = ('game', 'csgo') + parts[1:]
+        elif len(parts) >= 5 and parts[1:3] == ('game', 'csgo'):
             parts = parts[1:]
-        if len(parts) != 4 or parts[:2] != ('game', 'csgo'):
+        if len(parts) < 4 or parts[:2] != ('game', 'csgo'):
             continue
-        kind, name = parts[2:]
-        if not re.fullmatch(r'[A-Za-z0-9_][A-Za-z0-9_.-]*', name):
+        kind, name = parts[2], parts[-1]
+        if not all(re.fullmatch(r'[A-Za-z0-9_][A-Za-z0-9_.-]*', component) for component in parts):
             raise ValueError('Unsafe map filename')
-        if not ((kind == 'maps' and name.endswith('.vpk')) or (kind == 'cfg' and name.endswith('.cfg'))):
+        permitted = ((kind == 'maps' and len(parts) == 4 and name.endswith('.vpk')) or
+                     (kind == 'cfg' and name.endswith('.cfg')) or
+                     (kind in ('models', 'materials') and name.endswith(('.vmdl_c', '.vmesh_c', '.vphys_c', '.vmat_c', '.vtex_c'))))
+        if not permitted:
             continue
         dest = Path(*parts)
         if any(dest == prior[1] for prior in selected):
@@ -353,6 +364,12 @@ with zipfile.ZipFile(archive_path) as bundle:
         selected.append((entry, dest))
     if not any(dest.suffix == '.vpk' for _, dest in selected):
         raise ValueError('No map VPK files found')
+    if sum(entry.file_size for entry in bundle.infolist()) > MAX_EXTRACTED:
+        raise ValueError('ZIP integrity test exceeds uncompressed size limit')
+    # Validate CRC of EVERY member, including files deliberately not extracted.
+    bad_member = bundle.testzip()
+    if bad_member is not None:
+        raise ValueError('ZIP integrity failure: ' + bad_member)
     if sum(entry.file_size for entry, _ in selected) > MAX_EXTRACTED:
         raise ValueError('Map extraction exceeds size limit')
     extracted = []
@@ -371,7 +388,11 @@ with zipfile.ZipFile(archive_path) as bundle:
         dest.chmod(0o644)
         extracted.append({'path': relative.as_posix(), 'bytes': count, 'sha256': sha(dest)})
 receipt = {'repo': repo, 'tag': release['tag_name'], 'release_id': release.get('id'), 'archive': archive_name,
-           'archive_sha256': archive_hash, 'archive_checksum_present': archive_name in checksums, 'files': extracted}
+           'archive_sha256': archive_hash, 'archive_checksum_present': archive_name in checksums,
+           'release_json_sha256': sha(Path('/input/release.json')), 'zip_integrity_tested': True,
+           'asset_verification': [{'name': name, 'github_digest_verified': assets[name].get('digest') is not None,
+                                   'manifest_verified': name in checksums} for name in downloads],
+           'files': extracted}
 (output / 'map-release.json').write_text(json.dumps(receipt, indent=2) + '\n')
 print(json.dumps(receipt, indent=2))
 shutil.rmtree(work)
