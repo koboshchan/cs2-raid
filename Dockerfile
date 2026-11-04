@@ -10,7 +10,9 @@ RUN curl -fL --retry 3 https://github.com/roflmuffin/CounterStrikeSharp/releases
 FROM dependencies AS deltaops-build
 ENV HOME=/work/home DOTNET_CLI_HOME=/work/home NUGET_PACKAGES=/work/nuget
 RUN --network=none mkdir /work && chown 1000:1000 /work
-COPY --chown=1000:1000 plugins/DeltaOps/DeltaOps.csproj plugins/DeltaOps/DeltaOpsConfig.cs plugins/DeltaOps/DeltaOpsPlugin.cs plugins/DeltaOps/RaidCapabilityBridge.cs plugins/DeltaOps/config.example.json plugins/DeltaOps/source.sha256 /input/
+COPY --chown=1000:1000 plugins/DeltaOps/DeltaOps.csproj plugins/DeltaOps/DeltaOpsConfig.cs plugins/DeltaOps/DeltaOpsPlugin.cs plugins/DeltaOps/FixtureAbilityPolicyV2.cs plugins/DeltaOps/RaidCapabilityBridge.cs plugins/DeltaOps/config.example.json plugins/DeltaOps/source.sha256 /input/
+COPY --chown=1000:1000 tests/FixtureAbilitiesV2 /policy/tests/FixtureAbilitiesV2
+COPY --chown=1000:1000 plugins/DeltaOps/FixtureAbilityPolicyV2.cs /policy/plugins/DeltaOps/FixtureAbilityPolicyV2.cs
 USER 1000:1000
 WORKDIR /work
 RUN --network=none <<'BUILD'
@@ -24,11 +26,13 @@ cat > /work/NuGet.Config <<'EOF'
 EOF
 for n in 1 2; do
   mkdir -p /work/run$n/src /work/artifacts/build-$n
-  cp /input/DeltaOps.csproj /input/DeltaOpsConfig.cs /input/DeltaOpsPlugin.cs /input/RaidCapabilityBridge.cs /work/run$n/src/
+  cp /input/DeltaOps.csproj /input/DeltaOpsConfig.cs /input/DeltaOpsPlugin.cs /input/FixtureAbilityPolicyV2.cs /input/RaidCapabilityBridge.cs /work/run$n/src/
   dotnet build /work/run$n/src/DeltaOps.csproj -c Release --configfile /work/NuGet.Config \
     -o /work/artifacts/build-$n -p:CSS_API_DIR=/deps/css/addons/counterstrikesharp/api \
     -p:Deterministic=true -p:ContinuousIntegrationBuild=true -p:PathMap=/work/run$n/src=/_/deltaops \
     -p:UseSharedCompilation=false -p:TreatWarningsAsErrors=true > /work/artifacts/build-$n.log 2>&1 || { cat /work/artifacts/build-$n.log; exit 1; }
+  dotnet build /policy/tests/FixtureAbilitiesV2/FixtureAbilitiesV2.csproj -c Release --configfile /work/NuGet.Config -o /work/policy$n -p:BaseIntermediateOutputPath=/work/policyobj$n/ -p:TreatWarningsAsErrors=true >> /work/artifacts/build-$n.log 2>&1
+  dotnet /work/policy$n/FixtureAbilitiesV2.dll >> /work/artifacts/build-$n.log 2>&1
   cat /work/artifacts/build-$n.log
   grep -q '0 Warning(s)' /work/artifacts/build-$n.log
   grep -q '0 Error(s)' /work/artifacts/build-$n.log

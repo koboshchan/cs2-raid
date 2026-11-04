@@ -49,6 +49,7 @@ public sealed partial class RaidPlugin
     private void RegisterTestMode()
     {
         RegisterTestPresentation();
+        RegisterFixtureDeltaOpsBridge();
         var path=Path.Combine(ModuleDirectory,"testmode.json");
         var startup=File.Exists(path)?JsonSerializer.Deserialize<TestStartup>(File.ReadAllText(path),new JsonSerializerOptions{PropertyNameCaseInsensitive=true}):null;
         var startupGeneration=testMode.Generation;
@@ -302,7 +303,7 @@ try{
             Server.ExecuteCommand("mp_warmup_end");
         }catch{StopTestMode();throw;}
     }
-    private string TestStatus()=>$"TEST {(testMode.Enabled?"ON":"OFF")} | MONEY {(TestServer?"HARD OFF":"production gates")} | phase {testMode.Phase} | {testMode.Participants.Count} opted-in | 200HP saved-pawns={testPawns.Count} / spread 0.5 baselines={spreadOriginals.Count} shared SERVER-WIDE / CHASE living duo else ROAMING death+64 observers={testObservers.Count} | solo-enemy bots={testFlow.Bots.Count}/{TestFlow.BotCapacity} (no wallet/selection) | KIT STUB labels only, NO DeltaOps | custom duo immunity / same-side FFA (native QA pending) | native-map/captured insertion, finite TEST credits only; no loot/SSG/session | flow={(testFlow.Manual?"MANUAL QA":"AUTO")} / spawns={testSpawns.Count} / ledger={testFlow.Ledger.Count} pending-cvars={testCvars.Count} | generation {testMode.Generation}";
+    private string TestStatus()=>$"TEST {(testMode.Enabled?"ON":"OFF")} | MONEY {(TestServer?"HARD OFF":"production gates")} | phase {testMode.Phase} | {testMode.Participants.Count} opted-in | 200HP saved-pawns={testPawns.Count} / spread 0.5 baselines={spreadOriginals.Count} shared SERVER-WIDE / CHASE living duo else ROAMING death+64 observers={testObservers.Count} | solo-enemy bots={testFlow.Bots.Count}/{TestFlow.BotCapacity} (no wallet/selection) | KIT STUB labels only; ability delivery UNAVAILABLE (native ownership/ABI unverified) | custom duo immunity / same-side FFA (native QA pending) | native-map/captured insertion, finite TEST credits only; no loot/SSG/session | flow={(testFlow.Manual?"MANUAL QA":"AUTO")} / spawns={testSpawns.Count} / ledger={testFlow.Ledger.Count} pending-cvars={testCvars.Count} | generation {testMode.Generation}";
     private void TestCvar<T>(string name,T value){
         var cv=ConVar<T>.Find(name)??throw new InvalidOperationException("Missing "+name);
         TestModeState.SetCaptured(testCvars,name,()=>cv.Value,
@@ -572,6 +573,7 @@ try{
         finally{try{Server.PrintToConsole("TEST native setup failed closed OFF: "+ex.Message);}catch{}}
     }
     private void StopTestMode(){
+        ResetFixtureDeltaOps(); // Notify old published generation before fencing. Provider has no native grants.
         testTraceRemaining=0;
         testMode.Stop(); // Fence all callbacks before touching native resources.
         try{CleanupTestNative();}

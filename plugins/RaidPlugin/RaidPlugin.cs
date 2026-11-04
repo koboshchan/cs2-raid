@@ -121,6 +121,7 @@ public sealed partial class RaidPlugin : BasePlugin
         });
     }
     public override void Unload(bool hotReload) {
+        ResetFixtureDeltaOps();StopFixtureDeltaOpsBridge();
         testUnloaded=true;mapGeneration=Guid.NewGuid();
         TestModeState.FinalizeAll(TestCleanupError,StopTestMode,StopDeltaOpsBridge,UnhookGameplay,StopGameplay,()=>settlementRecovery?.Dispose(),http.Dispose);
     }
