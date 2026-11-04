@@ -185,16 +185,15 @@ public readonly record struct RoundBanner(int Winner, int Reason, string Message
 // Native result styling is owned by client Panorama, not arbitrary event strings.
 public static class BannerInput
 {
-    public static bool TryParse(string result, string color, out BannerResult parsed)
+    // argumentCount excludes the command itself. Exactly one action is accepted.
+    public static bool TryParse(int argumentCount, string? action, out BannerResult parsed)
     {
-        parsed = result.ToLowerInvariant() switch {
+        parsed = action?.ToLowerInvariant() switch {
             "win" => BannerResult.Win, "lose" => BannerResult.Lose,
-            "tie" => BannerResult.Draw, _ => (BannerResult)(-1)
+            "draw" or "tie" => BannerResult.Draw, _ => (BannerResult)(-1)
         };
-        return Enum.IsDefined(parsed) && color.ToLowerInvariant() is "gold" or "blue" or "red" or "gray";
+        return argumentCount == 1 && Enum.IsDefined(parsed);
     }
     public static string NativeColor(int team, BannerResult result) =>
         result == BannerResult.Lose ? "red" : result == BannerResult.Draw ? "gray" : team == 2 ? "gold" : "blue";
-    public static bool Matches(int team, BannerResult result, string color) =>
-        string.Equals(NativeColor(team, result), color, StringComparison.OrdinalIgnoreCase);
 }

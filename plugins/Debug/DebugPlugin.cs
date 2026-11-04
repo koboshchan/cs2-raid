@@ -19,7 +19,7 @@ public sealed class DebugConfig : BasePluginConfig
 public sealed class DebugPlugin : BasePlugin, IPluginConfig<DebugConfig>
 {
     public override string ModuleName => "Map Debug";
-    public override string ModuleVersion => "0.1.4";
+    public override string ModuleVersion => "0.1.5";
     public override string ModuleAuthor => "koboshchan";
     public override string ModuleDescription => "Debug economy and durable map issue reports";
     public DebugConfig Config { get; set; } = new();
@@ -47,7 +47,7 @@ public sealed class DebugPlugin : BasePlugin, IPluginConfig<DebugConfig>
     public override void Load(bool hotReload)
     {
         loaded = true;
-        AddCommand("css_banner", "Private native banner: win|lose|tie gold|blue|red|gray", ColoredBannerCommand);
+        AddCommand("css_banner", "Private native banner: win|lose|draw", SimpleBannerCommand);
         AddCommand("css_testwin", "Preview a private native round-win banner", (p, c) => BannerCommand(p, c, BannerResult.Win));
         AddCommand("css_testlose", "Preview a private native round-loss banner", (p, c) => BannerCommand(p, c, BannerResult.Lose));
         AddCommand("css_testdraw", "Preview a private native round-draw banner", (p, c) => BannerCommand(p, c, BannerResult.Draw));
@@ -167,22 +167,20 @@ public sealed class DebugPlugin : BasePlugin, IPluginConfig<DebugConfig>
         if (!Human(p)) { c.ReplyToCommand("A connected human player is required."); return false; }
         return true;
     }
-    private void ColoredBannerCommand(CCSPlayerController? p, CommandInfo c)
+    private void SimpleBannerCommand(CCSPlayerController? p, CommandInfo c)
     {
         if (!Ready(p, c)) return;
-        if (c.ArgCount != 3 || !BannerInput.TryParse(c.GetArg(1), c.GetArg(2), out var result))
-        { c.ReplyToCommand("Usage: !banner <win|lose|tie> <gold|blue|red|gray>"); return; }
-        BannerCommand(p, c, result, c.GetArg(2));
+        if (c.ArgCount != 2 || !BannerInput.TryParse(c.ArgCount - 1, c.GetArg(1), out var result))
+        { c.ReplyToCommand("Usage: !banner <win|lose|draw>"); return; }
+        BannerCommand(p, c, result);
     }
-    private void BannerCommand(CCSPlayerController? p, CommandInfo c, BannerResult result, string? requestedColor = null)
+    private void BannerCommand(CCSPlayerController? p, CommandInfo c, BannerResult result)
     {
         if (!Ready(p, c)) return;
         if (!RoundBanner.TryCreate(p!.TeamNum, result, out var banner))
         { c.ReplyToCommand("Join T or CT before testing a round banner."); return; }
         if (!bannerLimiter.Allow(p.SteamID, Environment.TickCount64, 3000))
         { c.ReplyToCommand("Wait three seconds between banner previews."); return; }
-        if (requestedColor != null && !BannerInput.Matches(p.TeamNum, result, requestedColor))
-            c.ReplyToCommand($"Native banner cannot show {requestedColor.ToLowerInvariant()} for this result/team; showing {BannerInput.NativeColor(p.TeamNum, result)} instead. Gold requires a T win, blue a CT win, red a loss, gray a tie.");
         try
         {
             // Direct client delivery only: never FireEvent(), TerminateRound(), or change rules.

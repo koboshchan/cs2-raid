@@ -29,20 +29,17 @@ foreach (var team in new[] { -1, 0, 1, 4, 255 })
         Check(!RoundBanner.TryCreate(team, result, out _), $"team {team} {result} rejected");
 
 foreach (var team in new[] { 2, 3 })
-foreach (var result in new[] { "win", "lose", "tie" })
-foreach (var color in new[] { "gold", "blue", "red", "gray" })
+foreach (var action in new[] { "win", "lose", "draw", "tie" })
 {
-    Check(BannerInput.TryParse(result, color, out var parsed), $"parse {result} {color}");
-    var expected = result == "lose" ? "red" : result == "tie" ? "gray" : team == 2 ? "gold" : "blue";
-    Check(BannerInput.NativeColor(team, parsed) == expected, $"native color {team} {result}");
-    Check(BannerInput.Matches(team, parsed, color) == (color == expected), $"color support {team} {result} {color}");
+    Check(BannerInput.TryParse(1, action, out var parsed), $"parse {action}");
+    var expected = action == "lose" ? "red" : action is "draw" or "tie" ? "gray" : team == 2 ? "gold" : "blue";
+    Check(BannerInput.NativeColor(team, parsed) == expected, $"native color {team} {action}");
 }
-Check(BannerInput.TryParse("WIN", "GOLD", out var upper) && upper == BannerResult.Win, "case insensitive banner");
-Check(!BannerInput.TryParse("draw", "red", out _), "reject invalid result");
-Check(!BannerInput.TryParse("win", "<font color=green>", out _), "reject color injection");
-Check(!BannerInput.TryParse("win", "green", out _), "reject removed green");
-Check(!BannerInput.TryParse("win", "white", out _), "reject removed white");
-Check(!BannerInput.TryParse("win", "purple", out _), "reject unadvertised color");
+Check(BannerInput.TryParse(1, "WIN", out var upper) && upper == BannerResult.Win, "case insensitive banner");
+foreach (var argumentCount in new[] { -1, 0, 2, 3, 99 })
+    Check(!BannerInput.TryParse(argumentCount, "win", out _), $"reject argument count {argumentCount}");
+foreach (var action in new string?[] { null, "", " ", "win gold", "win;quit", "gold", "red", "<font>", "unknown", " win", "draw " })
+    Check(!BannerInput.TryParse(1, action, out _), $"reject invalid action {action}");
 Check(!RoundBanner.TryCreate(2, (BannerResult)99, out _), "undefined banner result rejected");
 var a = new Point(1, 2, 3);
 var b = new Point(4, 5, 6);
