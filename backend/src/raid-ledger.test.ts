@@ -330,3 +330,22 @@ test("manual receipt mismatch cannot quarantine or replace evidence; admin confi
  assert.throws(()=>createServer("n".repeat(40),catalog,links,undefined,{ledger:f.ledger,api:f.api,adminToken:"short"}),/separate/);
  }finally{f.cleanup();}
 });
+
+test("native false during async recovery barrier retains paid and repeats finalize same proof without moving money",async()=>{
+ const f=setup();try{
+ const input=extract();let attempts=0;const seen:unknown[]=[];
+ const native={...f.native,async finalize(proof: Parameters<RaidNativeBridge["finalize"]>[0]){
+   attempts++;seen.push(proof);return attempts>=3;
+ }};
+ await assert.rejects(f.ledger.execute("extract",input,f.api,native),/Native completion unresolved/);
+ let row=JSON.parse(String(f.raw("SELECT data FROM raid_operations")[0].data));
+ assert.equal(row.state,"paid");
+ f.reopen();
+ await assert.rejects(f.ledger.execute("extract",input,f.api,native),/Native completion unresolved/);
+ row=JSON.parse(String(f.raw("SELECT data FROM raid_operations")[0].data));
+ assert.equal(row.state,"paid");
+ assert.equal((await f.ledger.execute("extract",input,f.api,native)).state,"settled");
+ assert.deepEqual(seen[0],seen[1]);assert.deepEqual(seen[1],seen[2]);
+ assert.equal(attempts,3);assert.equal(f.calls,1);
+ }finally{f.cleanup();}
+});
