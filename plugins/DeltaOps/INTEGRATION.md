@@ -1,4 +1,6 @@
-DeltaOps 1.3.2 integration review
+DeltaOps 1.3.2 integration review (original import; line numbers below refer to upstream)
+
+Current follow-up: numbered chat selection and local binding help are implemented on deltaops-abilities-fix. See docs/ABILITIES-INVESTIGATION.md for measured evidence and remaining engine QA. The legacy AutoBindSkillKeys config name now controls one-time instructions only; no client bindings are changed.
 
 Build acceptance is not gameplay acceptance. The unchanged source compiled twice against CSS 1.0.379 and SDK 10.0.403 with zero compiler warnings/errors and identical DLL/deps/PDB hashes. No CS2 server was started, no plugin methods were run, and no deployment was made. The SDK emits a workload-verification informational notice; it does not affect the zero-warning/error compiler summary. Upstream suppresses CS0618 around its old native damage call; zero build warnings does not remove that compatibility risk.
 
@@ -14,6 +16,6 @@ There are no map entity, lever, extraction zone, keycard, shop, SSG debit/credit
 
 Native code interaction needs installed-engine QA. DealDamage at 2781-2850 allocates raw schema-sized buffers, writes an attacker structure at a hardcoded 0x88 offset and invokes CBaseEntity_TakeDamageOldFunc with an obsolete-warning suppression. Grenade/smoke spawning, control movement and entity handles are also engine-version-sensitive. Outline code at 2871-2880 sets entity glow; do not assume the effect is private to intended teammates without two-client testing.
 
-Server test/reset/assignment commands reject non-null player callers and are console-only, not a separate player-admin permission system. Protect RCON and backend credentials. AutoBindSkillKeys sends fixed V/X bind commands on connect/spawn/selection and may override players' choices; disable it if unwanted. No HTTP client, external process launcher or explicit filesystem access was found in the plugin source; CSS itself manages plugin configuration and logging.
+Server test/reset/assignment commands reject non-null player callers and are console-only, not a separate player-admin permission system. Protect RCON and backend credentials. The original AutoBindSkillKeys remote command path was broken and has been removed; client bindings are now opt-in local commands. No HTTP client, external process launcher or explicit filesystem access was found in the plugin source; CSS itself manages plugin configuration and logging.
 
 Do not load both plugins together until targeting, granted-item ownership, spawn/reset behavior and map hooks have explicit designs and engine tests. The requested server target installs both assemblies, but has not been built or run. That architecture choice does not clear any integration risks above.

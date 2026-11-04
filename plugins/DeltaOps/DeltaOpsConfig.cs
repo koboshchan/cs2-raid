@@ -8,6 +8,8 @@ public sealed class DeltaOpsConfig : BasePluginConfig
     [JsonPropertyName("SelectionSeconds")]
     public int SelectionSeconds { get; set; } = 120;
 
+    // Legacy key retained for existing configs; now controls one-time binding help,
+    // never remote key changes. !bind always prints instructions.
     [JsonPropertyName("AutoBindSkillKeys")]
     public bool AutoBindSkillKeys { get; set; } = true;
 

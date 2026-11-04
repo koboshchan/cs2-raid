@@ -11,6 +11,7 @@ FROM dependencies AS deltaops-build
 ENV HOME=/work/home DOTNET_CLI_HOME=/work/home NUGET_PACKAGES=/work/nuget
 RUN --network=none mkdir /work && chown 1000:1000 /work
 COPY --chown=1000:1000 plugins/DeltaOps/DeltaOps.csproj plugins/DeltaOps/DeltaOpsConfig.cs plugins/DeltaOps/DeltaOpsPlugin.cs plugins/DeltaOps/config.example.json plugins/DeltaOps/source.sha256 /input/
+COPY --chown=1000:1000 plugins/DeltaOps/tests/ /input/tests/
 USER 1000:1000
 WORKDIR /work
 RUN --network=none <<'BUILD'
@@ -33,6 +34,9 @@ for n in 1 2; do
   grep -q '0 Warning(s)' /work/artifacts/build-$n.log
   grep -q '0 Error(s)' /work/artifacts/build-$n.log
 done
+dotnet build /input/tests/DeltaOps.SourceTests.csproj -c Release --configfile /work/NuGet.Config -o /work/source-tests -p:BaseIntermediateOutputPath=/work/source-tests-obj/ -p:TreatWarningsAsErrors=true
+dotnet /work/source-tests/DeltaOps.SourceTests.dll /input/DeltaOpsPlugin.cs > /work/artifacts/source-contract-tests.log
+cat /work/artifacts/source-contract-tests.log
 for ext in dll deps.json pdb; do
   cmp /work/artifacts/build-1/DeltaOps.$ext /work/artifacts/build-2/DeltaOps.$ext
 done

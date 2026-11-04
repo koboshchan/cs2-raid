@@ -10,6 +10,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="tests/**/*.cs" />
     <Reference Include="CounterStrikeSharp.API">
       <HintPath>$(CSS_API_DIR)\CounterStrikeSharp.API.dll</HintPath>
       <Private>false</Private>

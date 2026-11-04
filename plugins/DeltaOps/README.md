@@ -9,7 +9,8 @@ Delta Force models, textures, audio, weapon assets, or client mods.
 ## Commands
 
 ```text
-!op 1 ... !op 6   Select an operator during the 120-second selection window
+!characterselect  Print the numbered six-character list in chat
+!characterselect <1-6> Select an operator (legacy !op <1-6> still works)
 V                 Use the V ability when its cooldown is ready
 X                 Use the X ability when its cooldown is ready
 !v / !x           Chat-command fallbacks
@@ -28,15 +29,20 @@ css_ops_use <slot> x
 
 The slot number is the player ID shown by the `status` command.
 
-The plugin attempts to bind V/X on connect, spawn, and after operator selection.
-This survives respawn, team change, and reconnection. CS2 builds can still block
-server-issued bind commands; if V/X do not respond, run this once in the game
-developer console:
+Selection is chat-only, with all six numbered operators shown at once. There is
+no center-screen display box and no per-second list spam. The 120-second timeout,
+random fallback, cooldowns, and post-warmup selection lock are unchanged.
+
+The plugin does not change client key bindings. Use !v / !x immediately, or run
+these once yourself in the game developer console:
 
 ```text
 bind "v" "css_v"
 bind "x" "css_x"
 ```
+
+The legacy AutoBindSkillKeys config key now controls one-time help per player state,
+not remote binding. !bind always prints the instructions, even if this key is false.
 
 After the live match begins, a selected operator is locked until the match ends
 or a server operator runs `css_ops_reset`. Player-facing live switching is

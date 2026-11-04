@@ -3,7 +3,7 @@
 See [SPEC.md](SPEC.md). Flow changes are documentation only until go-ahead.
 
 - [x] Character roster decided: keep all 6 DeltaOps characters.
-- [ ] Replace DeltaOps display box with a numbered list printed in chat; choose using `!characterselect <number>`.
+- [x] DeltaOps source uses a numbered chat list and `!characterselect <number>` (six characters retained; isolated branch, not deployed).
 - [ ] Lucas/Ocean: spawn coords, lever coords/entities, extraction trigger name, loot prop names
 - [x] map stage defaults to Ocean repo; real build, digest/ZIP verification and cache reuse verified (743791a)
 - [ ] implement flow v2 (awaiting go-ahead)
