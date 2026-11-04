@@ -17,7 +17,8 @@ public sealed partial class RaidPlugin
             testCash.Remove(raw);
         },TestCleanupError);
     }
-    private void QueueLobbyWeaponCleanup(CCSPlayerController p){
+    private bool QueueLobbyWeaponCleanup(CCSPlayerController p){
+        try{
         // Snapshot only this pawn's tracked fixture entities BEFORE engine death-drop.
         var owned=p.PlayerPawn.Value?.WeaponServices?.MyWeapons.Select(h=>h.Raw).Where(testWeapons.Contains).ToArray()??[];
         var generation=testMode.Generation;
@@ -32,6 +33,8 @@ public sealed partial class RaidPlugin
                 }
             }catch(Exception ex){FailTestNative(ex);}
         });
+        return true;
+        }catch(Exception ex){FailTestNative(ex);return false;}
     }
     private static string FixturePrompt(GamePhase phase)=>phase switch{
         GamePhase.Lobby=>"Choose a partner or !team single",
@@ -82,7 +85,11 @@ public sealed partial class RaidPlugin
             // Wallet is authoritative. Capped native cash is presentation ONLY.
             var balance=testFlow.Wallet.GetValueOrDefault(Id(p));
             if(p.InGameMoneyServices is {} money){
-                testCash.TryAdd(p.EntityHandle.Raw,(money.Handle,money.Account));
+                var raw=p.EntityHandle.Raw;
+                // Never project onto a replacement service under the old baseline.
+                if(testCash.TryGetValue(raw,out var saved)&&saved.Services!=money.Handle)
+                    throw new InvalidOperationException("Fixture cash service identity changed; projection denied.");
+                testCash.TryAdd(raw,(money.Handle,money.Account));
                 money.Account=TonightRules.Hud(balance);
                 Utilities.SetStateChanged(p,"CCSPlayerController","m_pInGameMoneyServices");
             }

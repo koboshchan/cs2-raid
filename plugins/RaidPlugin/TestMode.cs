@@ -247,7 +247,7 @@ try{
         RegisterEventHandler<EventPlayerDeath>((e,i)=>{
             if(testMode.NativeActive&&TestBot(e.Userid)&&testMode.Phase==TestModeState.Stage.Active)testFlow.KillBot(BotId(e.Userid!));
             if(testMode.NativeActive&&testMode.Phase==TestModeState.Stage.Lobby&&(TestParticipant(e.Userid)||TestBot(e.Userid))){
-                QueueLobbyWeaponCleanup(e.Userid!);
+                if(!QueueLobbyWeaponCleanup(e.Userid!))return HookResult.Continue;
                 var raw=e.Userid!.EntityHandle.Raw;var generation=testMode.Generation;
                 Server.NextFrame(()=>{
 try{
