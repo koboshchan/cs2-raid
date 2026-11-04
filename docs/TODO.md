@@ -34,3 +34,7 @@ Authoritative requirements remain in [SPEC.md](SPEC.md). Implementation status b
 ## Storage
 
 Match state exists only in memory; no persistent stash. Existing backend SQLite remains account links/purchase-outbox only. Do not treat local ExtractionIntent or an arbitrary string as a backend receipt. Only a trusted future backend bridge may call ConfirmExtraction after durable receipt verification.
+
+## Offline build acceptance
+
+Dedicated cs2-raid Docker daemon, SDK 10.0.403 and pinned CSS 1.0.379. Two Release builds, zero warnings/errors, byte-identical DLL/deps/PDB. Each run passed 19 legacy rule checks plus 10,264 flow-v2 checks, including 10,000 generated lobby-invariant assertions. This is pure-model/compiler evidence, not native gameplay acceptance. Receipt confirmation additionally requires an issued intent from the current extraction window; stale-window, forged and post-timeout intents reject. Trusted backend receipt validation is still absent, so the native adapter never invokes confirmation.

@@ -24,6 +24,7 @@ public sealed class GameplayState
     private readonly Dictionary<string,(string Loot,DateTimeOffset Since)> holds = [];
     private readonly HashSet<string> usedLoot = [];
     private readonly HashSet<int> levers = [];
+    private readonly Dictionary<string,ExtractionIntent> extractionIntents = [];
     private int nextTeam;
     public GamePhase Phase { get; private set; }
     public DateTimeOffset? StartsAt { get; private set; }
@@ -108,7 +109,7 @@ public sealed class GameplayState
     public string? Spectate(string id) => Players.TryGetValue(id,out var p) && p.Team!=null ? Players.Values.FirstOrDefault(x=>x.Id!=id && x.Team==p.Team && Living(x.Id))?.Id : null;
     public bool AddLoot(GroundLoot loot)
     {
-        if(Phase!=GamePhase.Active || !loot.Position.Valid || string.IsNullOrWhiteSpace(loot.Id) || loot.Min<0 || loot.Max<loot.Min || loot.Max==int.MaxValue ||
+        if(!Enum.IsDefined(loot.Kind) || Phase!=GamePhase.Active || !loot.Position.Valid || string.IsNullOrWhiteSpace(loot.Id) || loot.Min<0 || loot.Max<loot.Min || loot.Max==int.MaxValue ||
             !double.IsFinite(loot.HoldSeconds) || loot.HoldSeconds<0 ||
             (loot.Kind!=LootKind.Safe && (loot.Min!=loot.Max || loot.HoldSeconds!=0)) ||
             Ground.ContainsKey(loot.Id) || usedLoot.Contains(loot.Id))return false;
@@ -133,20 +134,26 @@ public sealed class GameplayState
         if(levers.Count>=2)ExtractionAt=now.AddMinutes(5);
         return true;
     }
-    public ExtractionIntent[] ExtractionCandidates(DateTimeOffset now,IEnumerable<string> inZone) =>
-        Phase==GamePhase.Active && ExtractionAt is {} at && now>=at && now<EndsAt
-        ? inZone.Distinct().Where(Living).Select(id=>new ExtractionIntent(MatchId+":"+id,id,Players[id].Cash)).ToArray() : [];
+    public ExtractionIntent[] ExtractionCandidates(DateTimeOffset now,IEnumerable<string> inZone)
+    {
+        if(Phase!=GamePhase.Active || ExtractionAt is not {} at || now<at || now>=EndsAt)return [];
+        var candidates=inZone.Distinct().Where(Living).Select(id=>new ExtractionIntent(MatchId+":"+id,id,Players[id].Cash)).ToArray();
+        foreach(var intent in candidates)extractionIntents[intent.Player]=intent;
+        return candidates;
+    }
     // Called only after a durable backend settlement receipt. No local payout or refund occurs.
     public bool ConfirmExtraction(ExtractionIntent intent,string durableReceipt)
     {
-        if(string.IsNullOrWhiteSpace(durableReceipt) || intent.Id!=MatchId+":"+intent.Player || !Living(intent.Player) ||
+        if(Phase!=GamePhase.Active || string.IsNullOrWhiteSpace(durableReceipt) ||
+           !extractionIntents.TryGetValue(intent.Player,out var issued) || issued!=intent ||
+           intent.Id!=MatchId+":"+intent.Player || !Living(intent.Player) ||
            Players[intent.Player].Cash!=intent.Cash || ExtractionAt==null)return false;
-        var p=Players[intent.Player];p.Extracted=true;p.Cash=0;holds.Remove(p.Id);return true;
+        var p=Players[intent.Player];p.Extracted=true;p.Cash=0;holds.Remove(p.Id);extractionIntents.Remove(p.Id);return true;
     }
     public bool FinishExtractionWindow(DateTimeOffset now)
     {
         if(ExtractionAt is not {} at || now<at)return false;
-        ExtractionAt=null;levers.Clear();return true;
+        ExtractionAt=null;levers.Clear();extractionIntents.Clear();return true;
     }
 }
 public sealed record Position(float X,float Y,float Z,float Yaw=0)
@@ -178,7 +185,7 @@ public sealed class GameplayConfig
     {
         if (!Lobby.Valid || !ReadyPlatform.Valid || Spawns.Any(x=>!x.Valid) ||
             MapLoot.Select(x=>x.Targetname).Distinct().Count()!=MapLoot.Length ||
-            MapLoot.Any(x=>string.IsNullOrWhiteSpace(x.Targetname) || !double.IsFinite(x.SpawnRate) || x.SpawnRate<0 || x.SpawnRate>1 ||
+            MapLoot.Any(x=>!Enum.IsDefined(x.Kind) || string.IsNullOrWhiteSpace(x.Targetname) || !double.IsFinite(x.SpawnRate) || x.SpawnRate<0 || x.SpawnRate>1 ||
                 x.Kind is LootKind.MoneyBag or LootKind.Equipment || x.Value<0 || x.Min<0 || x.Max<x.Min || x.Max==int.MaxValue ||
                 !double.IsFinite(x.HoldSeconds) || x.HoldSeconds<0 || (x.Kind==LootKind.Item && (x.HoldSeconds!=0 || x.Min!=0 || x.Max!=0))) ||
             Levers.Any(x=>x.Number<1 || x.Number>4 || string.IsNullOrWhiteSpace(x.Targetname)) ||

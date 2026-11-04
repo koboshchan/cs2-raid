@@ -86,6 +86,15 @@ public static class FlowTests
                 Check(sim.Players.Values.Where(x=>x.Team!=null).GroupBy(x=>x.Team).All(x=>x.Count()<=2));
             }
         }
+        var issued=Active();Check(!issued.ConfirmExtraction(new(issued.MatchId+":a","a",0),"receipt"));
+        issued.PullLever("a",1,t);issued.PullLever("b",2,t);
+        var oldIntent=issued.ExtractionCandidates(t.AddMinutes(5),["a"]).Single();
+        issued.FinishExtractionWindow(t.AddMinutes(5));issued.PullLever("a",1,t.AddMinutes(6));issued.PullLever("b",2,t.AddMinutes(6));
+        Check(!issued.ConfirmExtraction(oldIntent,"stale-window-receipt"));
+        var timed=issued.ExtractionCandidates(t.AddMinutes(11),["a"]).Single();
+        issued.Tick(t.AddMinutes(30),true);Check(!issued.ConfirmExtraction(timed,"late-receipt"));
+        Check(!Active().AddLoot(new("invalid",origin,(LootKind)99,1,1)));
+        conf=new GameplayConfig {MapLoot=[new("invalid",(LootKind)99,1)]};Reject(conf.Validate);
         Check(!new GameplayConfig().CustomPricingEnabled);
         Check(!System.Text.Json.JsonSerializer.Deserialize<GameplayConfig>("{}")!.CustomPricingEnabled);
         Check(GameplayConfig.NativeSpend(1000,700)==300);Check(GameplayConfig.NativeSpend(700,700)==0);Check(GameplayConfig.NativeSpend(700,1000)==0);

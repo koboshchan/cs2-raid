@@ -285,10 +285,16 @@ public sealed partial class RaidPlugin
         }
         game.ReleaseUse(id);
         if(!pressed)return;
-        foreach(var (number,raw) in leverEntities) {
+        foreach(var (number,raw) in leverEntities.OrderBy(entry=>{
+            var origin=new CHandle<CBaseEntity>(entry.Value).Value?.AbsOrigin;
+            return origin==null?double.MaxValue:Math.Pow((double)pos.X-origin.X,2)+Math.Pow((double)pos.Y-origin.Y,2)+Math.Pow((double)pos.Z-origin.Z,2);
+        })) {
             var e=new CHandle<CBaseEntity>(raw).Value;
             if(e is {IsValid:true} && e.AbsOrigin is {} v && pos.Within(new(v.X,v.Y,v.Z),96) && game.PullLever(id,number,DateTimeOffset.UtcNow))
+            {
                 Server.PrintToChatAll(game.ExtractionAt is {} at?"Extraction in 5 minutes.":"Lever "+number+" activated.");
+                break; // One physical lever per fresh E press, even if two are close together.
+            }
         }
     }
     private void UpdateSpectators()
@@ -318,7 +324,7 @@ public sealed partial class RaidPlugin
     }
     private void StopGameplay()
     {
-        foreach(var p in Utilities.GetPlayers().Where(Human))SetPresentation(p,false,false);
+        if(sessionLoaded)foreach(var p in Utilities.GetPlayers().Where(Human))SetPresentation(p,false,false);
         ClearPricing();sessionLoaded=false;ClearPartnerVisuals();ClearLoot();observedWeapons.Clear();
         foreach(var (name,value) in savedCvars)RestoreCvar(name,value);
         savedCvars.Clear();
