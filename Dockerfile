@@ -149,10 +149,16 @@ RUN --network=none <<'BUILD'
 set -eu
 mkdir -p /work/artifacts
 printf '<configuration><packageSources><clear /></packageSources></configuration>\n' > /work/NuGet.Config
-dotnet build /work/src/Debug.csproj -c Release --configfile /work/NuGet.Config -o /work/artifacts/plugin -p:CSS_API_DIR=/deps/css/addons/counterstrikesharp/api -p:TreatWarningsAsErrors=true -p:UseSharedCompilation=false
-dotnet restore /work/src/tests/Debug.Tests.csproj --configfile /work/NuGet.Config
-dotnet build /work/src/tests/Debug.Tests.csproj -c Release --no-restore -p:TreatWarningsAsErrors=true
-dotnet /work/src/tests/bin/Release/net10.0/Debug.Tests.dll
+for n in 1 2; do
+  mkdir -p /work/debug-run$n
+  cp -R /work/src/. /work/debug-run$n/
+  dotnet build /work/debug-run$n/Debug.csproj -c Release --configfile /work/NuGet.Config -o /work/artifacts/build-$n -p:CSS_API_DIR=/deps/css/addons/counterstrikesharp/api -p:TreatWarningsAsErrors=true -p:UseSharedCompilation=false -p:Deterministic=true -p:ContinuousIntegrationBuild=true -p:PathMap=/work/debug-run$n=/_/debug
+  dotnet restore /work/debug-run$n/tests/Debug.Tests.csproj --configfile /work/NuGet.Config
+  dotnet build /work/debug-run$n/tests/Debug.Tests.csproj -c Release --no-restore -p:TreatWarningsAsErrors=true
+  dotnet /work/debug-run$n/tests/bin/Release/net10.0/Debug.Tests.dll
+done
+for ext in dll deps.json pdb; do cmp /work/artifacts/build-1/Debug.$ext /work/artifacts/build-2/Debug.$ext; done
+cp -R /work/artifacts/build-1 /work/artifacts/plugin
 cd /work/artifacts/plugin
 sha256sum Debug.dll Debug.deps.json Debug.pdb > ../SHA256SUMS
 BUILD

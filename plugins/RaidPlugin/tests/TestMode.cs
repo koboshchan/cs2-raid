@@ -39,6 +39,10 @@ static class TestModeTests
         Check(loggerRan==2&&loggerPending.Count==1);
         int finalAfterLogger=0;TestModeState.FinalizeAll(_=>throw new Exception("logger"),()=>throw new Exception("cleanup"),()=>finalAfterLogger++);
         Check(finalAfterLogger==1);
+        var expired=new Dictionary<nint,Action>{{(nint)123,()=>throw new Exception("expired native pointer dereferenced")}};
+        Check(TestModeState.ExpireEntries(expired)==1&&expired.Count==0);
+        TestModeState.RestoreEntries(expired,(_,touch)=>touch(),_=>throw new Exception());
+        Check(TestModeState.ExpireEntries(expired)==0);
         var state=new TestModeState();Check(!state.Enabled);
         Reject(()=>state.Start(false));Reject(()=>state.Join("a",true));
         state.Start(true);var gen=state.Generation;Reject(()=>state.Start(true));

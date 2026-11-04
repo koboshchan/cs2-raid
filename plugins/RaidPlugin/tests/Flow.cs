@@ -79,7 +79,7 @@ public static class FlowTests
             Check(TonightRules.ChooseNativeTeam(phase,side)==(phase is GamePhase.Lobby or GamePhase.CharacterSelect && side is 2 or 3));
         foreach(var side in new[]{2,3})foreach(var win in new[]{true,false}) {
             var banner=TonightRules.Banner(side,win);
-            Check(banner.Winner==(win?side:5-side));Check(banner.Reason==(banner.Winner==2?9:8));
+            Check(banner.PanelFinalEvent==banner.Reason);Check(banner.Winner==(win?side:5-side));Check(banner.Reason==(banner.Winner==2?9:8));
             Check(banner.Message==(banner.Winner==2?"#SFUI_Notice_Terrorists_Win":"#SFUI_Notice_CTs_Win"));
         }
         foreach(var baseline in new[]{0f,0.01f,0.8f,2f}) {

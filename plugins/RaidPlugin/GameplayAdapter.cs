@@ -55,8 +55,8 @@ public sealed partial class RaidPlugin
         AddCommand("css_cashout","Cash in from SSG",(p,c)=>BeginCashIn(p,c.ArgCount==2?c.GetArg(1):""));
         RegisterListener<Listeners.OnEntityTakeDamagePre>(Damage);
         RegisterListener<Listeners.OnTick>(GameplayTick);
-        RegisterListener<Listeners.OnMapStart>(_=>{StopGameplay();game=new();});
-        RegisterListener<Listeners.OnMapEnd>(StopGameplay);
+        RegisterListener<Listeners.OnMapStart>(_=>{AbandonExpiredSpread();spreadMapEnded=false;StopGameplay();game=new();});
+        RegisterListener<Listeners.OnMapEnd>(()=>{try{StopGameplay();}finally{spreadMapEnded=true;AbandonExpiredSpread();}});
         RegisterEventHandler<EventRoundStart>((e,i)=>{ResetLobby();return HookResult.Continue;});
         RegisterEventHandler<EventPlayerDisconnect>((e,i)=>{if(Human(e.Userid))game.Leave(Id(e.Userid));return HookResult.Continue;},HookMode.Pre);
         RegisterEventHandler<EventPlayerDeath>((e,i)=>{

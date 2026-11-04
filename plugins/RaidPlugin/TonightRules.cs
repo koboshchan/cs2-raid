@@ -9,10 +9,11 @@ public static class TonightRules
     public static bool ChooseNativeTeam(GamePhase phase, int nativeTeam) =>
         phase is GamePhase.Lobby or GamePhase.CharacterSelect && nativeTeam is 2 or 3;
     public static float Half(float baseline) => baseline * 0.5f;
-    public static (int Winner,int Reason,string Message) Banner(int nativeTeam,bool won)
+    public readonly record struct BannerFields(int Winner,int Reason,string Message) { public int PanelFinalEvent => Reason; }
+    public static BannerFields Banner(int nativeTeam,bool won)
     {
         if(nativeTeam is not (2 or 3))throw new ArgumentOutOfRangeException(nameof(nativeTeam));
         return (won ? nativeTeam : 5-nativeTeam) == 2
-            ? (2,9,"#SFUI_Notice_Terrorists_Win") : (3,8,"#SFUI_Notice_CTs_Win");
+            ? new(2,9,"#SFUI_Notice_Terrorists_Win") : new(3,8,"#SFUI_Notice_CTs_Win");
     }
 }

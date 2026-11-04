@@ -44,7 +44,7 @@ public sealed partial class RaidPlugin
                 if(op=="on"){
                     StartTestMode();
                 } else {
-                    if(!testMode.Enabled || !TestScope())throw new InvalidOperationException("Test mode OFF or LAN scope invalid.");
+                    if((op!="inspect"&&!testMode.Enabled) || !TestScope())throw new InvalidOperationException("Test mode OFF or LAN scope invalid.");
                     CCSPlayerController Participant(int arg) {
                         if(c.ArgCount<=arg || !int.TryParse(c.GetArg(arg),out var user))throw new InvalidOperationException("Expected engine userid.");
                         var player=Utilities.GetPlayerFromUserid(user);
@@ -52,6 +52,15 @@ public sealed partial class RaidPlugin
                         return player;
                     }
                     switch(op){
+                        case "inspect":
+                            var inspected=Participant(2);var native=inspected.PlayerPawn.Value;
+                            c.ReplyToCommand($"NATIVE userid={inspected.UserId} team={inspected.TeamNum} alive={inspected.PawnIsAlive} health={native?.Health} max={native?.MaxHealth}");
+                            if(!spreadMapEnded && native?.WeaponServices?.ActiveWeapon.Value is CCSWeaponBase gun && gun.VData is {} vd && spreadOriginals.TryGetValue(vd.Handle,out var original)){
+                                var current=SpreadModes(vd);
+                                for(var mode=0;mode<current.Length;mode++)
+                                    c.ReplyToCommand($"NATIVE gun={gun.DesignerName} mode={mode} baseline=[{string.Join(",",original.Modes[mode])}] current=[{string.Join(",",current[mode].Values.ToArray())}] expected=[{string.Join(",",original.Modes[mode].Select(TonightRules.Half))}]");
+                            }else c.ReplyToCommand("No held gun with saved current-map baseline; spread ratio NOT verified.");
+                            break;
                         case "join":
                             var a=Participant(2);testMode.Join(Id(a),Human(a));testControllers[Id(a)]=a.EntityHandle.Raw;
                             if(a.PawnIsAlive)TestHealth(a);else c.ReplyToCommand("Enrolled but dead/spectator. Use css_raid_test spawn <userid> <2|3> in Lobby; then verify 200HP before next.");break;
@@ -90,8 +99,8 @@ public sealed partial class RaidPlugin
         foreach(var cmd in new[]{"buy","autobuy","rebuy"})
             AddCommandListener(cmd,(p,c)=>testMode.NativeActive?HookResult.Handled:HookResult.Continue,HookMode.Pre);
         RegisterListener<Listeners.OnTick>(TestTick);
-        RegisterListener<Listeners.OnMapEnd>(StopTestMode);
-        RegisterListener<Listeners.OnMapStart>(_=>{StopTestMode();if(!TestServer)spreadOriginals.Clear();});
+        RegisterListener<Listeners.OnMapEnd>(()=>{try{StopTestMode();}finally{spreadMapEnded=true;AbandonExpiredSpread();}});
+        RegisterListener<Listeners.OnMapStart>(_=>{AbandonExpiredSpread();spreadMapEnded=false;StopTestMode();});
         RegisterListener<Listeners.OnEntitySpawned>(e=>{
             if(!testMode.NativeActive || !e.DesignerName.StartsWith("weapon_",StringComparison.Ordinal))return;
             var raw=e.EntityHandle.Raw;var generation=testMode.Generation;
@@ -122,7 +131,7 @@ public sealed partial class RaidPlugin
         },HookMode.Pre);
     }
     private void StartTestMode(){
-        if(testUnloaded || testPawns.Count!=0 || testObservers.Count!=0 || testCvars.Count!=0 || TestServer&&spreadOriginals.Count!=0)
+        if(testUnloaded || spreadMapEnded || testPawns.Count!=0 || testObservers.Count!=0 || testCvars.Count!=0 || TestServer&&spreadOriginals.Count!=0)
             throw new InvalidOperationException("Unloaded or pending native cleanup. Retry off; inspect saved baseline counters.");
         if(sessionLoaded || PendingSettlement || linking.Count!=0 || gameplayConfig.Enabled)
             throw new InvalidOperationException("Production config/session or pending bridge conflicts. Disable production gameplay first.");

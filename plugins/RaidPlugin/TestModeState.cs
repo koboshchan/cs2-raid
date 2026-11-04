@@ -27,6 +27,8 @@ public sealed class TestModeState
             catch(Exception ex){try{report(ex);}catch{/* A failing logger must not abort teardown. */}}
         }
     }
+    // Expiration abandons opaque native pointers without invoking any restore/dereference callback.
+    public static int ExpireEntries<K,V>(Dictionary<K,V> entries) where K:notnull {var count=entries.Count;entries.Clear();return count;}
     public static void FinalizeAll(Action<Exception> report,params Action[] actions)
     {
         foreach(var action in actions)try{action();}catch(Exception ex){try{report(ex);}catch{/* A failing logger must not abort teardown. */}}

@@ -10,6 +10,13 @@ public sealed partial class RaidPlugin
 {
     private sealed record SpreadBaseline(CCSWeaponBaseVData Data, float[][] Modes, float JumpInitial, float JumpApex, float Reload);
     private readonly Dictionary<nint,SpreadBaseline> spreadOriginals = [];
+    private bool spreadMapEnded;
+    private void AbandonExpiredSpread(){
+        // Called at map-end finally (after best-effort restoration), and BEFORE map-start cleanup.
+        // Do not ever dereference a retained old-map VData pointer in the next map.
+        var abandoned=TestModeState.ExpireEntries(spreadOriginals);
+        if(abandoned!=0)try{TestCleanupError(new InvalidOperationException($"Abandoned {abandoned} expired VData baselines at map boundary; native restoration unproven."));}catch{/* Logging cannot resurrect or retain expired pointers. */}
+    }
     private readonly Dictionary<string,Position> deathPositions = [];
     private readonly Dictionary<string,uint> roamingPlaced = [];
     private readonly Dictionary<string,int> deathTeams = [];
@@ -51,7 +58,7 @@ public sealed partial class RaidPlugin
          data.InaccuracyLand,data.InaccuracyLadder,data.InaccuracyFire,data.InaccuracyMove];
     private void PatchSpread(CCSWeaponBase weapon)
     {
-        if((!sessionLoaded && !testMode.Enabled) || PriceItem(weapon.DesignerName) is not {IsGun:true} || weapon.VData is not {} data || data.Handle==nint.Zero)return;
+        if(spreadMapEnded || (!sessionLoaded && !testMode.NativeActive) || PriceItem(weapon.DesignerName) is not {IsGun:true} || weapon.VData is not {} data || data.Handle==nint.Zero)return;
         if(!spreadOriginals.TryGetValue(data.Handle,out var baseline)) {
             baseline=new(data,SpreadModes(data).Select(x=>x.Values.ToArray()).ToArray(),
                 data.InaccuracyJumpInitial,data.InaccuracyJumpApex,data.InaccuracyReload);
@@ -113,7 +120,7 @@ public sealed partial class RaidPlugin
         } finally {end.Free();}
         var panel=new EventCsWinPanelRound(true);
         try {
-            panel.FinalEvent=0;panel.FunfactToken="";panel.ShowTimerAttack=false;
+            panel.FinalEvent=result.PanelFinalEvent;panel.FunfactToken="";panel.ShowTimerAttack=false;
             panel.ShowTimerDefend=false;panel.TimerTime=0;panel.FireEventToClient(p);
         } finally {panel.Free();}
         resultBanners.Add(id);
