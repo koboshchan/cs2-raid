@@ -257,3 +257,19 @@ lifecycle.OnTick();lifecycle.Clear(()=>nativeCalls++,()=>managedCalls++);
 Check(nativeCalls==1&&managedCalls==3,"native cleanup only after tick availability");
 lifecycle.Stop();lifecycle.Stop();lifecycle.Clear(()=>nativeCalls++,()=>managedCalls++);
 Check(nativeCalls==1&&managedCalls==4,"idempotent teardown no native call");
+
+var failureLife=new PreviewNativeLifecycle();failureLife.OnTick();
+var owned=new List<int>{1,2,3};var attempted=new List<int>();
+var detached=owned.ToArray();bool cleanupFailed=false;
+try{failureLife.Clear(()=>PreviewCleanup.Each(detached,x=>{attempted.Add(x);if(x==1)throw new InvalidOperationException("simulated native failure");}),()=>owned.Clear());}
+catch(AggregateException e){cleanupFailed=e.InnerExceptions.Count==1;}
+Check(cleanupFailed&&owned.Count==0&&attempted.SequenceEqual(new[]{1,2,3}),"throw cancels all and attempts later owned contexts, errors visible");
+failureLife.OnTick();Check(owned.Count==0,"guard recovery cannot resume cancelled previews");
+failureLife.Stop();int afterStopCalls=0;
+failureLife.Clear(()=>afterStopCalls++,()=>owned.Clear());
+Check(!failureLife.Available&&afterStopCalls==0,"mapend unavailable first prevents native teardown calls");
+var cancelFirst=new PreviewNativeLifecycle();cancelFirst.OnTick();bool detachedFirst=false;
+try{cancelFirst.Clear(()=>{Check(detachedFirst,"cancellation before throwing native work");throw new InvalidOperationException();},()=>detachedFirst=true);}catch(InvalidOperationException){}
+Check(detachedFirst,"failure preserves cancellation");
+
+Check(!cancelFirst.Available,"native cleanup failure invalidates availability before rethrow");

@@ -26,7 +26,7 @@ public sealed class DebugConfig : BasePluginConfig
 public sealed partial class DebugPlugin : BasePlugin, IPluginConfig<DebugConfig>
 {
     public override string ModuleName => "Map Debug";
-    public override string ModuleVersion => "0.1.4-hudonly.2";
+    public override string ModuleVersion => "0.1.4-hudonly.3";
     public override string ModuleAuthor => "koboshchan";
     public override string ModuleDescription => "Debug economy and durable map issue reports";
     public DebugConfig Config { get; set; } = new();
@@ -115,7 +115,7 @@ public sealed partial class DebugPlugin : BasePlugin, IPluginConfig<DebugConfig>
             Forget(e.Userid);
             return HookResult.Continue;
         }, HookMode.Pre);
-        RegisterListener<Listeners.OnMapEnd>(() => { ClearState(); previewNative.Stop(); RestoreCvars(); });
+        RegisterListener<Listeners.OnMapEnd>(() => { previewNative.Stop(); ClearState(); RestoreCvars(); });
         RegisterListener<Listeners.OnMapStart>(_ => { previewNative.Stop(); ClearState(); if (active) Server.NextFrame(ApplyCvars); });
         RegisterListener<Listeners.OnTick>(Tick);
         Reconfigure();

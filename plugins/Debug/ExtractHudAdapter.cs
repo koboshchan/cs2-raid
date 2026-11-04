@@ -17,14 +17,12 @@ public sealed partial class DebugPlugin
     private void ClearPreviews(){
         // Empty startup state and teardown require no globals, player enumeration or native reads.
         if(previews.Count==0)return;
-        previewNative.Clear(()=>{
-        foreach(var v in previews.Values.ToArray()){
+        var detached=previews.Values.ToArray();
+        previewNative.Clear(()=>PreviewCleanup.Each(detached,v=>{
             var p=v.Player;
             if(Human(p)&&Same(p,v)&&v.Clock.Clear(MenuManager.GetActiveMenu(p)==null) is {} text)
                 p.PrintToCenterHtml(text,1);
-        }
-        }
-        ,()=>previews.Clear());
+        }),()=>previews.Clear());
     }
     private bool RaidInactiveForHud() => RaidHudGuard.ReadInactive(
         ()=>File.ReadAllText(Path.Combine(ModuleDirectory,"..","RaidPlugin","gameplay.json")),

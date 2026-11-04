@@ -76,7 +76,21 @@ public sealed class PreviewNativeLifecycle
     public void OnTick()=>Available=true;
     public void Stop()=>Available=false;
     public void Clear(Action nativeClear,Action managedClear){
-        if(Available)nativeClear();
-        managedClear();
+        var available=Available;
+        managedClear(); // Cancellation precedes any potentially failing native access.
+        if(available){
+            try{nativeClear();}catch{Stop();throw;}
+        }
+    }
+}
+
+public static class PreviewCleanup
+{
+    public static void Each<T>(IEnumerable<T> detached,Action<T> clear){
+        List<Exception>? errors=null;
+        foreach(var item in detached){
+            try{clear(item);}catch(Exception e){(errors??=[]).Add(e);}
+        }
+        if(errors!=null)throw new AggregateException("Owned preview cleanup failed after managed cancellation",errors);
     }
 }
