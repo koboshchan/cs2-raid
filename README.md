@@ -55,6 +55,10 @@ Backend details and routes are documented in backend/README.md and the supplied 
 
 Provenance and repository contents
 
-plugins/DeltaOps contains the five retained upstream files from the supplied 1.3.2 ZIP, MIT LICENSE authorized by the owner, and source/build receipts. The original build.ps1 is intentionally omitted. plugins/RaidPlugin contains the extraction source and its tests. Historical upstream wrappers were also removed at the owner's request; historical game/source docs remain as reference only, not current startup instructions. See plugins/DeltaOps/PROVENANCE.md.
+plugins/DeltaOps contains the five retained upstream files from the supplied 1.3.2 ZIP and source/build receipts. The repository-root LICENSE covers the project under MIT, as authorized by the owner. The original build.ps1 is intentionally omitted. plugins/RaidPlugin contains the extraction source and its tests. Historical upstream wrappers were also removed at the owner's request; historical game/source docs remain as reference only, not current startup instructions. See plugins/DeltaOps/PROVENANCE.md.
 
-The live API confirmed koboshchan/cs2-raid is PUBLIC, not private as earlier notes assumed. Visibility was not changed. Source publication waited for explicit MIT authorization. This does not relicense legacy source, map assets or third-party dependencies. No downloaded binaries, runtimes, VPKs, ZIPs, release parts, secrets or build outputs are committed. See docs/server-files.md.
+The live API confirmed koboshchan/cs2-raid is PUBLIC, not private as earlier notes assumed. Visibility was not changed. Source publication waited for explicit MIT authorization. The owner subsequently authorized MIT licensing for the whole project, including the retained legacy project source. Third-party dependencies and downloaded map assets retain their own licenses. No downloaded binaries, runtimes, VPKs, ZIPs, release parts, secrets or build outputs are committed. See docs/server-files.md.
+
+License
+
+The whole project is licensed under the [MIT License](LICENSE), including both plugins, backend, build/configuration files, documentation and retained legacy project source. Existing author credits are preserved. Third-party dependencies and downloaded assets, including CounterStrikeSharp, Metamod, SteamCMD/CS2 and map assets, retain their own licenses and are not relicensed by this notice.
