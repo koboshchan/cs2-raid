@@ -20,3 +20,5 @@ See [SPEC.md](SPEC.md). Flow changes are documentation only until go-ahead.
 - [ ] Keep SQLite only for account links and durable settlement/idempotency records. SSG remains balance authority.
 - [ ] Keep all match state in memory and discard it each game; no persistent stash.
 - [ ] Prefer Ocean's invisible touch-based extraction trigger; use a plugin-defined zone if absent.
+
+Utility is supplied by character kits: DeltaOps characters grant their configured grenades. Utility buying remains disabled.
