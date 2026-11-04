@@ -11,7 +11,7 @@ public sealed class Member(string id)
     public long Cash { get; internal set; }
 }
 public enum LootKind { Item, Safe, MoneyBag, Equipment }
-public sealed record GroundLoot(string Id, Position Position, LootKind Kind, int Min, int Max, double HoldSeconds = 0);
+public sealed record GroundLoot(string Id, Position Position, LootKind Kind, long Min, long Max, double HoldSeconds = 0);
 public sealed record ExtractionIntent(string Id, string Player, long Cash);
 // Single game-thread owner. No external currency, native handles or persistent inventory.
 public sealed class GameplayState
@@ -102,14 +102,13 @@ public sealed class GameplayState
     {
         if(Phase!=GamePhase.Active || !Living(victim) || !position.Valid)return false;
         var cash=Players[victim].Cash;
-        if(cash>int.MaxValue)return false; // configured HUD cap is lower; never truncate a ledger
-        if(cash>0 && !AddLoot(new("bag:"+victim,position,LootKind.MoneyBag,(int)cash,(int)cash)))return false;
+        if(cash>0 && !AddLoot(new("bag:"+victim,position,LootKind.MoneyBag,cash,cash)))return false;
         return Kill(victim,null);
     }
     public string? Spectate(string id) => Players.TryGetValue(id,out var p) && p.Team!=null ? Players.Values.FirstOrDefault(x=>x.Id!=id && x.Team==p.Team && Living(x.Id))?.Id : null;
     public bool AddLoot(GroundLoot loot)
     {
-        if(!Enum.IsDefined(loot.Kind) || Phase!=GamePhase.Active || !loot.Position.Valid || string.IsNullOrWhiteSpace(loot.Id) || loot.Min<0 || loot.Max<loot.Min || loot.Max==int.MaxValue ||
+        if(!Enum.IsDefined(loot.Kind) || Phase!=GamePhase.Active || !loot.Position.Valid || string.IsNullOrWhiteSpace(loot.Id) || loot.Min<0 || loot.Max<loot.Min || (loot.Kind==LootKind.Safe && loot.Max>=int.MaxValue) ||
             !double.IsFinite(loot.HoldSeconds) || loot.HoldSeconds<0 ||
             (loot.Kind!=LootKind.Safe && (loot.Min!=loot.Max || loot.HoldSeconds!=0)) ||
             Ground.ContainsKey(loot.Id) || usedLoot.Contains(loot.Id))return false;
@@ -122,7 +121,7 @@ public sealed class GameplayState
            !position.Within(loot.Position,range)) { holds.Remove(id);return false; }
         if(!holds.TryGetValue(id,out var hold) || hold.Loot!=key) { hold=(key,now);holds[id]=hold; }
         if((now-hold.Since).TotalSeconds<loot.HoldSeconds)return false;
-        var value=random.NextInt64(loot.Min,(long)loot.Max+1);
+        var value=loot.Min==loot.Max ? loot.Min : random.NextInt64(loot.Min,loot.Max+1);
         if(Players[id].Cash>long.MaxValue-value)return false;
         Players[id].Cash+=value; Ground.Remove(key);usedLoot.Add(key);
         foreach(var player in holds.Where(x=>x.Value.Loot==key).Select(x=>x.Key).ToArray())holds.Remove(player);

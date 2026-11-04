@@ -24,11 +24,12 @@ Authoritative requirements remain in [SPEC.md](SPEC.md). Implementation status b
 - [ ] Lucas/Ocean confirmed lobby, platform, team spawn pads, loot targetnames, four lever targetnames and extraction trigger/zone. Zero actual targets shipped.
 - [ ] True lootable death equipment/utility drop completeness, money-bag visible prop/model and armor destruction.
 - [ ] Trigger entry/exit reconstruction for players already inside at active start; moving dropped-weapon positions, look/line-of-sight interaction trace.
-- [ ] Whole-dead-team invisible noclip (current adapter uses non-interacting native observer); partner spectating and partner-only visuals live QA.
+- [x] Offline adapter uses named native CHASE/ROAMING observer enums, follows living custom partner, and teleports roaming camera once to the player's saved death position.
+- [ ] Live verify observer pawn availability, partner-death transition, freecam controls and partner-only visuals.
 - [ ] Map-authored prop removal/restoration across native round restarts. In-memory ResetLobby alone cannot restore removed map props.
-- [ ] Native round management with all-T teams, no premature native round end during lobby/freeze or sole-team raids, respawn/reconnect/hot-reload edge cases.
+- [ ] Native round management with freely chosen T/CT, no premature native round end during lobby/freeze or sole-team raids, respawn/reconnect/hot-reload edge cases.
 - [ ] Live verify engine CanUse hook denies both auto and use pickup without blocking character kit grants. Tick inventory deltas can miss same-tick creation/drop.
-- [ ] Buy menu aliases/armor, native utility bypasses, spawn freeze/invisibility cleanup, purchase debit last-frame races and HUD cap test.
+- [ ] Buy menu aliases/armor, native utility bypasses, spawn freeze/invisibility cleanup, purchase debit last-frame races and HUD/native spend reconciliation above $65,535.
 - [ ] Isolated native QA before setting nativeFlowVerified; then reviewed merge/deploy approval.
 
 ## Storage
@@ -38,3 +39,15 @@ Match state exists only in memory; no persistent stash. Existing backend SQLite 
 ## Offline build acceptance
 
 Dedicated cs2-raid Docker daemon, SDK 10.0.403 and pinned CSS 1.0.379. Two Release builds, zero warnings/errors, byte-identical DLL/deps/PDB. Each run passed 19 legacy rule checks plus 10,264 flow-v2 checks, including 10,000 generated lobby-invariant assertions. This is pure-model/compiler evidence, not native gameplay acceptance. Receipt confirmation additionally requires an issued intent from the current extraction window; stale-window, forged and post-timeout intents reject. Trusted backend receipt validation is still absent, so the native adapter never invokes confirmation.
+
+## Tonight implementation, offline only
+
+- [x] 200 HP/max HP at spawn/lobby and raid insertion.
+- [x] Free native T/CT choice during lobby/character selection using SwitchTeam without changing custom duos; block mid-raid switching.
+- [x] Same-side strangers can damage via FFA cvars; pure custom-duo immunity stays independent of native teams.
+- [x] Shared VData half-spread/inaccuracy baselines are saved once and restored on map end/unload; new guns patched on spawn.
+- [x] HUD clamp is projection only; full long ledger survives collection, money bag death/drop and overflow rejection.
+- [x] Private loss banners on death; private win helper available for trusted receipt completion only.
+- [ ] Trusted extraction settlement adapter must call private ShowRaidResult(player,true) after confirmed extraction, not before backend payment.
+- [ ] Live native QA of 200 HP, both-team weapon buys, same-side strangers/opposite-side duos, all gun spread modes, predicted client impacts, private banners and two-user death/freecam transitions.
+- [ ] No production or native engine acceptance is implied by compiler/pure-model tests.

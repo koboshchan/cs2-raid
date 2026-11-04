@@ -70,6 +70,33 @@ public static class FlowTests
         Check(g.PullLever("a",1,t.AddMinutes(10)));Check(g.PullLever("b",2,t.AddMinutes(10)));Check(g.ExtractionAt==t.AddMinutes(15));
         g.Players["a"].Cash=3000;g.Tick(t.AddMinutes(30),true);Check(g.Phase==GamePhase.Closed);Check(!g.Players["a"].Alive && g.Players["a"].Cash==0);
         Check(g.Players["c"].Extracted);Check(g.ExtractionCandidates(t.AddMinutes(31),["a"]).Length==0);
+        // HUD is only a projection, not a ledger ceiling, including death bags.
+        Check(TonightRules.SpawnHealth==200);
+        Check(TonightRules.Hud(-1)==0);Check(TonightRules.Hud(0)==0);
+        Check(TonightRules.Hud(65534)==65534);Check(TonightRules.Hud(65535)==65535);
+        Check(TonightRules.Hud(65536)==65535);Check(TonightRules.Hud(long.MaxValue)==65535);
+        foreach(var phase in Enum.GetValues<GamePhase>())foreach(var side in Enumerable.Range(0,5))
+            Check(TonightRules.ChooseNativeTeam(phase,side)==(phase is GamePhase.Lobby or GamePhase.CharacterSelect && side is 2 or 3));
+        foreach(var side in new[]{2,3})foreach(var win in new[]{true,false}) {
+            var banner=TonightRules.Banner(side,win);
+            Check(banner.Winner==(win?side:5-side));Check(banner.Reason==(banner.Winner==2?9:8));
+            Check(banner.Message==(banner.Winner==2?"#SFUI_Notice_Terrorists_Win":"#SFUI_Notice_CTs_Win"));
+        }
+        foreach(var baseline in new[]{0f,0.01f,0.8f,2f}) {
+            var shared=TonightRules.Half(baseline);
+            for(var spawn=0;spawn<100;spawn++)shared=TonightRules.Half(baseline);
+            Check(shared==baseline*0.5f);
+        }
+        g=Active();g.Players["c"].Cash=(long)int.MaxValue+12345;
+        Check(g.DieWithBag("c",origin));Check(g.Ground["bag:c"].Min==(long)int.MaxValue+12345);
+        Check(g.UseLoot("a","bag:c",origin,true,t,rng));Check(g.Players["a"].Cash==(long)int.MaxValue+12345);
+        Check(g.Players["c"].Cash==0);Check(!g.CanDamage("a","b"));Check(g.CanDamage("a","ghost")==false);
+        g=Active();g.Players["c"].Cash=long.MaxValue;
+        Check(g.DieWithBag("c",origin));Check(g.UseLoot("a","bag:c",origin,true,t,rng));
+        Check(g.Players["a"].Cash==long.MaxValue);
+        Check(g.AddLoot(new("overflow",origin,LootKind.Item,1,1)));
+        Check(!g.UseLoot("a","overflow",origin,true,t,rng));Check(g.Players["a"].Cash==long.MaxValue);
+        Check(g.Ground.ContainsKey("overflow")); // Failed overflow cannot consume the loot.
         var conf=new GameplayConfig();Check(!conf.Ready(0));conf.Enabled=true;conf.CoordinatesConfirmed=true;conf.Spawns=[new(1,2,3)];Check(!conf.Ready(1));
         conf.NativeFlowVerified=true;Check(conf.Ready(1));Check(!conf.Ready(2));
         conf.MapLoot=[new("safe",LootKind.Safe,double.NaN)];Reject(conf.Validate);

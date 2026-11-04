@@ -36,11 +36,11 @@ public sealed partial class RaidPlugin
         if(File.Exists(path)) gameplayConfig=JsonSerializer.Deserialize<GameplayConfig>(File.ReadAllText(path),new JsonSerializerOptions { PropertyNameCaseInsensitive=true }) ?? new();
         gameplayConfig.Validate();
         if(!gameplayConfig.Enabled) return;
-        RegisterPartnerVisuals(); RegisterPricing();
+        RegisterPartnerVisuals(); RegisterPricing(); RegisterTonightGameplay();
         VirtualFunctions.CCSPlayer_WeaponServices_CanUseFunc.Hook(BlockGroundPickup,HookMode.Pre);
         VirtualFunctions.CBaseTrigger_StartTouchFunc.Hook(ExtractionTouchStart,HookMode.Post);
         VirtualFunctions.CBaseTrigger_EndTouchFunc.Hook(ExtractionTouchEnd,HookMode.Post);
-        foreach(var command in new[]{"jointeam","joinclass","autobuy","rebuy"})
+        foreach(var command in new[]{"joinclass","autobuy","rebuy"})
             AddCommandListener(command,(p,c)=>Human(p)&&sessionLoaded?HookResult.Handled:HookResult.Continue);
         AddCommand("css_cancelteam","Cancel your lobby team",(p,c)=>CancelTeam(p));
         AddCommand("css_cancel","Cancel team",(p,c)=>{if(c.ArgString.Trim().Equals("team",StringComparison.OrdinalIgnoreCase))CancelTeam(p);});
@@ -63,6 +63,7 @@ public sealed partial class RaidPlugin
             if(Human(e.Userid)) {
                 ObserveNativeSpend(e.Userid);
                 var pos=Location(e.Userid);
+                if(sessionLoaded && game.Living(Id(e.Userid)))RememberDeath(e.Userid,pos);
                 if(pos!=null && game.DieWithBag(Id(e.Userid),pos))Server.NextFrame(UpdateSpectators);
                 else game.Kill(Id(e.Userid),null);
             }
@@ -72,6 +73,7 @@ public sealed partial class RaidPlugin
             if(Human(e.Userid)) {
                 var id=Id(e.Userid);var generation=mapGeneration;
                 Server.NextFrame(()=>{if(generation!=mapGeneration)return;var p=Find(id);if(p==null)return;
+                    if(sessionLoaded && game.Living(id))SpawnHealth(p);
                     if(game.Phase==GamePhase.Lobby)PrepareLobby(p);
                     else if(!game.Players.ContainsKey(id)||!game.Living(id)){p.RemoveWeapons();p.ChangeTeam(CsTeam.Spectator);}
                 });
@@ -105,21 +107,23 @@ public sealed partial class RaidPlugin
     }
     private void ResetLobby()
     {
-        ClearPartnerVisuals();ClearLoot();game=new();observedWeapons.Clear();nativeProjections.Clear();lastCountdown=-1;
+        ClearPartnerVisuals();ClearLoot();ClearTonightMatch();game=new();observedWeapons.Clear();nativeProjections.Clear();lastCountdown=-1;
         sessionLoaded=gameplayConfig.Ready(0);
         if(!sessionLoaded){Server.PrintToChatAll("Raid disabled until map coordinates and native flow QA are confirmed.");return;}
+        SetCvar("mp_autoteambalance",0);SetCvar("mp_limitteams",0);SetCvar("mp_ignore_round_win_conditions",1);
         SetCvar("mp_teammates_are_enemies",1);SetCvar("mp_friendlyfire",1);SetCvar("mp_death_drop_gun",1);
         SetCvar("mp_respawn_on_death_t",0);SetCvar("mp_respawn_on_death_ct",0);
         SetCvar("mp_startmoney",0);SetCvar("mp_playercashawards",0);SetCvar("mp_teamcashawards",0);
-        SetCvar("mp_maxmoney",65535);SetCvar("mp_buy_anywhere",0);
+        SetCvar("mp_maxmoney",TonightRules.HudLimit);SetCvar("mp_buy_anywhere",0);
+        PatchExistingSpread();
         foreach(var p in Utilities.GetPlayers().Where(Human)) {if(game.Join(Id(p)))PrepareLobby(p);else p.ChangeTeam(CsTeam.Spectator);}
     }
     private void PrepareLobby(CCSPlayerController p)
     {
         if(!sessionLoaded)return;
-        game.Join(Id(p));p.SwitchTeam(CsTeam.Terrorist);
+        game.Join(Id(p));if(p.TeamNum is not (2 or 3))p.SwitchTeam(CsTeam.Terrorist);
         if(!p.PawnIsAlive)p.Respawn();
-        p.RemoveWeapons();p.GiveNamedItem("weapon_glock");SetPresentation(p,false,false);
+        p.RemoveWeapons();p.GiveNamedItem("weapon_glock");SpawnHealth(p);SetPresentation(p,false,false);
         Place(p,game.Players.TryGetValue(Id(p),out var m)&&m.Team!=null?gameplayConfig.ReadyPlatform:gameplayConfig.Lobby);
         SetMoney(p,0);
     }
@@ -198,6 +202,7 @@ public sealed partial class RaidPlugin
         if(game.Phase==GamePhase.Buy){SetCvar("mp_buy_anywhere",1);Server.PrintToChatAll("Buy guns and armor for 30s. Utility comes from character kits, not the shop.");}
         if(game.Phase==GamePhase.Countdown)SetCvar("mp_buy_anywhere",0);
         if(game.Phase==GamePhase.Freeze) {
+            foreach(var player in Utilities.GetPlayers().Where(Human).Where(p=>game.Living(Id(p))))SpawnHealth(player);
             var spawns=gameplayConfig.Spawns.OrderBy(_=>random.Next()).ToArray();int index=0;
             foreach(var team in game.Players.Values.GroupBy(x=>x.Team)){
                 var pos=spawns[index++];int member=0;
@@ -239,7 +244,7 @@ public sealed partial class RaidPlugin
     private void SetMoney(CCSPlayerController p,long value)
     {
         if(p.InGameMoneyServices is not {} money)return;
-        money.Account=(int)Math.Min(value,65535);nativeProjections[Id(p)]=money.Account;
+        money.Account=TonightRules.Hud(value);nativeProjections[Id(p)]=money.Account;
         Utilities.SetStateChanged(p,"CCSPlayerController","m_pInGameMoneyServices");
     }
     private void GameplayTick()
@@ -303,10 +308,19 @@ public sealed partial class RaidPlugin
         foreach(var m in game.Players.Values.Where(x=>!x.Alive)) {
             var p=Find(m.Id);if(p==null)continue;
             var mate=game.Spectate(m.Id);var target=mate==null?null:Find(mate);
-            var observer=p.ObserverPawn.Value?.ObserverServices;
-            if(observer==null)continue;
-            observer.ObserverMode=(byte)(target==null?6:5);observer.ForcedObserverMode=true;
+            var pawn=p.ObserverPawn.Value;
+            var observer=pawn?.ObserverServices;
+            if(pawn is not {IsValid:true} || observer==null)continue;
+            observer.ObserverMode=(byte)(target==null?ObserverMode_t.OBS_MODE_ROAMING:ObserverMode_t.OBS_MODE_CHASE);
+            observer.ForcedObserverMode=true;
             observer.ObserverTarget.Raw=target?.PlayerPawn.Raw??uint.MaxValue;
+            Utilities.SetStateChanged(pawn,"CBasePlayerPawn","m_pObserverServices");
+            if(target==null && deathPositions.TryGetValue(m.Id,out var position) &&
+               (!roamingPlaced.TryGetValue(m.Id,out var placed) || placed!=pawn.EntityHandle.Raw)) {
+                pawn.Teleport(new Vector(position.X,position.Y,position.Z+64),new QAngle(0,position.Yaw,0),new Vector(0,0,0));
+                roamingPlaced[m.Id]=pawn.EntityHandle.Raw; // Once only, never snap a roaming camera back each tick.
+            }
+
         }
     }
     private void ClearLoot()
@@ -325,7 +339,7 @@ public sealed partial class RaidPlugin
     private void StopGameplay()
     {
         if(sessionLoaded)foreach(var p in Utilities.GetPlayers().Where(Human))SetPresentation(p,false,false);
-        ClearPricing();sessionLoaded=false;ClearPartnerVisuals();ClearLoot();observedWeapons.Clear();
+        RestoreSpread();ClearTonightMatch();ClearPricing();sessionLoaded=false;ClearPartnerVisuals();ClearLoot();observedWeapons.Clear();
         foreach(var (name,value) in savedCvars)RestoreCvar(name,value);
         savedCvars.Clear();
     }
