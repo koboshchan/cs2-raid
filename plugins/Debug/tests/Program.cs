@@ -213,8 +213,8 @@ Check(clock.Tick(14000,2,true,true,"css")!.Contains("[ 1 ]"),"one bracket");
 Check(clock.Tick(15000,2,true,true,"css")=="","zero clear");
 Check(clock.Tick(15001,2,true,true,"css")==null,"idempotent clear");
 foreach(var z in new[]{-1e200,0,1e200}){
- Check(PreviewClock.Zone(1051.424683,-6000,z)==2,"real edge priority");
- Check(PreviewClock.Zone(997.650,-6000,z)==1,"warning edge");
+ Check(PreviewClock.Zone(943.874,-6000,z)==2,"real edge priority");
+ Check(PreviewClock.Zone(513.673,-6000,z)==1,"warning edge");
 }
 Check(PreviewClock.Zone(1100,-6000,double.NaN)==0,"nonfinite reject");
 foreach(var style in new[]{"css","png"}){
@@ -286,3 +286,23 @@ Check(dedupe.Tick(1005,2,true,true,"tags")!=null,"reenter immediate");
 Check(dedupe.Tick(5000,2,true,true,"classes")!.Contains("[ 10 ]"),"shape boundary");
 foreach(var variant in new[]{"plain","tags","classes"})Check(PreviewArgs.Parse(["15",variant])!.Style==variant,"bounded matrix parser");
 Check(!PreviewClock.Markup(15,false,"classes").Contains("style="),"matrix no browser css");
+
+foreach(var z in new[]{double.MinValue,-1e100,0,1e100,double.MaxValue}){
+ foreach(var x in new[]{943.874,1374.076})foreach(var y in new[]{-6816.610,-5143.672}){
+  Check(PreviewClock.Zone(x,y,z)==2,"exact real corner precedence finiteZ");
+  Check(PreviewClock.Zone(Math.BitIncrement(x),y,z)>=1,"epsilon corner neighborhood");
+ }
+ foreach(var x in new[]{513.673,1804.277})foreach(var y in new[]{-8489.547,-3470.735})Check(PreviewClock.Zone(x,y,z)==1,"warning corners inclusive");
+ Check(PreviewClock.Zone(800,-5980.141,z)==1,"left ring");Check(PreviewClock.Zone(1600,-5980.141,z)==1,"right ring");
+ Check(PreviewClock.Zone(1158.975,-7500,z)==1,"bottom ring");Check(PreviewClock.Zone(1158.975,-4000,z)==1,"top ring");
+ foreach(var x in new[]{943.874,1374.076})Check(PreviewClock.Zone(x,-5980.141,z)==2,"real xedge");
+ foreach(var y in new[]{-6816.610,-5143.672})Check(PreviewClock.Zone(1158.975,y,z)==2,"real yedge");
+ Check(PreviewClock.Zone(Math.BitDecrement(943.874),-5980.141,z)==1,"left real epsilon");
+ Check(PreviewClock.Zone(Math.BitIncrement(1374.076),-5980.141,z)==1,"right real epsilon");
+ Check(PreviewClock.Zone(1158.975,Math.BitDecrement(-6816.610),z)==1,"bottom real epsilon");
+ Check(PreviewClock.Zone(1158.975,Math.BitIncrement(-5143.672),z)==1,"top real epsilon");
+ Check(PreviewClock.Zone(Math.BitDecrement(513.673),-5980.141,z)==0,"left warning epsilon");
+ Check(PreviewClock.Zone(Math.BitIncrement(1804.277),-5980.141,z)==0,"right warning epsilon");
+ Check(PreviewClock.Zone(1158.975,Math.BitDecrement(-8489.547),z)==0,"bottom warning epsilon");
+ Check(PreviewClock.Zone(1158.975,Math.BitIncrement(-3470.735),z)==0,"top warning epsilon");
+}

@@ -4,5 +4,6 @@
     <ImplicitUsings>enable</ImplicitUsings><Nullable>enable</Nullable>
     <AssemblyName>Debug.Tests</AssemblyName>
   </PropertyGroup>
+  <ItemGroup><EmbeddedResource Include="../ZoneProfile.json" Condition="Exists('../ZoneProfile.json')" LogicalName="SpaceportZoneProfile" /><EmbeddedResource Include="../../../config/spawns/spaceport-default-20261105.json" Condition="!Exists('../ZoneProfile.json')" LogicalName="SpaceportZoneProfile" /></ItemGroup>
   <ItemGroup><Compile Include="../ExtractHud.cs" Link="ExtractHud.cs" /><Compile Include="../DebugCore.cs" Link="DebugCore.cs" /></ItemGroup>
 </Project>

@@ -63,10 +63,13 @@
     }
   ],
   "extractionZone": {
-    "minX": 1051.424683,
-    "maxX": 1266.525269,
-    "minY": -6398.375488,
-    "maxY": -5561.906738,
+    "minX": 943.874,
+    "maxX": 1374.076,
+    "minY": -6816.610,
+    "maxY": -5143.672,
     "unboundedZ": true
   }
+,
+  "warningZone": {"minX": 513.673,"maxX": 1804.277,"minY": -8489.547,"maxY": -3470.735,"unboundedZ": true},
+  "zoneCenterReference": {"x":1158.975,"y":-5980.141}
 }

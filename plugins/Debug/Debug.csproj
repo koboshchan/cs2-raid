@@ -5,6 +5,8 @@
     <CSS_API_DIR Condition="'$(CSS_API_DIR)' == ''">/deps/css/addons/counterstrikesharp/api</CSS_API_DIR>
   </PropertyGroup>
   <ItemGroup>
+    <EmbeddedResource Include="ZoneProfile.json" Condition="Exists('ZoneProfile.json')" LogicalName="SpaceportZoneProfile" />
+    <EmbeddedResource Include="../../config/spawns/spaceport-default-20261105.json" Condition="!Exists('ZoneProfile.json')" LogicalName="SpaceportZoneProfile" />
     <Compile Remove="tests/**/*.cs" />
     <Reference Include="CounterStrikeSharp.API"><HintPath>$(CSS_API_DIR)/CounterStrikeSharp.API.dll</HintPath><Private>false</Private></Reference>
     <Reference Include="Microsoft.Extensions.Logging.Abstractions"><HintPath>$(CSS_API_DIR)/Microsoft.Extensions.Logging.Abstractions.dll</HintPath><Private>false</Private></Reference>

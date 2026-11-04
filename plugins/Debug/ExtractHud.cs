@@ -21,10 +21,19 @@ public sealed class PreviewClock
     private int color;
     private string? lastMarkup;
     public PreviewClock(long now,int seconds){End=now+seconds*1000L;}
+    // Same embedded release-qualified JSON authority as Raid, no independently rounded HUD bounds.
+    private static readonly System.Text.Json.JsonDocument ZoneProfile=System.Text.Json.JsonDocument.Parse(
+        typeof(PreviewClock).Assembly.GetManifestResourceStream("SpaceportZoneProfile")
+        ??throw new InvalidOperationException("Missing release zone authority"));
     public static int Zone(double x,double y,double z){
         if(!double.IsFinite(x)||!double.IsFinite(y)||!double.IsFinite(z))return 0;
-        if(x>=1051.424683&&x<=1266.525269&&y>=-6398.375488&&y<=-5561.906738)return 2;
-        return x>=997.650&&x<=1320.300&&y>=-6607.493&&y<=-5352.790?1:0;
+        var root=ZoneProfile.RootElement;
+        if(root.GetProperty("mapId").GetString()!="df_spaceport_player_scale_raytrace"||
+           root.GetProperty("release").GetString()!="default-20261105")return 0;
+        bool Contains(string key){var r=root.GetProperty(key);return r.GetProperty("unboundedZ").GetBoolean()&&
+            x>=r.GetProperty("minX").GetDouble()&&x<=r.GetProperty("maxX").GetDouble()&&
+            y>=r.GetProperty("minY").GetDouble()&&y<=r.GetProperty("maxY").GetDouble();}
+        return Contains("extractionZone")?2:Contains("warningZone")?1:0;
     }
     public int Remaining(long now)=>(int)Math.Clamp((End-now+999)/1000,0,3600);
     public string? Clear(bool channel){var had=Owned;Owned=false;lastMarkup=null;return had&&channel?"":null;}
