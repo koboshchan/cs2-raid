@@ -18,6 +18,17 @@ static class BotCombatTests {
   TestModeState.RestoreEntries(resources,(key,value)=>{if(key==2)throw new Exception("injected");resources.Remove(key);},ex=>failures++);
   if(resources.Count!=1||!resources.ContainsKey(2)||failures!=1)throw new Exception("per-entry cleanup recovery");
   checks++;
+
+  var dir=Path.Combine(Path.GetTempPath(),"raid-isolation-"+Guid.NewGuid());Directory.CreateDirectory(dir);
+  try{
+   TestModeState.RequireIsolatedFixture(dir,false);checks++;
+   bool Denied(bool declared){try{TestModeState.RequireIsolatedFixture(dir,declared);return false;}catch(InvalidOperationException){return true;}}
+   if(!Denied(true))throw new Exception("declared shared world accepted");checks++;
+   var file=Path.Combine(dir,"settlement-recovery.jsonl");File.WriteAllText(file,"historical-corrupt");
+   if(!Denied(false)||File.ReadAllText(file)!="historical-corrupt")throw new Exception("historical journal mutated or accepted");checks++;
+   File.WriteAllText(file,"");if(!Denied(false))throw new Exception("empty journal accepted");checks++;
+   File.Delete(file);Directory.CreateDirectory(file);if(!Denied(false))throw new Exception("recovery directory accepted");checks++;
+  }finally{Directory.Delete(dir,true);}
   Console.WriteLine($"{checks} bot combat Lobby policy checks passed");
  }
 }

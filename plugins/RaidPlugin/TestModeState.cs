@@ -4,6 +4,18 @@ namespace Cs2Raid;
 // No GameplayState, wallets, inventory values, native acceptance, or raid sessions here.
 public sealed class TestModeState
 {
+    // Read-only admission check: never opens/parses/locks or repairs the production journal.
+    // Even an empty historical file is evidence of shared state, not permission to reuse it.
+    public static void RequireIsolatedFixture(string directory,bool productionStateDeclared){
+        if(productionStateDeclared)throw new InvalidOperationException("Fixture blocked: production/shared state declared.");
+        try{
+            foreach(var path in Directory.EnumerateFileSystemEntries(directory,"settlement-recovery*")){
+                _=File.GetAttributes(path);
+                throw new InvalidOperationException("Fixture blocked: historical recovery state present; use a separately provisioned data/native world.");
+            }
+        }catch(Exception ex){throw new InvalidOperationException("Fixture isolation preflight failed closed; no journal loaded or mutated.",ex);}
+    }
+
     public enum Stage { Lobby, Selection, Buy, Countdown, Freeze, Active, Closed }
     public bool Enabled { get; private set; }
     public Stage Phase { get; private set; }

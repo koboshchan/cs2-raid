@@ -271,6 +271,9 @@ try{
         },HookMode.Pre);
     }
     private void StartTestMode(){
+        TestModeState.RequireIsolatedFixture(ModuleDirectory,
+            Environment.GetEnvironmentVariable("RAID_PRODUCTION_STATE_PRESENT")=="1");
+
         if(testUnloaded || spreadMapEnded || testPawns.Count!=0 || testObservers.Count!=0 || testCvars.Count!=0 || testWeapons.Count!=0 || TestServer&&spreadOriginals.Count!=0)
             throw new InvalidOperationException("Unloaded or pending native cleanup. Retry off; inspect saved baseline counters.");
         if(sessionLoaded || PendingSettlement || linking.Count!=0 || gameplayConfig.Enabled)
