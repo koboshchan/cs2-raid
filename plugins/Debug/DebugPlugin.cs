@@ -20,7 +20,7 @@ public sealed class DebugConfig : BasePluginConfig
 public sealed class DebugPlugin : BasePlugin, IPluginConfig<DebugConfig>
 {
     public override string ModuleName => "Map Debug";
-    public override string ModuleVersion => "0.1.17";
+    public override string ModuleVersion => "0.1.18";
     public override string ModuleAuthor => "koboshchan";
     public override string ModuleDescription => "Debug economy and durable map issue reports";
     public DebugConfig Config { get; set; } = new();
@@ -334,16 +334,18 @@ public sealed class DebugPlugin : BasePlugin, IPluginConfig<DebugConfig>
         ("2030201291","Item/notebook.prefab",new Point(-2390.501953125f,-2588.87109375f,255.23978027343742f)),
         ("2030201292","Item/notebook.prefab",new Point(-1958.73046875f,-663.2578125f,172.44021972656242f)),
         ("2030201293","Item/notebook.prefab",new Point(-2939.80078125f,806.94140625f,159.87625488281242f)),
-        ("2030201294","Item/notebook.prefab",new Point(-1359.0f,516.779296875f,902.9519384765624f))
+        ("2030201294","Item/notebook.prefab",new Point(-1359.0f,516.779296875f,902.9519384765624f)),
+        ("LANG_20302_20260120_105459_970_marker_7","heart_of_africa",new Point(-1943.7480000000141f,-3173.7239999999874f,489.18373199999996f)),
+        ("LANG_20302_20260120_150634_719_marker_16","heart_of_africa",new Point(-1937.566439999995f,-3149.639999999992f,489.18373199999996f)),
+        ("LANG_20302_20260312_113014_794_marker_34","heart_of_africa",new Point(-1958.328000000005f,-3136.9219200000152f,488.7750600000004f))
     ];
     private CounterStrikeSharp.API.Modules.Timers.Timer? lootSpawnTimer;
     private int lootCursor;
     private static System.Drawing.Color LootColor(string type)
     {
         if(type=="c_safe")return System.Drawing.Color.Yellow;
-        uint hash=2166136261;
-        foreach(var c in type)hash=unchecked((hash^c)*16777619);
-        return System.Drawing.Color.FromArgb(100+(int)(hash%156),100+(int)((hash>>8)%156),100+(int)((hash>>16)%156));
+        if(type=="heart_of_africa")return System.Drawing.Color.Red;
+        return System.Drawing.Color.Blue;
     }
     private void ClearBigSafes()
     {
@@ -364,7 +366,7 @@ public sealed class DebugPlugin : BasePlugin, IPluginConfig<DebugConfig>
         ClearBigSafes();
         if(c.GetArg(1)=="off") { c.ReplyToCommand("Loot markers off.");return; }
         lootSpawnTimer=AddTimer(0.1f,SpawnLootBatch,CounterStrikeSharp.API.Modules.Timers.TimerFlags.REPEAT|CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
-        c.ReplyToCommand("Loot marker spawn started: 295 positions, batches of 10; css_loot_status for progress.");
+        c.ReplyToCommand("Loot marker spawn started: 298 positions, batches of 10; css_loot_status for progress.");
     }
     private void SpawnLootBatch()
     {
@@ -395,7 +397,7 @@ public sealed class DebugPlugin : BasePlugin, IPluginConfig<DebugConfig>
     private void LootStatusCommand(CCSPlayerController? p,CommandInfo c)
     {
         if(p!=null)return;
-        c.ReplyToCommand($"Loot markers={bigSafeMarkers.Count(e=>e.IsValid)}/295, pending={lootSpawnTimer!=null}, nonSolid={bigSafeMarkers.Count(e=>e.IsValid&&e.Collision.SolidType==SolidType_t.SOLID_NONE)}, scale021={bigSafeMarkers.Count(e=>e.IsValid&&e.CBodyComponent?.SceneNode?.Scale==0.21f)}, safe7={safe7Marker is {IsValid:true}}, beams={extractBoxBeams.Count(e=>e.IsValid)}");
+        c.ReplyToCommand($"Loot markers={bigSafeMarkers.Count(e=>e.IsValid)}/298, pending={lootSpawnTimer!=null}, nonSolid={bigSafeMarkers.Count(e=>e.IsValid&&e.Collision.SolidType==SolidType_t.SOLID_NONE)}, scale021={bigSafeMarkers.Count(e=>e.IsValid&&e.CBodyComponent?.SceneNode?.Scale==0.21f)}, safe7={safe7Marker is {IsValid:true}}, beams={extractBoxBeams.Count(e=>e.IsValid)}");
     }
 
     private const string Safe7Model="models/props/de_dust/hr_dust/dust_soccerball/dust_soccer_ball001.vmdl";
@@ -543,8 +545,8 @@ public sealed class DebugPlugin : BasePlugin, IPluginConfig<DebugConfig>
     {
         loaded = true;
         RegisterListener<Listeners.OnServerPrecacheResources>(m=>m.AddResource(Safe7Model));
-        AddCommand("css_bigsafes", "Draw all 295 dump loot markers: on|off", BigSafeCommand);
-        AddCommand("css_lootmarkers", "Draw all 295 dump loot markers: on|off", BigSafeCommand);
+        AddCommand("css_bigsafes", "Draw 295 loot plus 3 Heart of Africa markers: on|off", BigSafeCommand);
+        AddCommand("css_lootmarkers", "Draw 295 loot plus 3 Heart of Africa markers: on|off", BigSafeCommand);
         AddCommand("css_loot_status", "Read owned loot marker counts", LootStatusCommand);
         AddCommand("css_safe7_scale", "Set and report Safe7 scale 0.21", Safe7ScaleCommand);
         AddCommand("css_safe7", "Draw yellow Safe7 marker: on|off", Safe7Command);

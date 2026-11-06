@@ -80,3 +80,5 @@ Debug 0.1.15 adds the separate old-big-safe-10 marker at (-110.16,-2472.48,924.1
 Debug 0.1.16 removes the cancelled old-big-safe-10 comparison marker. Final set is nine dump safes plus separate Safe7, with extraction unchanged.
 
 Debug 0.1.17 draws all 295 dump loot spots using css_lootmarkers on|off (css_bigsafes alias). Ten markers per 100ms batch avoid a single spawn spike. All use scale 0.21 and SOLID_NONE, big safes yellow and other types stable type colors, without 295 glow effects. css_loot_status reports progress/counts/solid/scale. Lifecycle/off cancels timer and removes owned entities. Separate Safe7 and extraction remain. Cancelled legacy marker is absent.
+
+Debug 0.1.18 uses yellow for nine big safes, blue for other 286 loot, red for three Spaceport Heart of Africa route annotation locations. These are route-marker positions, not guaranteed precise item positions. Excludes keycard annotation and all player spawn POIs. Fixture preserves route name/key/worldPos evidence. 298 markers plus separate Safe7, extraction unchanged.
