@@ -74,6 +74,10 @@ Post-v26 zipline design (Lucas, Nov6; documentation only).
 
 All 11 gameplay ziplines in the selected DF Level2 closure must be rideable in both directions. Vertical lines support upward and downward travel; horizontal lines support travel both ways. This is the requested future behavior, not a claim about original DF direction permissions or working CS2 traversal.
 
+Movement along the rope is player-controlled using movement keys in both directions: horizontal left/right and vertical up/down, not an automatic one-way slide. The controls-relative frame, exact key mapping, camera rules and speed are unspecified.
+
+Fall damage after dismount or bail is explicitly UNDECIDED, pending Lucas's decision; neither immunity nor normal fall damage is selected.
+
 Press E near the rope to get on. Proximity distance is unspecified. Jump cancels a ride mid-ride, dropping the player off with the same small forward push in the player's view direction as normal dismount.
 
 On dismount, give a small forward push in the player's view direction at dismount, not an assumed rope direction. Push magnitude is unspecified and must be tuned later. No vertical-pitch clamping rule is specified. This remains documentation-only post-v26 scope.
