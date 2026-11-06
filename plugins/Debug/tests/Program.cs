@@ -257,3 +257,17 @@ try {
  using(var cs=new CollisionStore(nd))Check(cs.Active.Single().Id=="legacy","annotation never resurrects undone mark");
 }finally{Directory.Delete(nd,true);}
 Console.WriteLine("Annotation fixtures passed.");
+
+var noteDir=Path.Combine(Path.GetTempPath(),"note-schema-"+Guid.NewGuid().ToString("N"));Directory.CreateDirectory(noteDir);
+try {
+ var gm=new CollisionMark("original-uuid",DateTimeOffset.UtcNow,"nocollide","v24","owner",a,new(0,0,1),b,a,"glock","texture");
+ using(var cs=new CollisionStore(noteDir)){
+ cs.Add(gm);bool tooLong=false;try{cs.Annotate("owner","v24",new string('x',301));}catch(ArgumentException){tooLong=true;}Check(tooLong,"oversize note rejected");
+ cs.Annotate("owner","v24","中文\n<test>");}
+ var lines=File.ReadAllLines(Path.Combine(noteDir,"nocollide.jsonl"));
+ var ann=System.Text.Json.JsonSerializer.Deserialize<CollisionEntry>(lines[1])!;
+ Check(ann.Action=="annotation" && ann.ReferenceMarkId=="original-uuid" && ann.AuthorSteamID=="owner","annotation references exact original UUID and author");
+ Check(Guid.TryParseExact(ann.AnnotationId,"N",out _),"annotation owns separate UUID");
+ Check(ann.Note=="中文  test" && !ann.Note.Any(char.IsControl),"Unicode note sanitized without control or markup injection");
+ Check(System.Text.Json.JsonSerializer.Deserialize<CollisionEntry>(lines[0])!.Mark!.Tag=="texture","classification separate from note");
+}finally{Directory.Delete(noteDir,true);}

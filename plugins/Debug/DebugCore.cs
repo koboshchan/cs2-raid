@@ -193,7 +193,7 @@ public static class BannerInput
 
 public sealed record CollisionMark(string Id, DateTimeOffset Timestamp, string Label, string Map,
     string SteamId, Point Position, Point Normal, Point PlayerPosition, Point EyeAngles, string? Weapon = null, string? Tag = null);
-public sealed record CollisionEntry(string Action, CollisionMark? Mark, string? RemovedId, DateTimeOffset Timestamp, string? ReferenceMarkId = null, string? Note = null, string? AuthorSteamID = null);
+public sealed record CollisionEntry(string Action, CollisionMark? Mark, string? RemovedId, DateTimeOffset Timestamp, string? ReferenceMarkId = null, string? Note = null, string? AuthorSteamID = null, string? AnnotationId = null);
 
 // Append-only journal. Undo tombstones remove marks from the active set, never erase history.
 public sealed class CollisionStore : IDisposable
@@ -256,7 +256,7 @@ public sealed class CollisionStore : IDisposable
         if (note.Length is < 1 or > 300) throw new ArgumentException("Note must contain 1-300 characters");
         var mark = active.LastOrDefault(x => x.SteamId == steamId && x.Map == map && x.Weapon == "glock" && x.Tag == "texture");
         if (mark == null) return null;
-        Append(new("annotation", null, null, DateTimeOffset.UtcNow, mark.Id, note, steamId));
+        Append(new("annotation", null, null, DateTimeOffset.UtcNow, mark.Id, note, steamId, Guid.NewGuid().ToString("N")));
         return mark;
     }
     public CollisionMark? Undo(string steamId, string map)

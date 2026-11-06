@@ -912,7 +912,7 @@ public sealed class DebugPlugin : BasePlugin, IPluginConfig<DebugConfig>
             } catch(ArgumentException) {c.ReplyToCommand("Use !tag with 1-300 characters of note text.");}
             catch(Exception e) {Logger.LogError("Annotation storage failed ({Failure}).",e.GetType().Name);c.ReplyToCommand("Note NOT saved.");}
         });
-        AddCommand("css_markhelp", "Glock texture; M4 nocollide; append-only marks and undo", (p,c) => c.ReplyToCommand("Glock = texture (WRONG TEXTURE); M4A4/M4A1-S = nocollide (REMOVE COLLISION). No automatic fixes. !marks / !undo also support legacy untyped marks."));
+        AddCommand("css_markhelp", "Glock texture; M4 nocollide; append-only marks and undo", (p,c) => c.ReplyToCommand("Glock = texture (WRONG TEXTURE); M4A4/M4A1-S = nocollide (REMOVE COLLISION). No automatic fixes. !tag text notes your latest typed Glock texture mark. !marks / !undo also support legacy untyped marks."));
         AddCommand("css_marks", "Count your active nocollide marks on this map", (p, c) =>
         {
             if (!Ready(p, c)) return;
