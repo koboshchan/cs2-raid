@@ -1,0 +1,366 @@
+{
+  "status": "site_markers_found",
+  "description": "Type 6 spawn POI markers; no faction and marker coordinates not verified as exact player spawn positions or facing. Other spawn points may be missing. 2030206010 localization identifies a teleport Easter egg and has no SceneConfig marker.",
+  "placements": [
+    {
+      "id": "2030206001",
+      "type": "spawn_poi_site_marker",
+      "name": {
+        "zh": "西大",
+        "en": "West Main Gate"
+      },
+      "prefab": "Scene/SpaceCenter2/2030206001.prefab",
+      "x": -9706.32421875,
+      "y": -1247.044921875,
+      "z": -82.19320312500008,
+      "units": "CS2 source units",
+      "unity_position_m": {
+        "x": 6424.3798828125,
+        "y": -225.97314453125,
+        "z": 4543.35986328125
+      },
+      "rotation": {
+        "unity_euler_degrees": {
+          "x": -0.0,
+          "y": 270.3824157714844,
+          "z": 0.0
+        },
+        "cs2_yaw_degrees": 179.61758422851562,
+        "meaning": "Unity Y converted as projected local +Z heading; ignores X/Z Euler components"
+      },
+      "unity_bounds_m": {
+        "m_Center": {
+          "x": 6424.3798828125,
+          "y": -225.1357421875,
+          "z": 4543.35986328125
+        },
+        "m_Extent": {
+          "x": 0.0498046875,
+          "y": 0.71240234375,
+          "z": 0.375
+        }
+      },
+      "evidence": "SceneConfig numeric prefab ID matches same-ID site localization; classification from POITypeConfig",
+      "display_name": {
+        "zh": "西大",
+        "en": "West Main Gate"
+      },
+      "display_name_source": "site POIConfig Location localized by exact marker ID"
+    },
+    {
+      "id": "2030206002",
+      "type": "spawn_poi_site_marker",
+      "name": {
+        "zh": "宿舍",
+        "en": "Dormitory"
+      },
+      "prefab": "Scene/SpaceCenter2/2030206002.prefab",
+      "x": -9910.79296875,
+      "y": 5274.0,
+      "z": 58.20328124999992,
+      "units": "CS2 source units",
+      "unity_position_m": {
+        "x": 6418.7001953125,
+        "y": -222.0732421875,
+        "z": 4724.5
+      },
+      "rotation": {
+        "unity_euler_degrees": {
+          "x": -0.0,
+          "y": 263.89404296875,
+          "z": 0.0
+        },
+        "cs2_yaw_degrees": 186.10595703125,
+        "meaning": "Unity Y converted as projected local +Z heading; ignores X/Z Euler components"
+      },
+      "unity_bounds_m": {
+        "m_Center": {
+          "x": 6418.7001953125,
+          "y": -221.23583984375,
+          "z": 4724.5
+        },
+        "m_Extent": {
+          "x": 0.0498046875,
+          "y": 0.71240234375,
+          "z": 0.373046875
+        }
+      },
+      "evidence": "SceneConfig numeric prefab ID matches same-ID site localization; classification from POITypeConfig",
+      "display_name": {
+        "zh": "宿舍",
+        "en": "Dormitory"
+      },
+      "display_name_source": "site POIConfig Location localized by exact marker ID"
+    },
+    {
+      "id": "2030206004",
+      "type": "spawn_poi_site_marker",
+      "name": {
+        "zh": "中控",
+        "en": "Central Command Room"
+      },
+      "prefab": "Scene/SpaceCenter2/2030206004.prefab",
+      "x": -1292.6953125,
+      "y": 7667.525390625,
+      "z": 155.41031249999992,
+      "units": "CS2 source units",
+      "unity_position_m": {
+        "x": 6658.091796875,
+        "y": -219.373046875,
+        "z": 4790.98681640625
+      },
+      "rotation": {
+        "unity_euler_degrees": {
+          "x": -0.0,
+          "y": 333.98095703125,
+          "z": 0.0
+        },
+        "cs2_yaw_degrees": 116.01904296875,
+        "meaning": "Unity Y converted as projected local +Z heading; ignores X/Z Euler components"
+      },
+      "unity_bounds_m": {
+        "m_Center": {
+          "x": 6658.091796875,
+          "y": -218.53564453125,
+          "z": 4790.98681640625
+        },
+        "m_Extent": {
+          "x": 0.3369140625,
+          "y": 0.71240234375,
+          "z": 0.16455078125
+        }
+      },
+      "evidence": "SceneConfig numeric prefab ID matches same-ID site localization; classification from POITypeConfig",
+      "display_name": {
+        "zh": "中控",
+        "en": "Central Command Room"
+      },
+      "display_name_source": "site POIConfig Location localized by exact marker ID"
+    },
+    {
+      "id": "2030206005",
+      "type": "spawn_poi_site_marker",
+      "name": {
+        "zh": "牢二",
+        "en": "Jail 2"
+      },
+      "prefab": "Scene/SpaceCenter2/2030206005.prefab",
+      "x": 9957.744140625,
+      "y": 2545.20703125,
+      "z": -200.98617187500008,
+      "units": "CS2 source units",
+      "unity_position_m": {
+        "x": 6970.60400390625,
+        "y": -229.27294921875,
+        "z": 4648.7001953125
+      },
+      "rotation": {
+        "unity_euler_degrees": {
+          "x": -0.0,
+          "y": 0.0,
+          "z": 0.0
+        },
+        "cs2_yaw_degrees": 90.0,
+        "meaning": "Unity Y converted as projected local +Z heading; ignores X/Z Euler components"
+      },
+      "unity_bounds_m": {
+        "m_Center": {
+          "x": 6970.60400390625,
+          "y": -228.435546875,
+          "z": 4648.7001953125
+        },
+        "m_Extent": {
+          "x": 0.375,
+          "y": 0.71240234375,
+          "z": 0.0498046875
+        }
+      },
+      "evidence": "SceneConfig numeric prefab ID matches same-ID site localization; classification from POITypeConfig",
+      "display_name": {
+        "zh": "牢二",
+        "en": "Jail 2"
+      },
+      "display_name_source": "site POIConfig Location localized by exact marker ID"
+    },
+    {
+      "id": "2030206006",
+      "type": "spawn_poi_site_marker",
+      "name": {
+        "zh": "员二",
+        "en": "Employee Passage 2"
+      },
+      "prefab": "Scene/SpaceCenter2/2030206006.prefab",
+      "x": 3523.67578125,
+      "y": 3953.84765625,
+      "z": 11.410312499999918,
+      "units": "CS2 source units",
+      "unity_position_m": {
+        "x": 6791.8798828125,
+        "y": -223.373046875,
+        "z": 4687.8291015625
+      },
+      "rotation": {
+        "unity_euler_degrees": {
+          "x": 0.0,
+          "y": 183.72152709960938,
+          "z": 0.0
+        },
+        "cs2_yaw_degrees": 266.2784729003906,
+        "meaning": "Unity Y converted as projected local +Z heading; ignores X/Z Euler components"
+      },
+      "unity_bounds_m": {
+        "m_Center": {
+          "x": 6791.8798828125,
+          "y": -222.53564453125,
+          "z": 4687.8291015625
+        },
+        "m_Extent": {
+          "x": 0.3740234375,
+          "y": 0.71240234375,
+          "z": 0.0498046875
+        }
+      },
+      "evidence": "SceneConfig numeric prefab ID matches same-ID site localization; classification from POITypeConfig",
+      "display_name": {
+        "zh": "员二",
+        "en": "Employee Passage 2"
+      },
+      "display_name_source": "site POIConfig Location localized by exact marker ID"
+    },
+    {
+      "id": "2030206007",
+      "type": "spawn_poi_site_marker",
+      "name": {
+        "zh": "牢大",
+        "en": "Jail 1"
+      },
+      "prefab": "Scene/SpaceCenter2/2030206007.prefab",
+      "x": 6850.79296875,
+      "y": 7858.072265625,
+      "z": -202.79671875000008,
+      "units": "CS2 source units",
+      "unity_position_m": {
+        "x": 6884.2998046875,
+        "y": -229.3232421875,
+        "z": 4796.27978515625
+      },
+      "rotation": {
+        "unity_euler_degrees": {
+          "x": -0.0,
+          "y": 35.196571350097656,
+          "z": -0.0
+        },
+        "cs2_yaw_degrees": 54.803428649902344,
+        "meaning": "Unity Y converted as projected local +Z heading; ignores X/Z Euler components"
+      },
+      "unity_bounds_m": {
+        "m_Center": {
+          "x": 6884.2998046875,
+          "y": -228.48583984375,
+          "z": 4796.27978515625
+        },
+        "m_Extent": {
+          "x": 0.306640625,
+          "y": 0.71240234375,
+          "z": 0.21630859375
+        }
+      },
+      "evidence": "SceneConfig numeric prefab ID matches same-ID site localization; classification from POITypeConfig",
+      "display_name": {
+        "zh": "牢大",
+        "en": "Jail 1"
+      },
+      "display_name_source": "site POIConfig Location localized by exact marker ID"
+    },
+    {
+      "id": "2030206008",
+      "type": "spawn_poi_site_marker",
+      "name": {
+        "zh": "牢三",
+        "en": "Jail 3"
+      },
+      "prefab": "Scene/SpaceCenter2/2030206008.prefab",
+      "x": 6598.44140625,
+      "y": -3688.20703125,
+      "z": -195.58968750000008,
+      "units": "CS2 source units",
+      "unity_position_m": {
+        "x": 6877.2900390625,
+        "y": -229.123046875,
+        "z": 4475.5498046875
+      },
+      "rotation": {
+        "unity_euler_degrees": {
+          "x": -0.0,
+          "y": 129.3328094482422,
+          "z": -0.0
+        },
+        "cs2_yaw_degrees": 320.6671905517578,
+        "meaning": "Unity Y converted as projected local +Z heading; ignores X/Z Euler components"
+      },
+      "unity_bounds_m": {
+        "m_Center": {
+          "x": 6877.2900390625,
+          "y": -228.28564453125,
+          "z": 4475.5498046875
+        },
+        "m_Extent": {
+          "x": 0.23779296875,
+          "y": 0.71240234375,
+          "z": 0.2900390625
+        }
+      },
+      "evidence": "SceneConfig numeric prefab ID matches same-ID site localization; classification from POITypeConfig",
+      "display_name": {
+        "zh": "牢三",
+        "en": "Jail 3"
+      },
+      "display_name_source": "site POIConfig Location localized by exact marker ID"
+    },
+    {
+      "id": "2030206009",
+      "type": "spawn_poi_site_marker",
+      "name": {
+        "zh": "发射区",
+        "en": "Launch Area"
+      },
+      "prefab": "Scene/SpaceCenter2/2030206009.prefab",
+      "x": -4613.044921875,
+      "y": -14180.396484375,
+      "z": 610.0157812499999,
+      "units": "CS2 source units",
+      "unity_position_m": {
+        "x": 6565.85986328125,
+        "y": -206.7451171875,
+        "z": 4184.10009765625
+      },
+      "rotation": {
+        "unity_euler_degrees": {
+          "x": -0.0,
+          "y": 42.69725036621094,
+          "z": -0.0
+        },
+        "cs2_yaw_degrees": 47.30274963378906,
+        "meaning": "Unity Y converted as projected local +Z heading; ignores X/Z Euler components"
+      },
+      "unity_bounds_m": {
+        "m_Center": {
+          "x": 6565.85986328125,
+          "y": -205.90771484375,
+          "z": 4184.10009765625
+        },
+        "m_Extent": {
+          "x": 0.275390625,
+          "y": 0.71240234375,
+          "z": 0.25439453125
+        }
+      },
+      "evidence": "SceneConfig numeric prefab ID matches same-ID site localization; classification from POITypeConfig",
+      "display_name": {
+        "zh": "发射区",
+        "en": "Launch Area"
+      },
+      "display_name_source": "site POIConfig Location localized by exact marker ID"
+    }
+  ]
+}

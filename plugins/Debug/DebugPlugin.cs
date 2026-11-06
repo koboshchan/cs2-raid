@@ -20,7 +20,7 @@ public sealed class DebugConfig : BasePluginConfig
 public sealed class DebugPlugin : BasePlugin, IPluginConfig<DebugConfig>
 {
     public override string ModuleName => "Map Debug";
-    public override string ModuleVersion => "0.1.18";
+    public override string ModuleVersion => "0.1.19";
     public override string ModuleAuthor => "koboshchan";
     public override string ModuleDescription => "Debug economy and durable map issue reports";
     public DebugConfig Config { get; set; } = new();
@@ -337,13 +337,22 @@ public sealed class DebugPlugin : BasePlugin, IPluginConfig<DebugConfig>
         ("2030201294","Item/notebook.prefab",new Point(-1359.0f,516.779296875f,902.9519384765624f)),
         ("LANG_20302_20260120_105459_970_marker_7","heart_of_africa",new Point(-1943.7480000000141f,-3173.7239999999874f,489.18373199999996f)),
         ("LANG_20302_20260120_150634_719_marker_16","heart_of_africa",new Point(-1937.566439999995f,-3149.639999999992f,489.18373199999996f)),
-        ("LANG_20302_20260312_113014_794_marker_34","heart_of_africa",new Point(-1958.328000000005f,-3136.9219200000152f,488.7750600000004f))
+        ("LANG_20302_20260312_113014_794_marker_34","heart_of_africa",new Point(-1958.328000000005f,-3136.9219200000152f,488.7750600000004f)),
+        ("2030206001","player_spawn_poi",new Point(-9706.32421875f,-1247.044921875f,-82.19320312500008f)),
+        ("2030206002","player_spawn_poi",new Point(-9910.79296875f,5274.0f,58.20328124999992f)),
+        ("2030206004","player_spawn_poi",new Point(-1292.6953125f,7667.525390625f,155.41031249999992f)),
+        ("2030206005","player_spawn_poi",new Point(9957.744140625f,2545.20703125f,-200.98617187500008f)),
+        ("2030206006","player_spawn_poi",new Point(3523.67578125f,3953.84765625f,11.410312499999918f)),
+        ("2030206007","player_spawn_poi",new Point(6850.79296875f,7858.072265625f,-202.79671875000008f)),
+        ("2030206008","player_spawn_poi",new Point(6598.44140625f,-3688.20703125f,-195.58968750000008f)),
+        ("2030206009","player_spawn_poi",new Point(-4613.044921875f,-14180.396484375f,610.0157812499999f))
     ];
     private CounterStrikeSharp.API.Modules.Timers.Timer? lootSpawnTimer;
     private int lootCursor;
     private static System.Drawing.Color LootColor(string type)
     {
         if(type=="c_safe")return System.Drawing.Color.Yellow;
+        if(type=="player_spawn_poi")return System.Drawing.Color.Lime;
         if(type=="heart_of_africa")return System.Drawing.Color.Red;
         return System.Drawing.Color.Blue;
     }
@@ -366,7 +375,7 @@ public sealed class DebugPlugin : BasePlugin, IPluginConfig<DebugConfig>
         ClearBigSafes();
         if(c.GetArg(1)=="off") { c.ReplyToCommand("Loot markers off.");return; }
         lootSpawnTimer=AddTimer(0.1f,SpawnLootBatch,CounterStrikeSharp.API.Modules.Timers.TimerFlags.REPEAT|CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
-        c.ReplyToCommand("Loot marker spawn started: 298 positions, batches of 10; css_loot_status for progress.");
+        c.ReplyToCommand("Loot marker spawn started: 306 positions, batches of 10; css_loot_status for progress.");
     }
     private void SpawnLootBatch()
     {
@@ -382,7 +391,7 @@ public sealed class DebugPlugin : BasePlugin, IPluginConfig<DebugConfig>
                 // No expensive through-wall glow on 295 entities; yellow big safes remain distinct.
                 e.DispatchSpawn();e.Collision.SolidType=SolidType_t.SOLID_NONE;e.MoveType=MoveType_t.MOVETYPE_NONE;
                 if(e.CBodyComponent?.SceneNode is not {} node)throw new InvalidOperationException("Missing loot scene node");
-                node.Scale=0.21f;
+                node.Scale=type=="player_spawn_poi"?3.0f:0.21f;
                 e.Teleport(new Vector(pos.X,pos.Y,pos.Z),new QAngle(0,0,0),new Vector(0,0,0));
                 lootCursor++;
             }
@@ -397,7 +406,7 @@ public sealed class DebugPlugin : BasePlugin, IPluginConfig<DebugConfig>
     private void LootStatusCommand(CCSPlayerController? p,CommandInfo c)
     {
         if(p!=null)return;
-        c.ReplyToCommand($"Loot markers={bigSafeMarkers.Count(e=>e.IsValid)}/298, pending={lootSpawnTimer!=null}, nonSolid={bigSafeMarkers.Count(e=>e.IsValid&&e.Collision.SolidType==SolidType_t.SOLID_NONE)}, scale021={bigSafeMarkers.Count(e=>e.IsValid&&e.CBodyComponent?.SceneNode?.Scale==0.21f)}, safe7={safe7Marker is {IsValid:true}}, beams={extractBoxBeams.Count(e=>e.IsValid)}");
+        c.ReplyToCommand($"Loot markers={bigSafeMarkers.Count(e=>e.IsValid)}/306, pending={lootSpawnTimer!=null}, nonSolid={bigSafeMarkers.Count(e=>e.IsValid&&e.Collision.SolidType==SolidType_t.SOLID_NONE)}, scale3={bigSafeMarkers.Count(e=>e.IsValid&&e.CBodyComponent?.SceneNode?.Scale==3.0f)}, scale021={bigSafeMarkers.Count(e=>e.IsValid&&e.CBodyComponent?.SceneNode?.Scale==0.21f)}, safe7={safe7Marker is {IsValid:true}}, beams={extractBoxBeams.Count(e=>e.IsValid)}");
     }
 
     private const string Safe7Model="models/props/de_dust/hr_dust/dust_soccerball/dust_soccer_ball001.vmdl";
