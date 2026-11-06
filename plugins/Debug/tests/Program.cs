@@ -50,10 +50,10 @@ Check(tracker.Impact(10,a) == null, "AK feature removed");
 tracker.Fire("weapon_ak47", 10);
 Check(tracker.Impact(10,a) == null, "prefixed AK feature removed");
 tracker.Fire("glock", 50);
-Check(tracker.Impact(50,a) == "nocollide", "Glock nocollide");
+Check(tracker.Impact(50,a) is { Weapon: "glock", Tag: "texture" }, "Glock nocollide");
 Check(tracker.Impact(50,b) == null, "penetration ignored");
 tracker.Fire("weapon_glock",51);
-Check(tracker.Impact(51,b) == "nocollide", "prefixed Glock");
+Check(tracker.Impact(51,b) is { Weapon: "glock", Tag: "texture" }, "prefixed Glock");
 tracker.Fire("glock",52); tracker.Fire("awp",52);
 Check(tracker.Impact(52,a) == null, "other weapon clears");
 tracker.Fire("glock",53);
@@ -208,3 +208,30 @@ Check(outline.Any(x=>!x.Warning&&x.Start.X==(float)1039.138794&&x.Start.Y==(floa
 Check(outline.Any(x=>!x.Warning&&x.Start.X==(float)1095.046509&&x.Start.Y==(float)-5576.641113),"rotated fourth corner");
 Check(outline.Where(x=>!x.Warning&&x.Start.Z==x.End.Z).All(x=>x.Start.X!=x.End.X&&x.Start.Y!=x.End.Y),"no axis-aligned green edge");
 Console.WriteLine($"ALL {checks} checks passed");
+
+foreach (var weapon in new[]{"m4a1","weapon_m4a1","m4a1_silencer","weapon_m4a1_silencer"}) {
+ tracker.Fire(weapon,100); var ticket=tracker.Impact(100,a);
+ Check(ticket is {Tag:"nocollide"} && ticket.Weapon==weapon.Replace("weapon_",""),"M4 fire normalization "+weapon);
+ Check(tracker.Impact(100,b)==null,"M4 first impact only");
+}
+tracker.Fire("glock",110); // No active weapon queried at impact, so switching cannot reclassify.
+Check(tracker.Impact(110,a) is {Weapon:"glock",Tag:"texture"},"weapon captured at fire across active weapon swap");
+var typedDir=Path.Combine(Path.GetTempPath(),"debug-typed-"+Guid.NewGuid().ToString("N"));
+Directory.CreateDirectory(typedDir);
+try {
+ var legacy=new CollisionMark("legacy",DateTimeOffset.UtcNow,"nocollide","df_spaceport_v24","76561199818744151",a,new(0,0,1),b,a);
+ var legacyLine=System.Text.Json.JsonSerializer.Serialize(new CollisionEntry("add",legacy,null,legacy.Timestamp))+"\n";
+ File.WriteAllText(Path.Combine(typedDir,"nocollide.jsonl"),legacyLine);
+ using(var cs=new CollisionStore(typedDir)) {
+  Check(cs.Active.Single().Weapon==null && cs.Active.Single().Tag==null,"legacy stays untyped");
+  cs.Add(legacy with {Id="typedG",Weapon="glock",Tag="texture"});
+  cs.Add(legacy with {Id="typedM",Weapon="m4a1_silencer",Tag="nocollide"});
+  Check(cs.Undo("other","df_spaceport_v24")==null,"undo ownership isolation");
+  Check(cs.Undo(legacy.SteamId,legacy.Map)?.Id=="typedM","typed undo");
+  Check(cs.Undo(legacy.SteamId,legacy.Map)?.Id=="typedG","Glock typed undo");
+  Check(cs.Active.Single().Id=="legacy","legacy remains");
+ }
+ Check(File.ReadAllText(Path.Combine(typedDir,"nocollide.jsonl")).StartsWith(legacyLine),"old journal bytes unchanged");
+ using(var cs=new CollisionStore(typedDir)) {Check(cs.Active.Single().Tag==null,"legacy replay untyped");Check(cs.Undo(legacy.SteamId,legacy.Map)?.Id=="legacy","legacy undo supported");}
+} finally {Directory.Delete(typedDir,true);}
+Console.WriteLine("Typed tag fixtures passed.");

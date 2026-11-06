@@ -13,18 +13,27 @@ public sealed record MapReport(string Id, DateTimeOffset Timestamp, string Kind,
 
 // Source events have no projectile ID. Only accept the first impact in the SAME server tick
 // after a qualifying fire, and clear the ticket for every fire (including other weapons).
+public sealed record ShotTicket(string Weapon, string Tag);
 public sealed class ShotTracker
 {
     private int? pendingTick;
-    public void Fire(string weapon, int tick) =>
-        pendingTick = weapon is "glock" or "weapon_glock" ? tick : null;
-    public string? Impact(int tick, Point position)
+    private string? pendingWeapon;
+    public void Fire(string weapon, int tick)
+    {
+        var normalized = weapon.StartsWith("weapon_", StringComparison.Ordinal) ? weapon[7..] : weapon;
+        pendingWeapon = normalized is "glock" or "m4a1" or "m4a1_silencer" ? normalized : null;
+        pendingTick = pendingWeapon == null ? null : tick;
+    }
+    public ShotTicket? Impact(int tick, Point position)
     {
         var accept = pendingTick == tick;
-        pendingTick = null;
-        return accept && position.IsFinite ? "nocollide" : null;
+        var weapon = pendingWeapon;
+        Reset();
+        return accept && position.IsFinite && weapon != null
+            ? new ShotTicket(weapon, weapon == "glock" ? "texture" : "nocollide") : null;
     }
-    public void Reset() => pendingTick = null;
+    public void Reset() { pendingTick = null; pendingWeapon = null; }
+
 }
 
 // Tracks the last value the engine actually accepted, including any cvar clamp.
@@ -183,7 +192,7 @@ public static class BannerInput
 }
 
 public sealed record CollisionMark(string Id, DateTimeOffset Timestamp, string Label, string Map,
-    string SteamId, Point Position, Point Normal, Point PlayerPosition, Point EyeAngles);
+    string SteamId, Point Position, Point Normal, Point PlayerPosition, Point EyeAngles, string? Weapon = null, string? Tag = null);
 public sealed record CollisionEntry(string Action, CollisionMark? Mark, string? RemovedId, DateTimeOffset Timestamp);
 
 // Append-only journal. Undo tombstones remove marks from the active set, never erase history.
@@ -221,7 +230,10 @@ public sealed class CollisionStore : IDisposable
     }
     private static bool Valid(CollisionMark m) => m.Label == "nocollide" && m.Position.IsFinite &&
         m.Normal.IsFinite && m.PlayerPosition.IsFinite && m.EyeAngles.IsFinite &&
-        m.Normal.X*m.Normal.X+m.Normal.Y*m.Normal.Y+m.Normal.Z*m.Normal.Z is > 0.5f and < 1.5f;
+        m.Normal.X*m.Normal.X+m.Normal.Y*m.Normal.Y+m.Normal.Z*m.Normal.Z is > 0.5f and < 1.5f &&
+        ((m.Weapon == null && m.Tag == null) ||
+         (m.Weapon == "glock" && m.Tag == "texture") ||
+         (m.Weapon is "m4a1" or "m4a1_silencer" && m.Tag == "nocollide"));
     private bool failed;
     private void Append(CollisionEntry entry)
     {

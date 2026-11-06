@@ -20,7 +20,7 @@ public sealed class DebugConfig : BasePluginConfig
 public sealed class DebugPlugin : BasePlugin, IPluginConfig<DebugConfig>
 {
     public override string ModuleName => "Map Debug";
-    public override string ModuleVersion => "0.1.26";
+    public override string ModuleVersion => "0.1.27";
     public override string ModuleAuthor => "koboshchan";
     public override string ModuleDescription => "Debug economy and durable map issue reports";
     public DebugConfig Config { get; set; } = new();
@@ -874,6 +874,8 @@ public sealed class DebugPlugin : BasePlugin, IPluginConfig<DebugConfig>
     }
     public override void Load(bool hotReload)
     {
+        if (hotReload && (!File.ReadAllText("/proc/1/cmdline").Contains("27016") || Server.MapName != "df_spaceport_v24"))
+            throw new InvalidOperationException("Debug hot reload restricted to private 27016 v24");
         loaded = true;
         RegisterListener<Listeners.OnServerPrecacheResources>(m=>m.AddResource(Safe7Model));
         AddCommand("css_bigsafes", "Draw 295 loot plus 3 Heart of Africa markers: on|off", BigSafeCommand);
@@ -900,6 +902,7 @@ public sealed class DebugPlugin : BasePlugin, IPluginConfig<DebugConfig>
                 c.ReplyToCommand("Last nocollide mark removed.");
             } catch (Exception e) { Logger.LogError(e, "Undo failed"); c.ReplyToCommand("Undo NOT saved."); }
         });
+        AddCommand("css_markhelp", "Glock texture; M4 nocollide; append-only marks and undo", (p,c) => c.ReplyToCommand("Glock = texture (WRONG TEXTURE); M4A4/M4A1-S = nocollide (REMOVE COLLISION). No automatic fixes. !marks / !undo also support legacy untyped marks."));
         AddCommand("css_marks", "Count your active nocollide marks on this map", (p, c) =>
         {
             if (!Ready(p, c)) return;
@@ -946,9 +949,9 @@ public sealed class DebugPlugin : BasePlugin, IPluginConfig<DebugConfig>
                     n.X*n.X+n.Y*n.Y+n.Z*n.Z < 0.5f)
                     throw new InvalidOperationException("Surface normal unavailable");
                 var mark = new CollisionMark(Guid.NewGuid().ToString("N"), DateTimeOffset.UtcNow,
-                    "nocollide", Server.MapName, p.SteamID.ToString(), position, normal, pose.Pos, pose.Angles);
+                    "nocollide", Server.MapName, p.SteamID.ToString(), position, normal, pose.Pos, pose.Angles, kind.Weapon, kind.Tag);
                 marks.Add(mark);
-                p.PrintToChat("nocollide mark saved.");
+                p.PrintToChat(kind.Tag == "texture" ? "WRONG TEXTURE mark saved (texture)." : "REMOVE COLLISION mark saved (nocollide).");
                 try { DrawMarker(mark); }
                 catch (Exception ex) { Logger.LogError(ex, "Marker visual failed"); p.PrintToChat("Saved, but marker drawing failed."); }
             }
