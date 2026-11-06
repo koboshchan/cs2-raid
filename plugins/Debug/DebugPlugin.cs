@@ -20,7 +20,7 @@ public sealed class DebugConfig : BasePluginConfig
 public sealed class DebugPlugin : BasePlugin, IPluginConfig<DebugConfig>
 {
     public override string ModuleName => "Map Debug";
-    public override string ModuleVersion => "0.1.20";
+    public override string ModuleVersion => "0.1.21";
     public override string ModuleAuthor => "koboshchan";
     public override string ModuleDescription => "Debug economy and durable map issue reports";
     public DebugConfig Config { get; set; } = new();
@@ -335,9 +335,6 @@ public sealed class DebugPlugin : BasePlugin, IPluginConfig<DebugConfig>
         ("2030201292","Item/notebook.prefab",new Point(-1958.73046875f,-663.2578125f,172.44021972656242f)),
         ("2030201293","Item/notebook.prefab",new Point(-2939.80078125f,806.94140625f,159.87625488281242f)),
         ("2030201294","Item/notebook.prefab",new Point(-1359.0f,516.779296875f,902.9519384765624f)),
-        ("LANG_20302_20260120_105459_970_marker_7","heart_of_africa",new Point(-1943.7480000000141f,-3173.7239999999874f,489.18373199999996f)),
-        ("LANG_20302_20260120_150634_719_marker_16","heart_of_africa",new Point(-1937.566439999995f,-3149.639999999992f,489.18373199999996f)),
-        ("LANG_20302_20260312_113014_794_marker_34","heart_of_africa",new Point(-1958.328000000005f,-3136.9219200000152f,488.7750600000004f)),
         ("2030206001","player_spawn_poi",new Point(-9706.32421875f,-1247.044921875f,-82.19320312500008f)),
         ("2030206002","player_spawn_poi",new Point(-9910.79296875f,5274.0f,58.20328124999992f)),
         ("2030206004","player_spawn_poi",new Point(-1292.6953125f,7667.525390625f,155.41031249999992f)),
@@ -375,7 +372,7 @@ public sealed class DebugPlugin : BasePlugin, IPluginConfig<DebugConfig>
         ClearBigSafes();
         if(c.GetArg(1)=="off") { c.ReplyToCommand("Loot markers off.");return; }
         lootSpawnTimer=AddTimer(0.1f,SpawnLootBatch,CounterStrikeSharp.API.Modules.Timers.TimerFlags.REPEAT|CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
-        c.ReplyToCommand("Loot marker spawn started: 306 positions, batches of 10; css_loot_status for progress.");
+        c.ReplyToCommand("Loot marker spawn started: 303 positions, batches of 10; css_loot_status for progress.");
     }
     private void SpawnLootBatch()
     {
@@ -408,7 +405,7 @@ public sealed class DebugPlugin : BasePlugin, IPluginConfig<DebugConfig>
         if(p!=null)return;
         foreach(var e in bigSafeMarkers.Where(e=>e.IsValid && e.Entity?.Name.Contains("LANG_20302_")==true))
             c.ReplyToCommand($"Heart name={e.Entity!.Name}, pos={e.AbsOrigin}, scale={e.CBodyComponent?.SceneNode?.Scale}, solid={e.Collision.SolidType}, color={e.Render}, model={e.CBodyComponent?.SceneNode?.GetSkeletonInstance().ModelState.ModelName}");
-        c.ReplyToCommand($"Loot markers={bigSafeMarkers.Count(e=>e.IsValid)}/306, pending={lootSpawnTimer!=null}, nonSolid={bigSafeMarkers.Count(e=>e.IsValid&&e.Collision.SolidType==SolidType_t.SOLID_NONE)}, scale1={bigSafeMarkers.Count(e=>e.IsValid&&e.CBodyComponent?.SceneNode?.Scale==1.0f)}, scale3={bigSafeMarkers.Count(e=>e.IsValid&&e.CBodyComponent?.SceneNode?.Scale==3.0f)}, scale021={bigSafeMarkers.Count(e=>e.IsValid&&e.CBodyComponent?.SceneNode?.Scale==0.21f)}, safe7={safe7Marker is {IsValid:true}}, beams={extractBoxBeams.Count(e=>e.IsValid)}");
+        c.ReplyToCommand($"Loot markers={bigSafeMarkers.Count(e=>e.IsValid)}/303, pending={lootSpawnTimer!=null}, nonSolid={bigSafeMarkers.Count(e=>e.IsValid&&e.Collision.SolidType==SolidType_t.SOLID_NONE)}, scale1={bigSafeMarkers.Count(e=>e.IsValid&&e.CBodyComponent?.SceneNode?.Scale==1.0f)}, scale3={bigSafeMarkers.Count(e=>e.IsValid&&e.CBodyComponent?.SceneNode?.Scale==3.0f)}, scale021={bigSafeMarkers.Count(e=>e.IsValid&&e.CBodyComponent?.SceneNode?.Scale==0.21f)}, safe7={safe7Marker is {IsValid:true}}, beams={extractBoxBeams.Count(e=>e.IsValid)}");
     }
 
     private const string Safe7Model="models/props/de_dust/hr_dust/dust_soccerball/dust_soccer_ball001.vmdl";

@@ -86,3 +86,5 @@ Debug 0.1.18 uses yellow for nine big safes, blue for other 286 loot, red for th
 Debug 0.1.19 adds the eight player spawn POIs from start-positions.json as green scale-3.0 non-solid balls. Site POIs are not verified exact player spawn coordinates. Existing 298 loot/Heart markers stay scale 0.21; Safe7 and extraction remain. Status reports separate scale-3 count.
 
 Debug 0.1.20 enlarges only the three red Heart route markers to scale 1.0 and adds individual entity position/model/color/solid/scale readback to css_loot_status. All source coordinates unchanged.
+
+Debug 0.1.21 removes three rejected Heart route markers. No replacements pending evidence review. Keeps 295 loot, eight green POIs, Safe7 and extraction.
