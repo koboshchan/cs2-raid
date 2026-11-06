@@ -20,7 +20,7 @@ public sealed class DebugConfig : BasePluginConfig
 public sealed class DebugPlugin : BasePlugin, IPluginConfig<DebugConfig>
 {
     public override string ModuleName => "Map Debug";
-    public override string ModuleVersion => "0.1.9";
+    public override string ModuleVersion => "0.1.10";
     public override string ModuleAuthor => "koboshchan";
     public override string ModuleDescription => "Debug economy and durable map issue reports";
     public DebugConfig Config { get; set; } = new();
@@ -38,6 +38,47 @@ public sealed class DebugPlugin : BasePlugin, IPluginConfig<DebugConfig>
     private readonly Dictionary<string, List<CBeam>> markerEntities = [];
     private readonly LinkedList<string> markerOrder = [];
     private readonly List<CBeam> extractBoxBeams = [];
+    private const string Safe7Model="models/props/de_dust/hr_dust/dust_soccerball/dust_soccer_ball001.vmdl";
+    private CDynamicProp? safe7Marker;
+    private void ClearSafe7()
+    {
+        var marker=safe7Marker;safe7Marker=null;
+        try { if(marker is {IsValid:true})marker.Remove(); }
+        catch(Exception e) { Logger.LogError(e,"Safe7 marker cleanup failed"); }
+    }
+    private void Safe7Command(CCSPlayerController? p, CommandInfo c)
+    {
+        if(!active || !Config.EveryoneIsAdmin ||
+           ConVar<int>.Find("hostport")?.Value!=27016 || ConVar<bool>.Find("sv_lan")?.Value!=true ||
+           (Server.MapName!="df_spaceport_kat_linked" && Server.MapName!="df_spaceport_player_scale_raytrace"))
+        { c.ReplyToCommand("Safe7 marker requires the private Spaceport LAN server on 27016."); return; }
+        if(p!=null&&!Human(p))return;
+        if(c.ArgCount>2 || (c.ArgCount==2 && c.GetArg(1) is not ("on" or "off")))
+        { c.ReplyToCommand("Usage: !safe7 [on|off]");return; }
+        ClearSafe7();
+        if(c.ArgCount==2 && c.GetArg(1)=="off")
+        { c.ReplyToCommand("Safe7 marker off.");return; }
+        try {
+            var e=Utilities.CreateEntityByName<CDynamicProp>("prop_dynamic")
+                ??throw new InvalidOperationException("prop_dynamic unavailable");
+            safe7Marker=e;
+            e.Entity!.Name="kat_debug_safe7_marker";
+            e.SetModel(Safe7Model);
+            e.Collision.SolidType=SolidType_t.SOLID_NONE;e.TakesDamage=false;
+            e.Render=System.Drawing.Color.Yellow;
+            e.Glow.GlowColorOverride=System.Drawing.Color.Yellow;
+            e.Glow.GlowType=3;e.Glow.GlowRange=10000;e.Glow.Glowing=true;
+            e.DispatchSpawn();
+            e.Collision.SolidType=SolidType_t.SOLID_NONE;e.MoveType=MoveType_t.MOVETYPE_NONE;
+            if(e.CBodyComponent?.SceneNode is {} node)node.Scale=3f;
+            e.Teleport(new Vector(-196.56f,-767.88f,868.32f),new QAngle(0,0,0),new Vector(0,0,0));
+            c.ReplyToCommand($"Safe7 marker on: valid={e.IsValid}, solid={e.Collision.SolidType}, model={e.CBodyComponent?.SceneNode?.GetSkeletonInstance().ModelState.ModelName}, position={e.AbsOrigin}. !safe7 off to remove.");
+        } catch(Exception e) {
+            ClearSafe7();Logger.LogError(e,"Safe7 marker failed");
+            c.ReplyToCommand("Safe7 marker failed; partial entity removed.");
+        }
+    }
+
     private void ClearExtractBox()
     {
         var beams=extractBoxBeams.ToArray();extractBoxBeams.Clear();
@@ -128,6 +169,8 @@ public sealed class DebugPlugin : BasePlugin, IPluginConfig<DebugConfig>
     public override void Load(bool hotReload)
     {
         loaded = true;
+        RegisterListener<Listeners.OnServerPrecacheResources>(m=>m.AddResource(Safe7Model));
+        AddCommand("css_safe7", "Draw yellow Safe7 marker: on|off", Safe7Command);
         AddCommand("css_extractbox", "Draw green/red extraction outlines: on|off", ExtractBoxCommand);
         AddCommand("css_mvp", "Preview your private native round MVP panel", MvpCommand);
         AddCommand("css_bannerreset", "Reset your private native banner preview", BannerResetCommand);
@@ -254,6 +297,7 @@ public sealed class DebugPlugin : BasePlugin, IPluginConfig<DebugConfig>
     private void ClearState()
     {
         ClearExtractBox();
+        ClearSafe7();
         foreach (var id in markerEntities.Keys.ToArray()) RemoveMarker(id);
         firePoses.Clear();
         shots.Clear(); reportLimiter.Clear(); textureLimiter.Clear(); listLimiter.Clear(); resetLimiter.Clear(); bannerLimiter.Clear(); bannerResetLimiter.Clear(); mvpLimiter.Clear();
