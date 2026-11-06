@@ -68,3 +68,5 @@ Debug 0.1.9 adds !extractbox [on|off] (also css_extractbox from private RCON). O
 Debug 0.1.10 adds !safe7 [on|off], a yellow glowing 3x non-solid stationary soccerball at (-196.56,-767.88,868.32), private Spaceport LAN 27016 only. Lifecycle cleanup removes the owned marker. The model is requested during resource precache on future maps; hotload does not force a map reload or promise client visibility.
 
 Debug 0.1.11 replaces rectangular beam geometry with the four ordered polygon vertices in shared JSON. Red polygon is scaled 2x about the green polygon area centroid. Beam visualization heights do not restrict extraction Z. No server restart is required.
+
+Debug 0.1.12 sets the Safe7 marker to absolute scale 0.21, 7% of its former 3x scale. Console-only css_safe7_scale reapplies and reads back that fixed scale without changing extraction outlines or marker position.

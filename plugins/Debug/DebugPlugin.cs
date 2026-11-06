@@ -20,7 +20,7 @@ public sealed class DebugConfig : BasePluginConfig
 public sealed class DebugPlugin : BasePlugin, IPluginConfig<DebugConfig>
 {
     public override string ModuleName => "Map Debug";
-    public override string ModuleVersion => "0.1.11";
+    public override string ModuleVersion => "0.1.12";
     public override string ModuleAuthor => "koboshchan";
     public override string ModuleDescription => "Debug economy and durable map issue reports";
     public DebugConfig Config { get; set; } = new();
@@ -46,6 +46,19 @@ public sealed class DebugPlugin : BasePlugin, IPluginConfig<DebugConfig>
         try { if(marker is {IsValid:true})marker.Remove(); }
         catch(Exception e) { Logger.LogError(e,"Safe7 marker cleanup failed"); }
     }
+    private void Safe7ScaleCommand(CCSPlayerController? p, CommandInfo c)
+    {
+        if(!active || !Config.EveryoneIsAdmin || p!=null ||
+           ConVar<int>.Find("hostport")?.Value!=27016 || ConVar<bool>.Find("sv_lan")?.Value!=true ||
+           Server.MapName!="df_spaceport_kat_linked")
+        { c.ReplyToCommand("Private Spaceport console only.");return; }
+        if(c.ArgCount!=1) { c.ReplyToCommand("Usage: css_safe7_scale");return; }
+        if(safe7Marker is not {IsValid:true} e || e.CBodyComponent?.SceneNode is not {} node)
+        { c.ReplyToCommand("Safe7 marker not active.");return; }
+        node.Scale=0.21f;
+        Utilities.SetStateChanged(e,"CBaseEntity","m_CBodyComponent");
+        c.ReplyToCommand($"Safe7 scale={node.Scale}, position={e.AbsOrigin}, solid={e.Collision.SolidType}, model={node.GetSkeletonInstance().ModelState.ModelName}");
+    }
     private void Safe7Command(CCSPlayerController? p, CommandInfo c)
     {
         if(!active || !Config.EveryoneIsAdmin ||
@@ -70,7 +83,7 @@ public sealed class DebugPlugin : BasePlugin, IPluginConfig<DebugConfig>
             e.Glow.GlowType=3;e.Glow.GlowRange=10000;e.Glow.Glowing=true;
             e.DispatchSpawn();
             e.Collision.SolidType=SolidType_t.SOLID_NONE;e.MoveType=MoveType_t.MOVETYPE_NONE;
-            if(e.CBodyComponent?.SceneNode is {} node)node.Scale=3f;
+            if(e.CBodyComponent?.SceneNode is {} node)node.Scale=0.21f;
             e.Teleport(new Vector(-196.56f,-767.88f,868.32f),new QAngle(0,0,0),new Vector(0,0,0));
             c.ReplyToCommand($"Safe7 marker on: valid={e.IsValid}, solid={e.Collision.SolidType}, model={e.CBodyComponent?.SceneNode?.GetSkeletonInstance().ModelState.ModelName}, position={e.AbsOrigin}. !safe7 off to remove.");
         } catch(Exception e) {
@@ -170,6 +183,7 @@ public sealed class DebugPlugin : BasePlugin, IPluginConfig<DebugConfig>
     {
         loaded = true;
         RegisterListener<Listeners.OnServerPrecacheResources>(m=>m.AddResource(Safe7Model));
+        AddCommand("css_safe7_scale", "Set and report Safe7 scale 0.21", Safe7ScaleCommand);
         AddCommand("css_safe7", "Draw yellow Safe7 marker: on|off", Safe7Command);
         AddCommand("css_extractbox", "Draw green/red extraction outlines: on|off", ExtractBoxCommand);
         AddCommand("css_mvp", "Preview your private native round MVP panel", MvpCommand);
