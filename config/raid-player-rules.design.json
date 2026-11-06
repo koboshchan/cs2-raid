@@ -1,0 +1,8 @@
+{
+  "status": "design_only_not_wired_to_runtime",
+  "mode": "actual_raid",
+  "startingHealth": 200,
+  "armorPurchase": "separate",
+  "armorIncludedAtStart": false,
+  "liveChangeAuthorized": false
+}
