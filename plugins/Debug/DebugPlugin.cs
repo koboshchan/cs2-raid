@@ -20,7 +20,7 @@ public sealed class DebugConfig : BasePluginConfig
 public sealed class DebugPlugin : BasePlugin, IPluginConfig<DebugConfig>
 {
     public override string ModuleName => "Map Debug";
-    public override string ModuleVersion => "0.1.24";
+    public override string ModuleVersion => "0.1.25";
     public override string ModuleAuthor => "koboshchan";
     public override string ModuleDescription => "Debug economy and durable map issue reports";
     public DebugConfig Config { get; set; } = new();
@@ -353,7 +353,138 @@ public sealed class DebugPlugin : BasePlugin, IPluginConfig<DebugConfig>
         ("2030202005","confirmed_heart_of_africa",new Point(-9198.544921875f,3218.396484375f,202.20328124999992f)),
         ("2030202006","confirmed_heart_of_africa",new Point(-198.896484375f,7024.60546875f,142.26187499999992f)),
         ("2030202007","confirmed_heart_of_africa",new Point(213.591796875f,-1864.8984375f,949.2208593749999f)),
-        ("2030202008","confirmed_heart_of_africa",new Point(2286.228515625f,-7.20703125f,713.4103124999999f))
+        ("2030202008","confirmed_heart_of_africa",new Point(2286.228515625f,-7.20703125f,713.4103124999999f)),
+        ("2030202012","confirmed_other_red_layer",new Point(-716.748046875f,-878.765625f,891.3185156249999f)),
+        ("2030202015","confirmed_other_red_layer",new Point(97.171875f,-889.20703125f,891.6700781249999f)),
+        ("2030202016","confirmed_other_red_layer",new Point(-697.5703125f,-1831.67578125f,949.7482031249999f)),
+        ("2030202017","confirmed_other_red_layer",new Point(-47.619140625f,-2210.396484375f,948.7110937499999f)),
+        ("2030202018","confirmed_other_red_layer",new Point(-1482.046875f,818.68359375f,897.6993749999999f)),
+        ("2030202019","confirmed_other_red_layer",new Point(-1589.572265625f,701.103515625f,900.0372656249999f)),
+        ("2030202020","confirmed_other_red_layer",new Point(-2669.044921875f,499.640625f,150.55874999999992f)),
+        ("2030202022","confirmed_other_red_layer",new Point(-2059.734375f,-841.7109375f,-215.38265625000008f)),
+        ("2030202023","confirmed_other_red_layer",new Point(-2621.548828125f,-768.498046875f,-256.4978906250001f)),
+        ("2030202024","confirmed_other_red_layer",new Point(-2476.79296875f,-547.20703125f,-1989.033046875f)),
+        ("2030202025","confirmed_other_red_layer",new Point(-1781.6484375f,-1130.6953125f,166.51968749999992f)),
+        ("2030202026","confirmed_other_red_layer",new Point(-2129.466796875f,-907.875f,360.6173437499999f)),
+        ("2030202027","confirmed_other_red_layer",new Point(-2227.46484375f,-1051.20703125f,381.7814062499999f)),
+        ("2030202028","confirmed_other_red_layer",new Point(-2001.603515625f,-3186.720703125f,246.74624999999992f)),
+        ("2030202029","confirmed_other_red_layer",new Point(-2090.689453125f,-3189.533203125f,246.53531249999992f)),
+        ("2030202031","confirmed_other_red_layer",new Point(-1729.001953125f,-1804.81640625f,144.05484374999992f)),
+        ("2030202033","confirmed_other_red_layer",new Point(-1522.79296875f,-2663.419921875f,524.9376562499999f)),
+        ("2030202034","confirmed_other_red_layer",new Point(-2145.603515625f,-1999.65234375f,490.2032812499999f)),
+        ("2030202035","confirmed_other_red_layer",new Point(-2416.81640625f,-2602.037109375f,488.8673437499999f)),
+        ("2030202036","confirmed_other_red_layer",new Point(-1504.79296875f,-2821.939453125f,523.0216406249999f)),
+        ("2030202037","confirmed_other_red_layer",new Point(-2070.0f,-3336.626953125f,522.7579687499999f)),
+        ("2030202038","confirmed_other_red_layer",new Point(-2471.009765625f,-3067.998046875f,497.5157812499999f)),
+        ("2030202039","confirmed_other_red_layer",new Point(-3024.720703125f,-3182.87109375f,496.5314062499999f)),
+        ("2030202040","confirmed_other_red_layer",new Point(2125.0546875f,385.20703125f,-39.98812500000008f)),
+        ("2030202041","confirmed_other_red_layer",new Point(2320.048828125f,92.91796875f,-40.84945312500008f)),
+        ("2030202042","confirmed_other_red_layer",new Point(1736.666015625f,-495.28125f,141.47085937499992f)),
+        ("2030202044","confirmed_other_red_layer",new Point(1137.603515625f,400.7109375f,523.4786718749999f)),
+        ("2030202045","confirmed_other_red_layer",new Point(1099.037109375f,554.326171875f,523.1095312499999f)),
+        ("2030202046","confirmed_other_red_layer",new Point(1105.927734375f,674.068359375f,523.8653906249999f)),
+        ("2030202047","confirmed_other_red_layer",new Point(2116.79296875f,744.697265625f,523.7950781249999f)),
+        ("2030202048","confirmed_other_red_layer",new Point(-2538.0f,-3002.90625f,246.92203124999992f)),
+        ("2030202049","confirmed_other_red_layer",new Point(2250.0f,-2905.34765625f,151.15640624999992f)),
+        ("2030202050","confirmed_other_red_layer",new Point(2399.6953125f,-2700.755859375f,183.62320312499992f)),
+        ("2030202051","confirmed_other_red_layer",new Point(2394.0f,-2763.28125f,188.12320312499992f)),
+        ("2030202052","confirmed_other_red_layer",new Point(2227.921875f,-2149.41796875f,168.33023437499992f)),
+        ("2030202053","confirmed_other_red_layer",new Point(2530.79296875f,-2239.734375f,201.88687499999992f)),
+        ("2030202054","confirmed_other_red_layer",new Point(1222.927734375f,-2187.0f,215.07046874999992f)),
+        ("2030202055","confirmed_other_red_layer",new Point(2009.408203125f,-2489.80078125f,380.6388281249999f)),
+        ("2030202056","confirmed_other_red_layer",new Point(1988.103515625f,-2747.84765625f,362.6036718749999f)),
+        ("2030202057","confirmed_other_red_layer",new Point(-8107.048828125f,4286.197265625f,95.75015624999992f)),
+        ("2030202058","confirmed_other_red_layer",new Point(-8209.828125f,4024.79296875f,99.00210937499992f)),
+        ("2030202059","confirmed_other_red_layer",new Point(-7947.0f,4051.6875f,101.41031249999992f)),
+        ("2030202060","confirmed_other_red_layer",new Point(-7966.6171875f,3815.244140625f,100.25015624999992f)),
+        ("2030202061","confirmed_other_red_layer",new Point(-8110.248046875f,4186.79296875f,249.01382812499992f)),
+        ("2030202062","confirmed_other_red_layer",new Point(-7858.44140625f,4014.474609375f,245.51578124999992f)),
+        ("2030202063","confirmed_other_red_layer",new Point(-7574.87109375f,3999.708984375f,245.05874999999992f)),
+        ("2030202067","confirmed_other_red_layer",new Point(-9362.98828125f,3243.603515625f,163.81265624999992f)),
+        ("2030202068","confirmed_other_red_layer",new Point(-1118.408203125f,7402.39453125f,164.19937499999992f)),
+        ("2030202069","confirmed_other_red_layer",new Point(-1392.486328125f,7414.927734375f,163.47867187499992f)),
+        ("2030202070","confirmed_other_red_layer",new Point(-239.115234375f,7259.94140625f,145.33804687499992f)),
+        ("2030202071","confirmed_other_red_layer",new Point(928.79296875f,6962.291015625f,162.58218749999992f)),
+        ("2030202072","confirmed_other_red_layer",new Point(890.103515625f,6175.037109375f,186.25992187499992f)),
+        ("2030202073","confirmed_other_red_layer",new Point(-412.927734375f,7522.2421875f,612.3360937499999f)),
+        ("2030202074","confirmed_other_red_layer",new Point(-52.927734375f,7256.337890625f,605.7267187499999f)),
+        ("2030202075","confirmed_other_red_layer",new Point(-1696.21875f,7056.931640625f,612.7228124999999f)),
+        ("2030202076","confirmed_other_red_layer",new Point(-1693.51171875f,6654.603515625f,605.7794531249999f)),
+        ("2030202077","confirmed_other_red_layer",new Point(-1626.380859375f,7530.767578125f,618.0489843749999f)),
+        ("2030202078","confirmed_other_red_layer",new Point(9457.20703125f,1796.501953125f,-202.39242187500008f)),
+        ("2030202079","confirmed_other_red_layer",new Point(8348.396484375f,1998.0f,-156.56625000000008f)),
+        ("2030202080","confirmed_other_red_layer",new Point(8350.8046875f,2244.375f,-80.89242187500008f)),
+        ("2030202081","confirmed_other_red_layer",new Point(9388.58203125f,1624.78125f,-168.51937500000008f)),
+        ("2030202082","confirmed_other_red_layer",new Point(9513.439453125f,1618.171875f,-172.61507812500008f)),
+        ("2030202083","confirmed_other_red_layer",new Point(9141.5390625f,2036.953125f,108.49429687499992f)),
+        ("2030202084","confirmed_other_red_layer",new Point(9764.630859375f,2437.927734375f,83.41031249999992f)),
+        ("2030202085","confirmed_other_red_layer",new Point(9549.0f,4226.396484375f,132.43570312499992f)),
+        ("2030202086","confirmed_other_red_layer",new Point(5983.927734375f,3296.671875f,-175.83187500000008f)),
+        ("2030202087","confirmed_other_red_layer",new Point(5631.591796875f,-9925.20703125f,150.33023437499992f)),
+        ("2030202088","confirmed_other_red_layer",new Point(-2900.302734375f,-970.6640625f,384.4005468749999f)),
+        ("2030202089","confirmed_other_red_layer",new Point(-2750.396484375f,-1000.72265625f,360.8282812499999f)),
+        ("2030202090","confirmed_other_red_layer",new Point(-557.666015625f,7427.84765625f,755.7911718749999f)),
+        ("2030202091","confirmed_other_red_layer",new Point(1364.396484375f,-418.78125f,489.7286718749999f)),
+        ("2030202092","confirmed_other_red_layer",new Point(9189.38671875f,2597.607421875f,115.77164062499992f)),
+        ("2030202093","confirmed_other_red_layer",new Point(9835.55859375f,2219.080078125f,80.38687499999992f)),
+        ("2030202094","confirmed_other_red_layer",new Point(8818.171875f,4554.791015625f,-22.867031250000082f)),
+        ("2030202095","confirmed_other_red_layer",new Point(8817.08203125f,4615.20703125f,16.121249999999918f)),
+        ("2030202096","confirmed_other_red_layer",new Point(8810.384765625f,4716.0703125f,-23.517421875000082f)),
+        ("2030202097","confirmed_other_red_layer",new Point(8987.255859375f,4471.20703125f,-23.113125000000082f)),
+        ("2030202098","confirmed_other_red_layer",new Point(9100.79296875f,4647.603515625f,60.94546874999992f)),
+        ("2030202099","confirmed_other_red_layer",new Point(-1304.560546875f,-3094.34765625f,523.5841406249999f)),
+        ("2030202100","confirmed_other_red_layer",new Point(-1612.4765625f,-3102.662109375f,523.3380468749999f)),
+        ("2030202101","confirmed_other_red_layer",new Point(-1400.080078125f,-3089.548828125f,525.3946874999999f)),
+        ("2030202102","confirmed_other_red_layer",new Point(-2937.181640625f,-3116.77734375f,246.85171874999992f)),
+        ("2030202103","confirmed_other_red_layer",new Point(-2637.10546875f,-2948.66015625f,247.43179687499992f)),
+        ("2030202104","confirmed_other_red_layer",new Point(1807.20703125f,-648.931640625f,120.48257812499992f)),
+        ("2030202105","confirmed_other_red_layer",new Point(1657.107421875f,-638.068359375f,155.86734374999992f)),
+        ("2030202106","confirmed_other_red_layer",new Point(178.927734375f,-897.697265625f,888.5763281249999f)),
+        ("2030202107","confirmed_other_red_layer",new Point(-2013.416015625f,-2137.4296875f,489.2716406249999f)),
+        ("2030202108","confirmed_other_red_layer",new Point(-1858.974609375f,-1998.10546875f,490.2032812499999f)),
+        ("2030202109","confirmed_other_red_layer",new Point(5427.509765625f,-9994.21875f,150.61148437499992f)),
+        ("2030202110","confirmed_other_red_layer",new Point(1792.705078125f,-418.78125f,490.2032812499999f)),
+        ("2030202111","confirmed_other_red_layer",new Point(1641.955078125f,-417.3046875f,490.2032812499999f)),
+        ("2030202112","confirmed_other_red_layer",new Point(-9088.06640625f,4489.20703125f,95.36343749999992f)),
+        ("2030202113","confirmed_other_red_layer",new Point(-9546.626953125f,4355.208984375f,97.84195312499992f)),
+        ("2030202114","confirmed_other_red_layer",new Point(-9079.734375f,3742.083984375f,49.97671874999992f)),
+        ("2030202115","confirmed_other_red_layer",new Point(-9541.107421875f,3612.234375f,51.83999999999992f)),
+        ("2030202116","confirmed_other_red_layer",new Point(-9403.189453125f,4304.513671875f,209.41031249999992f)),
+        ("2030202117","confirmed_other_red_layer",new Point(-96.486328125f,5932.986328125f,577.7774999999999f)),
+        ("2030202119","confirmed_other_red_layer",new Point(-9335.91796875f,4338.0f,98.45718749999992f)),
+        ("2030202120","confirmed_other_red_layer",new Point(-9312.626953125f,3603.603515625f,52.96499999999992f)),
+        ("2030202121","confirmed_other_red_layer",new Point(9121.060546875f,1971.931640625f,107.17593749999992f)),
+        ("2030202122","confirmed_other_red_layer",new Point(2189.00390625f,-2458.072265625f,213.64664062499992f)),
+        ("2030202123","confirmed_other_red_layer",new Point(-140.4140625f,-2396.7421875f,957.8517187499999f)),
+        ("2030202124","confirmed_other_red_layer",new Point(-2156.396484375f,-1319.94140625f,373.9415624999999f)),
+        ("2030202125","confirmed_other_red_layer",new Point(-3889.546875f,-6179.58984375f,42.83999999999992f)),
+        ("2030202126","confirmed_other_red_layer",new Point(-4004.75390625f,-5932.265625f,219.41226562499992f)),
+        ("2030202127","confirmed_other_red_layer",new Point(-4190.255859375f,-6117.1171875f,219.23648437499992f)),
+        ("2030202128","confirmed_other_red_layer",new Point(-4225.341796875f,-6305.466796875f,226.44351562499992f)),
+        ("2030202129","confirmed_other_red_layer",new Point(-1800.615234375f,-6643.001953125f,370.4435156249999f)),
+        ("2030202130","confirmed_other_red_layer",new Point(-1679.501953125f,-6582.09375f,370.4435156249999f)),
+        ("2030202131","confirmed_other_red_layer",new Point(-1839.392578125f,-6677.89453125f,367.7716406249999f)),
+        ("2030202132","confirmed_other_red_layer",new Point(-4443.908203125f,-4995.826171875f,50.99624999999992f)),
+        ("2030202133","confirmed_other_red_layer",new Point(-395.6484375f,-10693.6171875f,333.7931249999999f)),
+        ("2030202134","confirmed_other_red_layer",new Point(-1544.150390625f,-6733.40625f,220.85367187499992f)),
+        ("2030202135","confirmed_other_red_layer",new Point(-1371.26953125f,-6723.369140625f,183.67593749999992f)),
+        ("2030202136","confirmed_other_red_layer",new Point(-1487.42578125f,-7624.880859375f,201.92203124999992f)),
+        ("2030202137","confirmed_other_red_layer",new Point(-1906.857421875f,-7654.7109375f,203.15249999999992f)),
+        ("2030202138","confirmed_other_red_layer",new Point(-2305.212890625f,-11318.431640625f,-173.77523437500008f)),
+        ("2030202139","confirmed_other_red_layer",new Point(-1917.38671875f,-6394.1484375f,394.8419531249999f)),
+        ("2030202140","confirmed_other_red_layer",new Point(-3759.556640625f,-5922.2109375f,14.398593749999918f)),
+        ("2030202141","confirmed_other_red_layer",new Point(-1749.234375f,-6378.1171875f,197.93179687499992f)),
+        ("2030202143","confirmed_other_red_layer",new Point(-1752.591796875f,-7137.03515625f,223.22671874999992f)),
+        ("2030202144","confirmed_other_red_layer",new Point(-1379.98828125f,-7216.69921875f,202.06265624999992f)),
+        ("2030202145","confirmed_other_red_layer",new Point(-1586.478515625f,-6575.8359375f,197.52749999999992f)),
+        ("2030202146","confirmed_other_red_layer",new Point(-5601.603515625f,5079.603515625f,7.050937499999918f)),
+        ("2030202147","confirmed_other_red_layer",new Point(-576.0f,-1137.603515625f,153.51187499999992f)),
+        ("2030202148","confirmed_other_red_layer",new Point(-2008.79296875f,-6062.396484375f,8.422031249999918f)),
+        ("2030202149","confirmed_other_red_layer",new Point(5810.748046875f,-9900.140625f,112.78335937499992f)),
+        ("2030202150","confirmed_other_red_layer",new Point(5385.603515625f,3772.79296875f,-208.47445312500008f)),
+        ("2030202151","confirmed_other_red_layer",new Point(6142.32421875f,1280.443359375f,-207.13851562500008f)),
+        ("2030202152","confirmed_other_red_layer",new Point(3147.697265625f,-7943.361328125f,56.65640624999992f)),
+        ("2030202153","confirmed_other_red_layer",new Point(-1921.0078125f,-602.876953125f,171.17789062499992f))
     ];
     private CounterStrikeSharp.API.Modules.Timers.Timer? lootSpawnTimer;
     private int lootCursor;
@@ -361,6 +492,7 @@ public sealed class DebugPlugin : BasePlugin, IPluginConfig<DebugConfig>
     {
         if(type=="c_safe")return System.Drawing.Color.Yellow;
         if(type=="player_spawn_poi")return System.Drawing.Color.Lime;
+        if(type=="confirmed_other_red_layer")return System.Drawing.Color.Purple;
         if(type=="confirmed_heart_of_africa")return System.Drawing.Color.Red;
         if(type=="heart_of_africa")return System.Drawing.Color.Orange;
         return System.Drawing.Color.Blue;
@@ -384,7 +516,7 @@ public sealed class DebugPlugin : BasePlugin, IPluginConfig<DebugConfig>
         ClearBigSafes();
         if(c.GetArg(1)=="off") { c.ReplyToCommand("Loot markers off.");return; }
         lootSpawnTimer=AddTimer(0.1f,SpawnLootBatch,CounterStrikeSharp.API.Modules.Timers.TimerFlags.REPEAT|CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
-        c.ReplyToCommand("Loot marker spawn started: 314 positions, batches of 10; css_loot_status for progress.");
+        c.ReplyToCommand("Loot marker spawn started: 445 positions, batches of 10; css_loot_status for progress.");
     }
     private void SpawnLootBatch()
     {
@@ -400,7 +532,7 @@ public sealed class DebugPlugin : BasePlugin, IPluginConfig<DebugConfig>
                 // No expensive through-wall glow on 295 entities; yellow big safes remain distinct.
                 e.DispatchSpawn();e.Collision.SolidType=SolidType_t.SOLID_NONE;e.MoveType=MoveType_t.MOVETYPE_NONE;
                 if(e.CBodyComponent?.SceneNode is not {} node)throw new InvalidOperationException("Missing loot scene node");
-                node.Scale=type=="player_spawn_poi"?3.0f:(type=="heart_of_africa"||type=="confirmed_heart_of_africa")?1.0f:0.21f;
+                node.Scale=type=="player_spawn_poi"?3.0f:(type=="heart_of_africa"||type=="confirmed_heart_of_africa"||type=="confirmed_other_red_layer")?1.0f:0.21f;
                 e.Teleport(new Vector(pos.X,pos.Y,pos.Z),new QAngle(0,0,0),new Vector(0,0,0));
                 lootCursor++;
             }
@@ -417,7 +549,7 @@ public sealed class DebugPlugin : BasePlugin, IPluginConfig<DebugConfig>
         if(p!=null)return;
         foreach(var e in bigSafeMarkers.Where(e=>e.IsValid && (e.Entity?.Name.Contains("LANG_20302_")==true || new[]{"2030202001","2030202002","2030202003","2030202004","2030202005","2030202006","2030202007","2030202008"}.Any(id=>e.Entity?.Name.EndsWith(id)==true))))
             c.ReplyToCommand($"Heart name={e.Entity!.Name}, pos={e.AbsOrigin}, scale={e.CBodyComponent?.SceneNode?.Scale}, solid={e.Collision.SolidType}, color={e.Render}, model={e.CBodyComponent?.SceneNode?.GetSkeletonInstance().ModelState.ModelName}");
-        c.ReplyToCommand($"Loot markers={bigSafeMarkers.Count(e=>e.IsValid)}/314, pending={lootSpawnTimer!=null}, nonSolid={bigSafeMarkers.Count(e=>e.IsValid&&e.Collision.SolidType==SolidType_t.SOLID_NONE)}, scale1={bigSafeMarkers.Count(e=>e.IsValid&&e.CBodyComponent?.SceneNode?.Scale==1.0f)}, scale3={bigSafeMarkers.Count(e=>e.IsValid&&e.CBodyComponent?.SceneNode?.Scale==3.0f)}, scale021={bigSafeMarkers.Count(e=>e.IsValid&&e.CBodyComponent?.SceneNode?.Scale==0.21f)}, safe7={safe7Marker is {IsValid:true}}, beams={extractBoxBeams.Count(e=>e.IsValid)}");
+        c.ReplyToCommand($"Loot markers={bigSafeMarkers.Count(e=>e.IsValid)}/445, pending={lootSpawnTimer!=null}, nonSolid={bigSafeMarkers.Count(e=>e.IsValid&&e.Collision.SolidType==SolidType_t.SOLID_NONE)}, scale1={bigSafeMarkers.Count(e=>e.IsValid&&e.CBodyComponent?.SceneNode?.Scale==1.0f)}, scale3={bigSafeMarkers.Count(e=>e.IsValid&&e.CBodyComponent?.SceneNode?.Scale==3.0f)}, scale021={bigSafeMarkers.Count(e=>e.IsValid&&e.CBodyComponent?.SceneNode?.Scale==0.21f)}, safe7={safe7Marker is {IsValid:true}}, beams={extractBoxBeams.Count(e=>e.IsValid)}");
     }
 
     private const string Safe7Model="models/props/de_dust/hr_dust/dust_soccerball/dust_soccer_ball001.vmdl";

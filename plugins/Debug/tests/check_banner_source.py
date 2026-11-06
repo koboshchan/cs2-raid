@@ -19,7 +19,7 @@ assert 'end.Winner = banner.Winner;' in handler and 'end.Reason = banner.Reason;
 code = '\n'.join(line.split('//')[0] for line in handler.splitlines())
 for forbidden in ('FireEvent(', 'TerminateRound(', 'PrintToChatAll(', 'Server.', 'Utilities.', 'TeamNum =', 'GameRules', 'requestedColor'):
     assert forbidden not in code, forbidden
-assert 'ModuleVersion => "0.1.24"' in source
+assert 'ModuleVersion => "0.1.25"' in source
 print("PASS private invoker delivery, allocation cleanup, parser wiring, native reason and no round termination/broadcast structural guards")
 
 reset = source[source.index("    private void BannerResetCommand"):source.index("    private void SimpleBannerCommand")]

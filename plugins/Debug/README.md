@@ -92,3 +92,5 @@ Debug 0.1.21 removes three rejected Heart route markers. No replacements pending
 Debug 0.1.22 retains the three route annotations at scale1 and recolors them orange, not confirmed Heart spawns. Future confirmed candidates reserved red. All other markers unchanged.
 
 Debug0.1.23 adds eight confirmed active SpaceCity ItemId102001 Heart of Africa markers, IDs2030202001..2008, red scale1 SOLID_NONE. Exact decoded POI evidence included; positions use SceneConfig-derived existing dump CS2 xyz. Satcom excluded. Three older route annotations remain orange. Lucas teleported to1700,-2455,416 and confirmed2004, resolving frame.
+
+Debug0.1.25 adds all131 other active red-layer official POIs purple scale1 no collision excluding HoA and existing loot IDs. Includes87genericred14Satcom16keycard5fuel7trophy7treasure. Existingthree orange route annotations have no shared POI IDs and are retained, no proximity merging guessed.
