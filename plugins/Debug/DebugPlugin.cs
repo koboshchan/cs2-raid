@@ -20,7 +20,7 @@ public sealed class DebugConfig : BasePluginConfig
 public sealed class DebugPlugin : BasePlugin, IPluginConfig<DebugConfig>
 {
     public override string ModuleName => "Map Debug";
-    public override string ModuleVersion => "0.1.22";
+    public override string ModuleVersion => "0.1.23";
     public override string ModuleAuthor => "koboshchan";
     public override string ModuleDescription => "Debug economy and durable map issue reports";
     public DebugConfig Config { get; set; } = new();
@@ -346,6 +346,14 @@ public sealed class DebugPlugin : BasePlugin, IPluginConfig<DebugConfig>
         ("LANG_20302_20260120_105459_970_marker_7","heart_of_africa",new Point(-1943.7480000000141f,-3173.7239999999874f,489.18373199999996f)),
         ("LANG_20302_20260120_150634_719_marker_16","heart_of_africa",new Point(-1937.566439999995f,-3149.639999999992f,489.18373199999996f)),
         ("LANG_20302_20260312_113014_794_marker_34","heart_of_africa",new Point(-1958.328000000005f,-3136.9219200000152f,488.7750600000004f)),
+        ("2030202001","confirmed_heart_of_africa",new Point(-306.439453125f,-2075.326171875f,942.0138281249999f)),
+        ("2030202002","confirmed_heart_of_africa",new Point(-2134.79296875f,210.375f,396.6173437499999f)),
+        ("2030202003","confirmed_heart_of_africa",new Point(-1991.56640625f,-3109.904296875f,519.0138281249999f)),
+        ("2030202004","confirmed_heart_of_africa",new Point(1699.998046875f,-2455.013671875f,400.2032812499999f)),
+        ("2030202005","confirmed_heart_of_africa",new Point(-9198.544921875f,3218.396484375f,202.20328124999992f)),
+        ("2030202006","confirmed_heart_of_africa",new Point(-198.896484375f,7024.60546875f,142.26187499999992f)),
+        ("2030202007","confirmed_heart_of_africa",new Point(213.591796875f,-1864.8984375f,949.2208593749999f)),
+        ("2030202008","confirmed_heart_of_africa",new Point(2286.228515625f,-7.20703125f,713.4103124999999f))
     ];
     private CounterStrikeSharp.API.Modules.Timers.Timer? lootSpawnTimer;
     private int lootCursor;
@@ -353,6 +361,7 @@ public sealed class DebugPlugin : BasePlugin, IPluginConfig<DebugConfig>
     {
         if(type=="c_safe")return System.Drawing.Color.Yellow;
         if(type=="player_spawn_poi")return System.Drawing.Color.Lime;
+        if(type=="confirmed_heart_of_africa")return System.Drawing.Color.Red;
         if(type=="heart_of_africa")return System.Drawing.Color.Orange;
         return System.Drawing.Color.Blue;
     }
@@ -375,7 +384,7 @@ public sealed class DebugPlugin : BasePlugin, IPluginConfig<DebugConfig>
         ClearBigSafes();
         if(c.GetArg(1)=="off") { c.ReplyToCommand("Loot markers off.");return; }
         lootSpawnTimer=AddTimer(0.1f,SpawnLootBatch,CounterStrikeSharp.API.Modules.Timers.TimerFlags.REPEAT|CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
-        c.ReplyToCommand("Loot marker spawn started: 306 positions, batches of 10; css_loot_status for progress.");
+        c.ReplyToCommand("Loot marker spawn started: 314 positions, batches of 10; css_loot_status for progress.");
     }
     private void SpawnLootBatch()
     {
@@ -391,7 +400,7 @@ public sealed class DebugPlugin : BasePlugin, IPluginConfig<DebugConfig>
                 // No expensive through-wall glow on 295 entities; yellow big safes remain distinct.
                 e.DispatchSpawn();e.Collision.SolidType=SolidType_t.SOLID_NONE;e.MoveType=MoveType_t.MOVETYPE_NONE;
                 if(e.CBodyComponent?.SceneNode is not {} node)throw new InvalidOperationException("Missing loot scene node");
-                node.Scale=type=="player_spawn_poi"?3.0f:type=="heart_of_africa"?1.0f:0.21f;
+                node.Scale=type=="player_spawn_poi"?3.0f:(type=="heart_of_africa"||type=="confirmed_heart_of_africa")?1.0f:0.21f;
                 e.Teleport(new Vector(pos.X,pos.Y,pos.Z),new QAngle(0,0,0),new Vector(0,0,0));
                 lootCursor++;
             }
@@ -408,7 +417,7 @@ public sealed class DebugPlugin : BasePlugin, IPluginConfig<DebugConfig>
         if(p!=null)return;
         foreach(var e in bigSafeMarkers.Where(e=>e.IsValid && e.Entity?.Name.Contains("LANG_20302_")==true))
             c.ReplyToCommand($"Heart name={e.Entity!.Name}, pos={e.AbsOrigin}, scale={e.CBodyComponent?.SceneNode?.Scale}, solid={e.Collision.SolidType}, color={e.Render}, model={e.CBodyComponent?.SceneNode?.GetSkeletonInstance().ModelState.ModelName}");
-        c.ReplyToCommand($"Loot markers={bigSafeMarkers.Count(e=>e.IsValid)}/306, pending={lootSpawnTimer!=null}, nonSolid={bigSafeMarkers.Count(e=>e.IsValid&&e.Collision.SolidType==SolidType_t.SOLID_NONE)}, scale1={bigSafeMarkers.Count(e=>e.IsValid&&e.CBodyComponent?.SceneNode?.Scale==1.0f)}, scale3={bigSafeMarkers.Count(e=>e.IsValid&&e.CBodyComponent?.SceneNode?.Scale==3.0f)}, scale021={bigSafeMarkers.Count(e=>e.IsValid&&e.CBodyComponent?.SceneNode?.Scale==0.21f)}, safe7={safe7Marker is {IsValid:true}}, beams={extractBoxBeams.Count(e=>e.IsValid)}");
+        c.ReplyToCommand($"Loot markers={bigSafeMarkers.Count(e=>e.IsValid)}/314, pending={lootSpawnTimer!=null}, nonSolid={bigSafeMarkers.Count(e=>e.IsValid&&e.Collision.SolidType==SolidType_t.SOLID_NONE)}, scale1={bigSafeMarkers.Count(e=>e.IsValid&&e.CBodyComponent?.SceneNode?.Scale==1.0f)}, scale3={bigSafeMarkers.Count(e=>e.IsValid&&e.CBodyComponent?.SceneNode?.Scale==3.0f)}, scale021={bigSafeMarkers.Count(e=>e.IsValid&&e.CBodyComponent?.SceneNode?.Scale==0.21f)}, safe7={safe7Marker is {IsValid:true}}, beams={extractBoxBeams.Count(e=>e.IsValid)}");
     }
 
     private const string Safe7Model="models/props/de_dust/hr_dust/dust_soccerball/dust_soccer_ball001.vmdl";

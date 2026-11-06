@@ -1,0 +1,618 @@
+[
+  {
+    "id": "2030202001",
+    "type": "confirmed_heart_of_africa",
+    "name": {
+      "zh": "总裁进门右边小桌子上",
+      "en": "On the table to the right of the CEO's entrance"
+    },
+    "prefab": "Item/Landmark-Red-Name.prefab",
+    "x": -306.439453125,
+    "y": -2075.326171875,
+    "z": 942.0138281249999,
+    "units": "CS2 source units",
+    "unity_position_m": {
+      "x": 6685.48779296875,
+      "y": -197.52294921875,
+      "z": 4520.35205078125
+    },
+    "rotation": {
+      "unity_euler_degrees": {
+        "x": -0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "cs2_yaw_degrees": 90.0,
+      "meaning": "Unity Y converted as projected local +Z heading; ignores X/Z Euler components"
+    },
+    "unity_bounds_m": {
+      "m_Center": {
+        "x": 6685.48779296875,
+        "y": -196.6941375732422,
+        "z": 4520.35205078125
+      },
+      "m_Extent": {
+        "x": 0.375,
+        "y": 0.6213836669921875,
+        "z": 0.2275390625
+      }
+    },
+    "evidence": "SceneConfig m_Data 2030202xxx plus red landmark prefab; type 2 localization labels red item spawn points",
+    "display_name": {
+      "zh": "总裁进门右边小桌子上",
+      "en": "On the table to the right of the CEO's entrance"
+    },
+    "web_location": {
+      "zh": "总裁进门右边小桌子上",
+      "en": "On the table to the right of the CEO's entrance"
+    },
+    "web_location_source_key": "LANG_POIConfig_2030202001_Location",
+    "web_category": {
+      "zh": "刷红点",
+      "en": "Red Item Spawn Point"
+    },
+    "web_type_id": 102001,
+    "display_name_source": "site POIConfig Location localized by exact marker ID",
+    "decoded_poi_record": {
+      "Id": 2030202001,
+      "MapId": 203,
+      "MapMode": 2,
+      "ItemId": 102001,
+      "Active": 1,
+      "Location": "总裁进门右边小桌子上",
+      "Location_Key": "LANG_POIConfig_2030202001_Location",
+      "Floor": 0,
+      "SubTitle": "",
+      "SubTitle_Key": "",
+      "Description": "",
+      "Description_Key": "",
+      "WorldPos": [
+        6686.7,
+        -198.0,
+        4519.9
+      ],
+      "POICollectionConfigId": 1014,
+      "MinVersions": []
+    },
+    "position_authority": "existing SceneConfig-derived CS2 xyz; POI WorldPos preserved separately"
+  },
+  {
+    "id": "2030202002",
+    "type": "confirmed_heart_of_africa",
+    "name": {
+      "zh": "浮力二楼楼梯间桌子",
+      "en": "Buoyancy Lab 2F - Stairwell"
+    },
+    "prefab": "Item/Landmark-Red-Name.prefab",
+    "x": -2134.79296875,
+    "y": 210.375,
+    "z": 396.6173437499999,
+    "units": "CS2 source units",
+    "unity_position_m": {
+      "x": 6634.7001953125,
+      "y": -212.6728515625,
+      "z": 4583.84375
+    },
+    "rotation": {
+      "unity_euler_degrees": {
+        "x": -0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "cs2_yaw_degrees": 90.0,
+      "meaning": "Unity Y converted as projected local +Z heading; ignores X/Z Euler components"
+    },
+    "unity_bounds_m": {
+      "m_Center": {
+        "x": 6634.7001953125,
+        "y": -211.8440399169922,
+        "z": 4583.84375
+      },
+      "m_Extent": {
+        "x": 0.375,
+        "y": 0.6213836669921875,
+        "z": 0.2275390625
+      }
+    },
+    "evidence": "SceneConfig m_Data 2030202xxx plus red landmark prefab; type 2 localization labels red item spawn points",
+    "display_name": {
+      "zh": "浮力二楼楼梯间桌子",
+      "en": "Buoyancy Lab 2F - Stairwell"
+    },
+    "web_location": {
+      "zh": "浮力二楼楼梯间桌子",
+      "en": "Buoyancy Lab 2F - Stairwell"
+    },
+    "web_location_source_key": "LANG_POIConfig_2030202002_Location",
+    "web_category": {
+      "zh": "刷红点",
+      "en": "Red Item Spawn Point"
+    },
+    "web_type_id": 102001,
+    "display_name_source": "site POIConfig Location localized by exact marker ID",
+    "decoded_poi_record": {
+      "Id": 2030202002,
+      "MapId": 203,
+      "MapMode": 2,
+      "ItemId": 102001,
+      "Active": 1,
+      "Location": "浮力二楼楼梯间桌子",
+      "Location_Key": "LANG_POIConfig_2030202002_Location",
+      "Floor": 0,
+      "SubTitle": "",
+      "SubTitle_Key": "",
+      "Description": "",
+      "Description_Key": "",
+      "WorldPos": [
+        6634.4,
+        -213.9731,
+        4585
+      ],
+      "POICollectionConfigId": 1014,
+      "MinVersions": []
+    },
+    "position_authority": "existing SceneConfig-derived CS2 xyz; POI WorldPos preserved separately"
+  },
+  {
+    "id": "2030202003",
+    "type": "confirmed_heart_of_africa",
+    "name": {
+      "zh": "离心办公室",
+      "en": "Centrifuge Office"
+    },
+    "prefab": "Item/Landmark-Red-Name.prefab",
+    "x": -1991.56640625,
+    "y": -3109.904296875,
+    "z": 519.0138281249999,
+    "units": "CS2 source units",
+    "unity_position_m": {
+      "x": 6638.6787109375,
+      "y": -209.27294921875,
+      "z": 4491.61376953125
+    },
+    "rotation": {
+      "unity_euler_degrees": {
+        "x": -0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "cs2_yaw_degrees": 90.0,
+      "meaning": "Unity Y converted as projected local +Z heading; ignores X/Z Euler components"
+    },
+    "unity_bounds_m": {
+      "m_Center": {
+        "x": 6638.6787109375,
+        "y": -208.4441375732422,
+        "z": 4491.61376953125
+      },
+      "m_Extent": {
+        "x": 0.375,
+        "y": 0.6213836669921875,
+        "z": 0.2275390625
+      }
+    },
+    "evidence": "SceneConfig m_Data 2030202xxx plus red landmark prefab; type 2 localization labels red item spawn points",
+    "display_name": {
+      "zh": "离心办公室",
+      "en": "Centrifuge Office"
+    },
+    "web_location": {
+      "zh": "离心办公室",
+      "en": "Centrifuge Office"
+    },
+    "web_location_source_key": "LANG_POIConfig_2030202003_Location",
+    "web_category": {
+      "zh": "刷红点",
+      "en": "Red Item Spawn Point"
+    },
+    "web_type_id": 102001,
+    "display_name_source": "site POIConfig Location localized by exact marker ID",
+    "decoded_poi_record": {
+      "Id": 2030202003,
+      "MapId": 203,
+      "MapMode": 2,
+      "ItemId": 102001,
+      "Active": 1,
+      "Location": "离心办公室",
+      "Location_Key": "LANG_POIConfig_2030202003_Location",
+      "Floor": 0,
+      "SubTitle": "",
+      "SubTitle_Key": "",
+      "Description": "",
+      "Description_Key": "",
+      "WorldPos": [
+        6640.5,
+        -210.0732,
+        4491.3
+      ],
+      "POICollectionConfigId": 1014,
+      "MinVersions": []
+    },
+    "position_authority": "existing SceneConfig-derived CS2 xyz; POI WorldPos preserved separately"
+  },
+  {
+    "id": "2030202004",
+    "type": "confirmed_heart_of_africa",
+    "name": {
+      "zh": "黑室二楼桌子",
+      "en": "Dark Room 2F - Table"
+    },
+    "prefab": "Item/Landmark-Red-Name.prefab",
+    "x": 1699.998046875,
+    "y": -2455.013671875,
+    "z": 400.2032812499999,
+    "units": "CS2 source units",
+    "unity_position_m": {
+      "x": 6741.22216796875,
+      "y": -212.5732421875,
+      "z": 4509.80517578125
+    },
+    "rotation": {
+      "unity_euler_degrees": {
+        "x": -0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "cs2_yaw_degrees": 90.0,
+      "meaning": "Unity Y converted as projected local +Z heading; ignores X/Z Euler components"
+    },
+    "unity_bounds_m": {
+      "m_Center": {
+        "x": 6741.22216796875,
+        "y": -211.7444305419922,
+        "z": 4509.80517578125
+      },
+      "m_Extent": {
+        "x": 0.375,
+        "y": 0.6213836669921875,
+        "z": 0.2275390625
+      }
+    },
+    "evidence": "SceneConfig m_Data 2030202xxx plus red landmark prefab; type 2 localization labels red item spawn points",
+    "display_name": {
+      "zh": "黑室二楼桌子",
+      "en": "Dark Room 2F - Table"
+    },
+    "web_location": {
+      "zh": "黑室二楼桌子",
+      "en": "Dark Room 2F - Table"
+    },
+    "web_location_source_key": "LANG_POIConfig_2030202004_Location",
+    "web_category": {
+      "zh": "刷红点",
+      "en": "Red Item Spawn Point"
+    },
+    "web_type_id": 102001,
+    "display_name_source": "site POIConfig Location localized by exact marker ID",
+    "decoded_poi_record": {
+      "Id": 2030202004,
+      "MapId": 203,
+      "MapMode": 2,
+      "ItemId": 102001,
+      "Active": 1,
+      "Location": "黑室二楼桌子",
+      "Location_Key": "LANG_POIConfig_2030202004_Location",
+      "Floor": 0,
+      "SubTitle": "",
+      "SubTitle_Key": "",
+      "Description": "",
+      "Description_Key": "",
+      "WorldPos": [
+        6742.2,
+        -213.6729,
+        4508.4
+      ],
+      "POICollectionConfigId": 1014,
+      "MinVersions": []
+    },
+    "position_authority": "existing SceneConfig-derived CS2 xyz; POI WorldPos preserved separately"
+  },
+  {
+    "id": "2030202005",
+    "type": "confirmed_heart_of_africa",
+    "name": {
+      "zh": "3号楼钥匙房鞋柜",
+      "en": "Table / Stairwell Table"
+    },
+    "prefab": "Item/Landmark-Red-Name.prefab",
+    "x": -9198.544921875,
+    "y": 3218.396484375,
+    "z": 202.20328124999992,
+    "units": "CS2 source units",
+    "unity_position_m": {
+      "x": 6438.48486328125,
+      "y": -218.0732421875,
+      "z": 4667.39990234375
+    },
+    "rotation": {
+      "unity_euler_degrees": {
+        "x": -0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "cs2_yaw_degrees": 90.0,
+      "meaning": "Unity Y converted as projected local +Z heading; ignores X/Z Euler components"
+    },
+    "unity_bounds_m": {
+      "m_Center": {
+        "x": 6438.48486328125,
+        "y": -217.2444305419922,
+        "z": 4667.39990234375
+      },
+      "m_Extent": {
+        "x": 0.375,
+        "y": 0.6213836669921875,
+        "z": 0.2275390625
+      }
+    },
+    "evidence": "SceneConfig m_Data 2030202xxx plus red landmark prefab; type 2 localization labels red item spawn points",
+    "display_name": {
+      "zh": "3号楼钥匙房鞋柜",
+      "en": "Table / Stairwell Table"
+    },
+    "web_location": {
+      "zh": "3号楼钥匙房鞋柜",
+      "en": "Table / Stairwell Table"
+    },
+    "web_location_source_key": "LANG_POIConfig_2030202005_Location",
+    "web_category": {
+      "zh": "刷红点",
+      "en": "Red Item Spawn Point"
+    },
+    "web_type_id": 102001,
+    "display_name_source": "site POIConfig Location localized by exact marker ID",
+    "decoded_poi_record": {
+      "Id": 2030202005,
+      "MapId": 203,
+      "MapMode": 2,
+      "ItemId": 102001,
+      "Active": 1,
+      "Location": "3号楼钥匙房鞋柜",
+      "Location_Key": "LANG_POIConfig_2030202005_Location",
+      "Floor": 0,
+      "SubTitle": "",
+      "SubTitle_Key": "",
+      "Description": "",
+      "Description_Key": "",
+      "WorldPos": [
+        6438.4,
+        -219.1729,
+        4668.3
+      ],
+      "POICollectionConfigId": 1014,
+      "MinVersions": []
+    },
+    "position_authority": "existing SceneConfig-derived CS2 xyz; POI WorldPos preserved separately"
+  },
+  {
+    "id": "2030202006",
+    "type": "confirmed_heart_of_africa",
+    "name": {
+      "zh": "中控一楼讲台",
+      "en": "Central Control 1F - Podium"
+    },
+    "prefab": "Item/Landmark-Red-Name.prefab",
+    "x": -198.896484375,
+    "y": 7024.60546875,
+    "z": 142.26187499999992,
+    "units": "CS2 source units",
+    "unity_position_m": {
+      "x": 6688.47509765625,
+      "y": -219.73828125,
+      "z": 4773.1279296875
+    },
+    "rotation": {
+      "unity_euler_degrees": {
+        "x": -0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "cs2_yaw_degrees": 90.0,
+      "meaning": "Unity Y converted as projected local +Z heading; ignores X/Z Euler components"
+    },
+    "unity_bounds_m": {
+      "m_Center": {
+        "x": 6688.47509765625,
+        "y": -218.9094696044922,
+        "z": 4773.1279296875
+      },
+      "m_Extent": {
+        "x": 0.375,
+        "y": 0.6213836669921875,
+        "z": 0.2275390625
+      }
+    },
+    "evidence": "SceneConfig m_Data 2030202xxx plus red landmark prefab; type 2 localization labels red item spawn points",
+    "display_name": {
+      "zh": "中控一楼讲台",
+      "en": "Central Control 1F - Podium"
+    },
+    "web_location": {
+      "zh": "中控一楼讲台",
+      "en": "Central Control 1F - Podium"
+    },
+    "web_location_source_key": "LANG_POIConfig_2030202006_Location",
+    "web_category": {
+      "zh": "刷红点",
+      "en": "Red Item Spawn Point"
+    },
+    "web_type_id": 102001,
+    "display_name_source": "site POIConfig Location localized by exact marker ID",
+    "decoded_poi_record": {
+      "Id": 2030202006,
+      "MapId": 203,
+      "MapMode": 2,
+      "ItemId": 102001,
+      "Active": 1,
+      "Location": "中控一楼讲台",
+      "Location_Key": "LANG_POIConfig_2030202006_Location",
+      "Floor": 0,
+      "SubTitle": "",
+      "SubTitle_Key": "",
+      "Description": "",
+      "Description_Key": "",
+      "WorldPos": [
+        6688.5,
+        -221.0732,
+        4773.9
+      ],
+      "POICollectionConfigId": 1014,
+      "MinVersions": []
+    },
+    "position_authority": "existing SceneConfig-derived CS2 xyz; POI WorldPos preserved separately"
+  },
+  {
+    "id": "2030202007",
+    "type": "confirmed_heart_of_africa",
+    "name": {
+      "zh": "总裁会客厅地上台子",
+      "en": "CEO Lounge - Floor"
+    },
+    "prefab": "Item/Landmark-Red-Name.prefab",
+    "x": 213.591796875,
+    "y": -1864.8984375,
+    "z": 949.2208593749999,
+    "units": "CS2 source units",
+    "unity_position_m": {
+      "x": 6699.93310546875,
+      "y": -197.32275390625,
+      "z": 4526.197265625
+    },
+    "rotation": {
+      "unity_euler_degrees": {
+        "x": -0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "cs2_yaw_degrees": 90.0,
+      "meaning": "Unity Y converted as projected local +Z heading; ignores X/Z Euler components"
+    },
+    "unity_bounds_m": {
+      "m_Center": {
+        "x": 6699.93310546875,
+        "y": -196.4939422607422,
+        "z": 4526.197265625
+      },
+      "m_Extent": {
+        "x": 0.375,
+        "y": 0.6213836669921875,
+        "z": 0.2275390625
+      }
+    },
+    "evidence": "SceneConfig m_Data 2030202xxx plus red landmark prefab; type 2 localization labels red item spawn points",
+    "display_name": {
+      "zh": "总裁会客厅地上台子",
+      "en": "CEO Lounge - Floor"
+    },
+    "web_location": {
+      "zh": "总裁会客厅地上台子",
+      "en": "CEO Lounge - Floor"
+    },
+    "web_location_source_key": "LANG_POIConfig_2030202007_Location",
+    "web_category": {
+      "zh": "刷红点",
+      "en": "Red Item Spawn Point"
+    },
+    "web_type_id": 102001,
+    "display_name_source": "site POIConfig Location localized by exact marker ID",
+    "decoded_poi_record": {
+      "Id": 2030202007,
+      "MapId": 203,
+      "MapMode": 2,
+      "ItemId": 102001,
+      "Active": 1,
+      "Location": "总裁会客厅地上台子",
+      "Location_Key": "LANG_POIConfig_2030202007_Location",
+      "Floor": 0,
+      "SubTitle": "",
+      "SubTitle_Key": "",
+      "Description": "",
+      "Description_Key": "",
+      "WorldPos": [
+        6700.9,
+        -198.373,
+        4527.3
+      ],
+      "POICollectionConfigId": 1014,
+      "MinVersions": []
+    },
+    "position_authority": "existing SceneConfig-derived CS2 xyz; POI WorldPos preserved separately"
+  },
+  {
+    "id": "2030202008",
+    "type": "confirmed_heart_of_africa",
+    "name": {
+      "zh": "蓝室核心桌子",
+      "en": "Blue Room - Core Table"
+    },
+    "prefab": "Item/Landmark-Red-Name.prefab",
+    "x": 2286.228515625,
+    "y": -7.20703125,
+    "z": 713.4103124999999,
+    "units": "CS2 source units",
+    "unity_position_m": {
+      "x": 6757.50634765625,
+      "y": -203.873046875,
+      "z": 4577.7998046875
+    },
+    "rotation": {
+      "unity_euler_degrees": {
+        "x": -0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "cs2_yaw_degrees": 90.0,
+      "meaning": "Unity Y converted as projected local +Z heading; ignores X/Z Euler components"
+    },
+    "unity_bounds_m": {
+      "m_Center": {
+        "x": 6757.50634765625,
+        "y": -203.0442352294922,
+        "z": 4577.7998046875
+      },
+      "m_Extent": {
+        "x": 0.375,
+        "y": 0.6213836669921875,
+        "z": 0.2275390625
+      }
+    },
+    "evidence": "SceneConfig m_Data 2030202xxx plus red landmark prefab; type 2 localization labels red item spawn points",
+    "display_name": {
+      "zh": "蓝室核心桌子",
+      "en": "Blue Room - Core Table"
+    },
+    "web_location": {
+      "zh": "蓝室核心桌子",
+      "en": "Blue Room - Core Table"
+    },
+    "web_location_source_key": "LANG_POIConfig_2030202008_Location",
+    "web_category": {
+      "zh": "刷红点",
+      "en": "Red Item Spawn Point"
+    },
+    "web_type_id": 102001,
+    "display_name_source": "site POIConfig Location localized by exact marker ID",
+    "decoded_poi_record": {
+      "Id": 2030202008,
+      "MapId": 203,
+      "MapMode": 2,
+      "ItemId": 102001,
+      "Active": 1,
+      "Location": "蓝室核心桌子",
+      "Location_Key": "LANG_POIConfig_2030202008_Location",
+      "Floor": 0,
+      "SubTitle": "",
+      "SubTitle_Key": "",
+      "Description": "",
+      "Description_Key": "",
+      "WorldPos": [
+        6757,
+        -204.9731,
+        4577.3
+      ],
+      "POICollectionConfigId": 1014,
+      "MinVersions": []
+    },
+    "position_authority": "existing SceneConfig-derived CS2 xyz; POI WorldPos preserved separately"
+  }
+]
