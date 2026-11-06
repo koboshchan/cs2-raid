@@ -15,8 +15,9 @@ See [SPEC.md](SPEC.md). Flow changes are documentation only until go-ahead.
 
 ## Confirmed requirements for the pending flow
 
-- [ ] Non-safe loot items: instant press-E pickup, fixed value per item name; no hold timer or random payout.
-- [ ] Safes: retain hold-E timer and configured money range.
+- [ ] Separate loose loot items only: instant press-E pickup, fixed value per item name. Do not apply this to Spaceport containers.
+- [ ] Implement confirmed Nov5 container interaction, not yet implemented. Hold E for normal containers 5s, small safes 10s, big safes 17s; show progress and cancel on release or moving away. Completion despawns the individual container for the rest of that raid; reconnect/late join preserves collection, new raid resets eligible placements.
+- [ ] Next-build individual loot entity plan and collision/resource/anchor acceptance are documented in SPACEPORT_LOOT_PLAN.md. Preserve separate loose-item/death-bag rules; do not invent reward or spawn-probability changes.
 - [ ] Disable buying all utility (flash, smoke, HE, molotov/incendiary, decoy); allow guns, armor and helmet.
 - [ ] Keep SQLite only for account links and durable settlement/idempotency records. SSG remains balance authority.
 - [ ] Keep all match state in memory and discard it each game; no persistent stash.
