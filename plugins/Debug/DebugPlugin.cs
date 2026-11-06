@@ -20,7 +20,7 @@ public sealed class DebugConfig : BasePluginConfig
 public sealed class DebugPlugin : BasePlugin, IPluginConfig<DebugConfig>
 {
     public override string ModuleName => "Map Debug";
-    public override string ModuleVersion => "0.1.13";
+    public override string ModuleVersion => "0.1.14";
     public override string ModuleAuthor => "koboshchan";
     public override string ModuleDescription => "Debug economy and durable map issue reports";
     public DebugConfig Config { get; set; } = new();
@@ -38,6 +38,55 @@ public sealed class DebugPlugin : BasePlugin, IPluginConfig<DebugConfig>
     private readonly Dictionary<string, List<CBeam>> markerEntities = [];
     private readonly LinkedList<string> markerOrder = [];
     private readonly List<CBeam> extractBoxBeams = [];
+    private readonly List<CDynamicProp> bigSafeMarkers=[];
+    private static readonly (string Id,Point Position)[] BigSafePositions=[
+        ("2030201029",new Point(259.62890625f,-2178.720703125f,926.2083471679687f)),
+        ("2030201030",new Point(311.8359375f,-2177.6484375f,926.2083471679687f)),
+        ("2030201031",new Point(-2299.552734375f,-2594.513671875f,488.23178466796867f)),
+        ("2030201032",new Point(-2645.33203125f,-442.072265625f,-1987.4521142578126f)),
+        ("2030201033",new Point(2381.2734375f,-162.0f,672.5516088867187f)),
+        ("2030201034",new Point(2262.603515625f,602.6484375f,-41.90414062500008f)),
+        ("2030201035",new Point(-196.55859375f,-767.8828125f,868.2115209960937f)),
+        ("2030201036",new Point(-232.69921875f,7667.279296875f,576.3602636718749f)),
+        ("2030201272",new Point(-1926.685546875f,-6183.685546875f,363.2397802734374f))
+    ];
+    private void ClearBigSafes()
+    {
+        var markers=bigSafeMarkers.ToArray();bigSafeMarkers.Clear();
+        foreach(var marker in markers)
+            try { if(marker.IsValid)marker.Remove(); }
+            catch(Exception e) { Logger.LogError(e,"Big safe marker cleanup failed"); }
+    }
+    private void BigSafeCommand(CCSPlayerController? p, CommandInfo c)
+    {
+        if(!active || !Config.EveryoneIsAdmin || p!=null ||
+           ConVar<int>.Find("hostport")?.Value!=27016 || ConVar<bool>.Find("sv_lan")?.Value!=true ||
+           Server.MapName!="df_spaceport_kat_linked")
+        { c.ReplyToCommand("Private Spaceport console only.");return; }
+        if(c.ArgCount!=2 || c.GetArg(1) is not ("on" or "off"))
+        { c.ReplyToCommand("Usage: css_bigsafes on|off");return; }
+        ClearBigSafes();
+        if(c.GetArg(1)=="off") { c.ReplyToCommand("Big safe markers off.");return; }
+        try {
+            foreach(var (id,pos) in BigSafePositions) {
+                var e=Utilities.CreateEntityByName<CDynamicProp>("prop_dynamic")
+                    ??throw new InvalidOperationException("prop_dynamic unavailable");
+                bigSafeMarkers.Add(e);e.Entity!.Name="kat_debug_big_safe_"+id;e.SetModel(Safe7Model);
+                e.Collision.SolidType=SolidType_t.SOLID_NONE;e.TakesDamage=false;
+                e.Render=System.Drawing.Color.Yellow;e.Glow.GlowColorOverride=System.Drawing.Color.Yellow;
+                e.Glow.GlowType=3;e.Glow.GlowRange=10000;e.Glow.Glowing=true;
+                e.DispatchSpawn();e.Collision.SolidType=SolidType_t.SOLID_NONE;e.MoveType=MoveType_t.MOVETYPE_NONE;
+                if(e.CBodyComponent?.SceneNode is not {} node)throw new InvalidOperationException("Missing safe scene node");
+                node.Scale=0.21f;
+                e.Teleport(new Vector(pos.X,pos.Y,pos.Z),new QAngle(0,0,0),new Vector(0,0,0));
+                c.ReplyToCommand($"Big safe {id}: valid={e.IsValid} scale={node.Scale} solid={e.Collision.SolidType} position={e.AbsOrigin}");
+            }
+            c.ReplyToCommand($"Big safe markers on: {bigSafeMarkers.Count}; separate Safe7 unchanged.");
+        } catch(Exception e) {
+            ClearBigSafes();Logger.LogError(e,"Big safe marker drawing failed");
+            c.ReplyToCommand("Big safe markers failed; partial markers removed.");
+        }
+    }
     private const string Safe7Model="models/props/de_dust/hr_dust/dust_soccerball/dust_soccer_ball001.vmdl";
     private CDynamicProp? safe7Marker;
     private void ClearSafe7()
@@ -183,6 +232,7 @@ public sealed class DebugPlugin : BasePlugin, IPluginConfig<DebugConfig>
     {
         loaded = true;
         RegisterListener<Listeners.OnServerPrecacheResources>(m=>m.AddResource(Safe7Model));
+        AddCommand("css_bigsafes", "Draw nine dump big safe markers: on|off", BigSafeCommand);
         AddCommand("css_safe7_scale", "Set and report Safe7 scale 0.21", Safe7ScaleCommand);
         AddCommand("css_safe7", "Draw yellow Safe7 marker: on|off", Safe7Command);
         AddCommand("css_extractbox", "Draw green/red extraction outlines: on|off", ExtractBoxCommand);
@@ -312,6 +362,7 @@ public sealed class DebugPlugin : BasePlugin, IPluginConfig<DebugConfig>
     {
         ClearExtractBox();
         ClearSafe7();
+        ClearBigSafes();
         foreach (var id in markerEntities.Keys.ToArray()) RemoveMarker(id);
         firePoses.Clear();
         shots.Clear(); reportLimiter.Clear(); textureLimiter.Clear(); listLimiter.Clear(); resetLimiter.Clear(); bannerLimiter.Clear(); bannerResetLimiter.Clear(); mvpLimiter.Clear();
