@@ -74,10 +74,10 @@ Post-v26 zipline design (Lucas, Nov6; documentation only).
 
 All 11 gameplay ziplines in the selected DF Level2 closure must be rideable in both directions. Vertical lines support upward and downward travel; horizontal lines support travel both ways. This is the requested future behavior, not a claim about original DF direction permissions or working CS2 traversal.
 
-Press E near the rope to get on. Proximity distance is unspecified.
+Press E near the rope to get on. Proximity distance is unspecified. Jump cancels a ride mid-ride, dropping the player off with the same small forward push in the player's view direction as normal dismount.
 
 On dismount, give a small forward push in the player's view direction at dismount, not an assumed rope direction. Push magnitude is unspecified and must be tuned later. No vertical-pitch clamping rule is specified. This remains documentation-only post-v26 scope.
 
 The authoritative read-only actor inventory is [inventory.json](file:///E:/df-zipline-readonly-20261106/inventory.json), with full-precision source and validated CS2 endpoints in [endpoints.csv](file:///E:/df-zipline-readonly-20261106/endpoints.csv). These desktop-local references are not repository-bundled assets. The inventory identifies 11 distinct actors, 22 endpoint slots and 33 mesh placements; source spline start/end labels do not imply allowed travel direction. Source-map static-prop placement does not establish traversal or individual merged-VPK visibility.
 
-This requirement is POST-V26 future scope only. Do not implement it, modify plugins or maps, include it in the current v26 stage, or change the current build. Speed and cancellation behavior remain unspecified. Implementation requires separate future authorization; this documentation does not authorize a push, deployment or live change.
+This requirement is POST-V26 future scope only. Do not implement it, modify plugins or maps, include it in the current v26 stage, or change the current build. Speed remains unspecified. Implementation requires separate future authorization; this documentation does not authorize a push, deployment or live change.
