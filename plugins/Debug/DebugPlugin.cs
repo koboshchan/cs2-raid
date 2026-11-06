@@ -20,7 +20,7 @@ public sealed class DebugConfig : BasePluginConfig
 public sealed class DebugPlugin : BasePlugin, IPluginConfig<DebugConfig>
 {
     public override string ModuleName => "Map Debug";
-    public override string ModuleVersion => "0.1.25";
+    public override string ModuleVersion => "0.1.26";
     public override string ModuleAuthor => "koboshchan";
     public override string ModuleDescription => "Debug economy and durable map issue reports";
     public DebugConfig Config { get; set; } = new();
@@ -39,6 +39,7 @@ public sealed class DebugPlugin : BasePlugin, IPluginConfig<DebugConfig>
     private readonly LinkedList<string> markerOrder = [];
     private readonly List<CBeam> extractBoxBeams = [];
     private readonly List<CDynamicProp> bigSafeMarkers=[];
+    private readonly List<CPointWorldText> purpleMarkerLabels=[];
     private static readonly (string Id,string Type,Point Position)[] LootPositions=[
         ("2030201001","c_piece_of_clothing",new Point(-2716.55859375f,-2169.474609375f,519.3000219726562f)),
         ("2030201002","c_piece_of_clothing",new Point(1271.021484375f,750.955078125f,148.96847900390617f)),
@@ -484,8 +485,184 @@ public sealed class DebugPlugin : BasePlugin, IPluginConfig<DebugConfig>
         ("2030202150","confirmed_other_red_layer",new Point(5385.603515625f,3772.79296875f,-208.47445312500008f)),
         ("2030202151","confirmed_other_red_layer",new Point(6142.32421875f,1280.443359375f,-207.13851562500008f)),
         ("2030202152","confirmed_other_red_layer",new Point(3147.697265625f,-7943.361328125f,56.65640624999992f)),
-        ("2030202153","confirmed_other_red_layer",new Point(-1921.0078125f,-602.876953125f,171.17789062499992f))
+        ("2030202153","confirmed_other_red_layer",new Point(-1921.0078125f,-602.876953125f,171.17789062499992f)),
+        ("2030202013","confirmed_other_red_layer",new Point(-183.6000000000131f,-2422.8000000000065f,958.2047999999994f)),
+        ("2030202014","confirmed_other_red_layer",new Point(-698.3999999999869f,-1915.1999999999935f,951.0156000000002f)),
+        ("2030202030","confirmed_other_red_layer",new Point(-2127.600000000013f,-1940.399999999987f,159.01560000000018f)),
+        ("2030202043","confirmed_other_red_layer",new Point(1040.399999999987f,126.0f,489.2400000000001f)),
+        ("2030202066","confirmed_other_red_layer",new Point(-9324f,3546.0f,187.80840000000035f))
     ];
+    // Exact marker IDs and decoded_poi_record.ItemId from purple-confirmed.json (136 rows).
+    // Short tags verified against Localization.txt/default, not the landmark prefab color.
+    private static readonly IReadOnlyDictionary<string,string> PurpleMarkerLabels=new Dictionary<string,string>
+    {
+        ["2030202012"]="RedItem",
+        ["2030202015"]="RedItem",
+        ["2030202016"]="RedItem",
+        ["2030202017"]="RedItem",
+        ["2030202018"]="RedItem",
+        ["2030202019"]="RedItem",
+        ["2030202020"]="RedItem",
+        ["2030202022"]="Fuel",
+        ["2030202023"]="RedItem",
+        ["2030202024"]="RedItem",
+        ["2030202025"]="RedItem",
+        ["2030202026"]="Satcom",
+        ["2030202027"]="Satcom",
+        ["2030202028"]="Satcom",
+        ["2030202029"]="RedItem",
+        ["2030202031"]="RedItem",
+        ["2030202033"]="RedItem",
+        ["2030202034"]="RedItem",
+        ["2030202035"]="RedItem",
+        ["2030202036"]="RedItem",
+        ["2030202037"]="RedItem",
+        ["2030202038"]="RedItem",
+        ["2030202039"]="Fuel",
+        ["2030202040"]="Fuel",
+        ["2030202041"]="Fuel",
+        ["2030202042"]="RedItem",
+        ["2030202044"]="RedItem",
+        ["2030202045"]="RedItem",
+        ["2030202046"]="RedItem",
+        ["2030202047"]="RedItem",
+        ["2030202048"]="Satcom",
+        ["2030202049"]="RedItem",
+        ["2030202050"]="RedItem",
+        ["2030202051"]="RedItem",
+        ["2030202052"]="Fuel",
+        ["2030202053"]="RedItem",
+        ["2030202054"]="RedItem",
+        ["2030202055"]="RedItem",
+        ["2030202056"]="RedItem",
+        ["2030202057"]="Satcom",
+        ["2030202058"]="RedItem",
+        ["2030202059"]="Satcom",
+        ["2030202060"]="RedItem",
+        ["2030202061"]="RedItem",
+        ["2030202062"]="RedItem",
+        ["2030202063"]="RedItem",
+        ["2030202067"]="RedItem",
+        ["2030202068"]="Fuel",
+        ["2030202069"]="Fuel",
+        ["2030202070"]="RedItem",
+        ["2030202071"]="Fuel",
+        ["2030202072"]="RedItem",
+        ["2030202073"]="RedItem",
+        ["2030202074"]="RedItem",
+        ["2030202075"]="RedItem",
+        ["2030202076"]="RedItem",
+        ["2030202077"]="RedItem",
+        ["2030202078"]="Fuel",
+        ["2030202079"]="Fuel",
+        ["2030202080"]="Fuel",
+        ["2030202081"]="RedItem",
+        ["2030202082"]="RedItem",
+        ["2030202083"]="RedItem",
+        ["2030202084"]="Satcom",
+        ["2030202085"]="RedItem",
+        ["2030202086"]="RedItem",
+        ["2030202087"]="Satcom",
+        ["2030202088"]="RedItem",
+        ["2030202089"]="RedItem",
+        ["2030202090"]="RedItem",
+        ["2030202091"]="RedItem",
+        ["2030202092"]="RedItem",
+        ["2030202093"]="Satcom",
+        ["2030202094"]="Fuel",
+        ["2030202095"]="Fuel",
+        ["2030202096"]="Fuel",
+        ["2030202097"]="Fuel",
+        ["2030202098"]="Fuel",
+        ["2030202099"]="RedItem",
+        ["2030202100"]="RedItem",
+        ["2030202101"]="RedItem",
+        ["2030202102"]="Satcom",
+        ["2030202103"]="Satcom",
+        ["2030202104"]="RedItem",
+        ["2030202105"]="RedItem",
+        ["2030202106"]="RedItem",
+        ["2030202107"]="RedItem",
+        ["2030202108"]="RedItem",
+        ["2030202109"]="Satcom",
+        ["2030202110"]="RedItem",
+        ["2030202111"]="RedItem",
+        ["2030202112"]="Satcom",
+        ["2030202113"]="RedItem",
+        ["2030202114"]="Satcom",
+        ["2030202115"]="RedItem",
+        ["2030202116"]="RedItem",
+        ["2030202117"]="Trophy",
+        ["2030202119"]="Trophy",
+        ["2030202120"]="Trophy",
+        ["2030202121"]="Trophy",
+        ["2030202122"]="Trophy",
+        ["2030202123"]="Trophy",
+        ["2030202124"]="Trophy",
+        ["2030202125"]="RedItem",
+        ["2030202126"]="RedItem",
+        ["2030202127"]="RedItem",
+        ["2030202128"]="RedItem",
+        ["2030202129"]="RedItem",
+        ["2030202130"]="RedItem",
+        ["2030202131"]="RedItem",
+        ["2030202132"]="RedItem",
+        ["2030202133"]="RedItem",
+        ["2030202134"]="RedItem",
+        ["2030202135"]="RedItem",
+        ["2030202136"]="RedItem",
+        ["2030202137"]="RedItem",
+        ["2030202138"]="RedItem",
+        ["2030202139"]="RedItem",
+        ["2030202140"]="RedItem",
+        ["2030202141"]="RedItem",
+        ["2030202143"]="RedItem",
+        ["2030202144"]="RedItem",
+        ["2030202145"]="RedItem",
+        ["2030202146"]="TreasurePile",
+        ["2030202147"]="TreasurePile",
+        ["2030202148"]="TreasurePile",
+        ["2030202149"]="TreasurePile",
+        ["2030202150"]="TreasurePile",
+        ["2030202151"]="TreasurePile",
+        ["2030202152"]="TreasurePile",
+        ["2030202153"]="RedItem",
+        ["2030202013"]="Keycard",
+        ["2030202014"]="Keycard",
+        ["2030202030"]="Keycard",
+        ["2030202043"]="Keycard",
+        ["2030202066"]="Keycard",
+    };
+    private void SpawnPurpleMarkerLabel(string id,Point pos)
+    {
+        if(!PurpleMarkerLabels.TryGetValue(id,out var label))
+            throw new InvalidOperationException("Missing verified purple marker label: "+id);
+        if(purpleMarkerLabels.Count>=PurpleMarkerLabels.Count)
+            throw new InvalidOperationException("Purple marker label limit reached");
+        var text=Utilities.CreateEntityByName<CPointWorldText>("point_worldtext")
+            ??throw new InvalidOperationException("point_worldtext unavailable");
+        // Track before any setup so the batch failure path also removes partial labels.
+        purpleMarkerLabels.Add(text);
+        text.Entity!.Name="kat_debug_loot_label_"+id;
+        text.MessageText=label;text.FontName="Arial";
+        text.Enabled=true;text.Fullbright=true;text.DrawBackground=false;
+        text.FontSize=32.0f;text.WorldUnitsPerPx=0.25f;
+        text.Color=System.Drawing.Color.White;
+        text.JustifyHorizontal=PointWorldTextJustifyHorizontal_t.POINT_WORLD_TEXT_JUSTIFY_HORIZONTAL_CENTER;
+        text.JustifyVertical=PointWorldTextJustifyVertical_t.POINT_WORLD_TEXT_JUSTIFY_VERTICAL_BOTTOM;
+        text.ReorientMode=PointWorldTextReorientMode_t.POINT_WORLD_TEXT_REORIENT_AROUND_UP;
+        text.Collision.SolidType=SolidType_t.SOLID_NONE;text.TakesDamage=false;
+        text.DispatchSpawn();
+        text.Collision.SolidType=SolidType_t.SOLID_NONE;text.MoveType=MoveType_t.MOVETYPE_NONE;
+        text.Teleport(new Vector(pos.X,pos.Y,pos.Z+30.0f),new QAngle(0,0,0),new Vector(0,0,0));
+    }
+    private void ClearPurpleMarkerLabels()
+    {
+        var labels=purpleMarkerLabels.ToArray();purpleMarkerLabels.Clear();
+        foreach(var label in labels)
+            try { if(label.IsValid)label.Remove(); }
+            catch(Exception e) { Logger.LogError(e,"Purple marker label cleanup failed"); }
+    }
     private CounterStrikeSharp.API.Modules.Timers.Timer? lootSpawnTimer;
     private int lootCursor;
     private static System.Drawing.Color LootColor(string type)
@@ -500,6 +677,7 @@ public sealed class DebugPlugin : BasePlugin, IPluginConfig<DebugConfig>
     private void ClearBigSafes()
     {
         lootSpawnTimer?.Kill();lootSpawnTimer=null;lootCursor=0;
+        ClearPurpleMarkerLabels();
         var markers=bigSafeMarkers.ToArray();bigSafeMarkers.Clear();
         foreach(var marker in markers)
             try { if(marker.IsValid)marker.Remove(); }
@@ -516,7 +694,7 @@ public sealed class DebugPlugin : BasePlugin, IPluginConfig<DebugConfig>
         ClearBigSafes();
         if(c.GetArg(1)=="off") { c.ReplyToCommand("Loot markers off.");return; }
         lootSpawnTimer=AddTimer(0.1f,SpawnLootBatch,CounterStrikeSharp.API.Modules.Timers.TimerFlags.REPEAT|CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
-        c.ReplyToCommand("Loot marker spawn started: 445 positions, batches of 10; css_loot_status for progress.");
+        c.ReplyToCommand("Loot marker spawn started: 450 positions, batches of 10; css_loot_status for progress.");
     }
     private void SpawnLootBatch()
     {
@@ -534,6 +712,7 @@ public sealed class DebugPlugin : BasePlugin, IPluginConfig<DebugConfig>
                 if(e.CBodyComponent?.SceneNode is not {} node)throw new InvalidOperationException("Missing loot scene node");
                 node.Scale=type=="player_spawn_poi"?3.0f:(type=="heart_of_africa"||type=="confirmed_heart_of_africa"||type=="confirmed_other_red_layer")?1.0f:0.21f;
                 e.Teleport(new Vector(pos.X,pos.Y,pos.Z),new QAngle(0,0,0),new Vector(0,0,0));
+                if(type=="confirmed_other_red_layer")SpawnPurpleMarkerLabel(id,pos);
                 lootCursor++;
             }
             if(lootCursor==LootPositions.Length) {
@@ -549,7 +728,7 @@ public sealed class DebugPlugin : BasePlugin, IPluginConfig<DebugConfig>
         if(p!=null)return;
         foreach(var e in bigSafeMarkers.Where(e=>e.IsValid && (e.Entity?.Name.Contains("LANG_20302_")==true || new[]{"2030202001","2030202002","2030202003","2030202004","2030202005","2030202006","2030202007","2030202008"}.Any(id=>e.Entity?.Name.EndsWith(id)==true))))
             c.ReplyToCommand($"Heart name={e.Entity!.Name}, pos={e.AbsOrigin}, scale={e.CBodyComponent?.SceneNode?.Scale}, solid={e.Collision.SolidType}, color={e.Render}, model={e.CBodyComponent?.SceneNode?.GetSkeletonInstance().ModelState.ModelName}");
-        c.ReplyToCommand($"Loot markers={bigSafeMarkers.Count(e=>e.IsValid)}/445, pending={lootSpawnTimer!=null}, nonSolid={bigSafeMarkers.Count(e=>e.IsValid&&e.Collision.SolidType==SolidType_t.SOLID_NONE)}, scale1={bigSafeMarkers.Count(e=>e.IsValid&&e.CBodyComponent?.SceneNode?.Scale==1.0f)}, scale3={bigSafeMarkers.Count(e=>e.IsValid&&e.CBodyComponent?.SceneNode?.Scale==3.0f)}, scale021={bigSafeMarkers.Count(e=>e.IsValid&&e.CBodyComponent?.SceneNode?.Scale==0.21f)}, safe7={safe7Marker is {IsValid:true}}, beams={extractBoxBeams.Count(e=>e.IsValid)}");
+        c.ReplyToCommand($"Loot markers={bigSafeMarkers.Count(e=>e.IsValid)}/450, pending={lootSpawnTimer!=null}, nonSolid={bigSafeMarkers.Count(e=>e.IsValid&&e.Collision.SolidType==SolidType_t.SOLID_NONE)}, scale1={bigSafeMarkers.Count(e=>e.IsValid&&e.CBodyComponent?.SceneNode?.Scale==1.0f)}, scale3={bigSafeMarkers.Count(e=>e.IsValid&&e.CBodyComponent?.SceneNode?.Scale==3.0f)}, scale021={bigSafeMarkers.Count(e=>e.IsValid&&e.CBodyComponent?.SceneNode?.Scale==0.21f)}, labels={purpleMarkerLabels.Count(e=>e.IsValid)}/136, safe7={safe7Marker is {IsValid:true}}, beams={extractBoxBeams.Count(e=>e.IsValid)}");
     }
 
     private const string Safe7Model="models/props/de_dust/hr_dust/dust_soccerball/dust_soccer_ball001.vmdl";

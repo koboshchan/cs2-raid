@@ -9954,5 +9954,180 @@
       "POICollectionConfigId": 1017,
       "MinVersions": []
     }
+  },
+  {
+    "id": "2030202013",
+    "type": "confirmed_other_red_layer",
+    "x": -183.6000000000131,
+    "y": -2422.8000000000065,
+    "z": 958.2047999999994,
+    "unity_position_m": {
+      "x": 6688.9,
+      "y": -197.0732,
+      "z": 4510.7
+    },
+    "decoded_poi_record": {
+      "Id": 2030202013,
+      "MapId": 203,
+      "MapMode": 2,
+      "ItemId": 102005,
+      "Active": 1,
+      "Location": "总裁电脑桌",
+      "Location_Key": "LANG_POIConfig_2030202013_Location",
+      "Floor": 0,
+      "SubTitle": "",
+      "SubTitle_Key": "",
+      "Description": "",
+      "Description_Key": "",
+      "WorldPos": [
+        6688.9,
+        -197.0732,
+        4510.7
+      ],
+      "POICollectionConfigId": 1018,
+      "MinVersions": []
+    },
+    "web_type_id": 102005,
+    "position_authority": "official POI WorldPos fallback; no SceneConfig marker for this ID"
+  },
+  {
+    "id": "2030202014",
+    "type": "confirmed_other_red_layer",
+    "x": -698.3999999999869,
+    "y": -1915.1999999999935,
+    "z": 951.0156000000002,
+    "unity_position_m": {
+      "x": 6674.6,
+      "y": -197.2729,
+      "z": 4524.8
+    },
+    "decoded_poi_record": {
+      "Id": 2030202014,
+      "MapId": 203,
+      "MapMode": 2,
+      "ItemId": 102005,
+      "Active": 1,
+      "Location": "总裁右边小门桌子",
+      "Location_Key": "LANG_POIConfig_2030202014_Location",
+      "Floor": 0,
+      "SubTitle": "",
+      "SubTitle_Key": "",
+      "Description": "",
+      "Description_Key": "",
+      "WorldPos": [
+        6674.6,
+        -197.2729,
+        4524.8
+      ],
+      "POICollectionConfigId": 1018,
+      "MinVersions": []
+    },
+    "web_type_id": 102005,
+    "position_authority": "official POI WorldPos fallback; no SceneConfig marker for this ID"
+  },
+  {
+    "id": "2030202030",
+    "type": "confirmed_other_red_layer",
+    "x": -2127.600000000013,
+    "y": -1940.399999999987,
+    "z": 159.01560000000018,
+    "unity_position_m": {
+      "x": 6634.9,
+      "y": -219.2729,
+      "z": 4524.1
+    },
+    "decoded_poi_record": {
+      "Id": 2030202030,
+      "MapId": 203,
+      "MapMode": 2,
+      "ItemId": 102005,
+      "Active": 1,
+      "Location": "离心玻璃房",
+      "Location_Key": "LANG_POIConfig_2030202030_Location",
+      "Floor": 0,
+      "SubTitle": "",
+      "SubTitle_Key": "",
+      "Description": "",
+      "Description_Key": "",
+      "WorldPos": [
+        6634.9,
+        -219.2729,
+        4524.1
+      ],
+      "POICollectionConfigId": 1018,
+      "MinVersions": []
+    },
+    "web_type_id": 102005,
+    "position_authority": "official POI WorldPos fallback; no SceneConfig marker for this ID"
+  },
+  {
+    "id": "2030202043",
+    "type": "confirmed_other_red_layer",
+    "x": 1040.399999999987,
+    "y": 126.0,
+    "z": 489.2400000000001,
+    "unity_position_m": {
+      "x": 6722.9,
+      "y": -210.1,
+      "z": 4581.5
+    },
+    "decoded_poi_record": {
+      "Id": 2030202043,
+      "MapId": 203,
+      "MapMode": 2,
+      "ItemId": 102005,
+      "Active": 1,
+      "Location": "蓝室二楼会议室",
+      "Location_Key": "LANG_POIConfig_2030202043_Location",
+      "Floor": 0,
+      "SubTitle": "",
+      "SubTitle_Key": "",
+      "Description": "",
+      "Description_Key": "",
+      "WorldPos": [
+        6722.9,
+        -210.1,
+        4581.5
+      ],
+      "POICollectionConfigId": 1018,
+      "MinVersions": []
+    },
+    "web_type_id": 102005,
+    "position_authority": "official POI WorldPos fallback; no SceneConfig marker for this ID"
+  },
+  {
+    "id": "2030202066",
+    "type": "confirmed_other_red_layer",
+    "x": -9324,
+    "y": 3546.0,
+    "z": 187.80840000000035,
+    "unity_position_m": {
+      "x": 6435,
+      "y": -218.4731,
+      "z": 4676.5
+    },
+    "decoded_poi_record": {
+      "Id": 2030202066,
+      "MapId": 203,
+      "MapMode": 2,
+      "ItemId": 102005,
+      "Active": 1,
+      "Location": "3号楼第1个房间",
+      "Location_Key": "LANG_POIConfig_2030202066_Location",
+      "Floor": 0,
+      "SubTitle": "",
+      "SubTitle_Key": "",
+      "Description": "",
+      "Description_Key": "",
+      "WorldPos": [
+        6435,
+        -218.4731,
+        4676.5
+      ],
+      "POICollectionConfigId": 1018,
+      "MinVersions": []
+    },
+    "web_type_id": 102005,
+    "position_authority": "official POI WorldPos fallback; no SceneConfig marker for this ID"
   }
 ]

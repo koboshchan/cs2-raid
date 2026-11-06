@@ -93,4 +93,6 @@ Debug 0.1.22 retains the three route annotations at scale1 and recolors them ora
 
 Debug0.1.23 adds eight confirmed active SpaceCity ItemId102001 Heart of Africa markers, IDs2030202001..2008, red scale1 SOLID_NONE. Exact decoded POI evidence included; positions use SceneConfig-derived existing dump CS2 xyz. Satcom excluded. Three older route annotations remain orange. Lucas teleported to1700,-2455,416 and confirmed2004, resolving frame.
 
-Debug0.1.25 adds all131 other active red-layer official POIs purple scale1 no collision excluding HoA and existing loot IDs. Includes87genericred14Satcom16keycard5fuel7trophy7treasure. Existingthree orange route annotations have no shared POI IDs and are retained, no proximity merging guessed.
+Debug0.1.25 adds all131 other active red-layer official POIs purple scale1 no collision excluding HoA and existing loot IDs. Includes87genericred14Satcom16fuel5keycard7trophy7treasure. Existingthree orange route annotations have no shared POI IDs and are retained, no proximity merging guessed.
+
+Debug0.1.26 complete136purple, including5Keycards absent SceneConfig using official POI WorldPos transformed to confirmed frame. Type tags one static point_worldtext perpurple at+30u, no tick/timers, tracked cleanup. 450batched balls plusSafe7,136labels,32beams. 8HoAred scale1,3orange retained,8green scale3,295loot scale0.21.
