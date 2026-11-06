@@ -202,5 +202,9 @@ Check(outline.All(x=>x.Start.IsFinite&&x.End.IsFinite),"finite outline geometry"
 Check(outline.All(x=>x.Start.Z>=0&&x.End.Z<=300),"outline 0 through 300 without limiting extraction Z");
 Check(outline.Count(x=>x.Start.Z!=x.End.Z)==8,"eight tall corner beams");
 Check(outline.Any(x=>!x.Warning&&x.Start.X==(float)715.278076&&x.Start.Y==(float)-6013.118164),"green new corner");
-Check(outline.Any(x=>x.Warning&&x.Start.X==(float)330.5567014999999&&x.Start.Y==(float)-6049.26709),"red new corner");
+Check(outline.Any(x=>x.Warning&&x.Start.X==(float)341.3649148725517&&x.Start.Y==(float)-6052.782085122279),"red new corner");
+
+Check(outline.Any(x=>!x.Warning&&x.Start.X==(float)1039.138794&&x.Start.Y==(float)-6369.889648),"rotated second corner");
+Check(outline.Any(x=>!x.Warning&&x.Start.X==(float)1095.046509&&x.Start.Y==(float)-5576.641113),"rotated fourth corner");
+Check(outline.Where(x=>!x.Warning&&x.Start.Z==x.End.Z).All(x=>x.Start.X!=x.End.X&&x.Start.Y!=x.End.Y),"no axis-aligned green edge");
 Console.WriteLine($"ALL {checks} checks passed");

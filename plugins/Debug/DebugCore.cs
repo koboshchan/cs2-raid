@@ -259,9 +259,10 @@ public static class ExtractBoxGeometry
         foreach (var key in new[]{"extractionZone","warningZone"})
         {
             var box=json.RootElement.GetProperty(key);
-            float x0=box.GetProperty("minX").GetSingle(), x1=box.GetProperty("maxX").GetSingle();
-            float y0=box.GetProperty("minY").GetSingle(), y1=box.GetProperty("maxY").GetSingle();
-            var corners=new[]{(x0,y0),(x1,y0),(x1,y1),(x0,y1)};
+            var corners=box.GetProperty("vertices").EnumerateArray()
+                .Select(v=>(v.GetProperty("x").GetSingle(),v.GetProperty("y").GetSingle())).ToArray();
+            if(corners.Length!=4 || corners.Any(v=>!float.IsFinite(v.Item1)||!float.IsFinite(v.Item2)))
+                throw new InvalidOperationException("Expected four finite extraction corners");
             var warning=key=="warningZone";
             foreach(var z in new[]{0f,150f,300f})
                 for(var i=0;i<4;i++) {
