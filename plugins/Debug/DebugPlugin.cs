@@ -20,7 +20,7 @@ public sealed class DebugConfig : BasePluginConfig
 public sealed class DebugPlugin : BasePlugin, IPluginConfig<DebugConfig>
 {
     public override string ModuleName => "Map Debug";
-    public override string ModuleVersion => "0.1.23";
+    public override string ModuleVersion => "0.1.24";
     public override string ModuleAuthor => "koboshchan";
     public override string ModuleDescription => "Debug economy and durable map issue reports";
     public DebugConfig Config { get; set; } = new();
@@ -415,7 +415,7 @@ public sealed class DebugPlugin : BasePlugin, IPluginConfig<DebugConfig>
     private void LootStatusCommand(CCSPlayerController? p,CommandInfo c)
     {
         if(p!=null)return;
-        foreach(var e in bigSafeMarkers.Where(e=>e.IsValid && e.Entity?.Name.Contains("LANG_20302_")==true))
+        foreach(var e in bigSafeMarkers.Where(e=>e.IsValid && (e.Entity?.Name.Contains("LANG_20302_")==true || new[]{"2030202001","2030202002","2030202003","2030202004","2030202005","2030202006","2030202007","2030202008"}.Any(id=>e.Entity?.Name.EndsWith(id)==true))))
             c.ReplyToCommand($"Heart name={e.Entity!.Name}, pos={e.AbsOrigin}, scale={e.CBodyComponent?.SceneNode?.Scale}, solid={e.Collision.SolidType}, color={e.Render}, model={e.CBodyComponent?.SceneNode?.GetSkeletonInstance().ModelState.ModelName}");
         c.ReplyToCommand($"Loot markers={bigSafeMarkers.Count(e=>e.IsValid)}/314, pending={lootSpawnTimer!=null}, nonSolid={bigSafeMarkers.Count(e=>e.IsValid&&e.Collision.SolidType==SolidType_t.SOLID_NONE)}, scale1={bigSafeMarkers.Count(e=>e.IsValid&&e.CBodyComponent?.SceneNode?.Scale==1.0f)}, scale3={bigSafeMarkers.Count(e=>e.IsValid&&e.CBodyComponent?.SceneNode?.Scale==3.0f)}, scale021={bigSafeMarkers.Count(e=>e.IsValid&&e.CBodyComponent?.SceneNode?.Scale==0.21f)}, safe7={safe7Marker is {IsValid:true}}, beams={extractBoxBeams.Count(e=>e.IsValid)}");
     }
