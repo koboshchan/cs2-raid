@@ -63,13 +63,21 @@
     }
   ],
   "extractionZone": {
-    "minX": 943.874,
-    "maxX": 1374.076,
-    "minY": -6816.610,
-    "maxY": -5143.672,
+    "minX": 715.278076,
+    "maxX": 1484.720825,
+    "minY": -6013.118164,
+    "maxY": -5940.820312,
     "unboundedZ": true
+  },
+  "warningZone": {
+    "minX": 330.5567014999999,
+    "maxX": 1869.4421995,
+    "minY": -6049.26709,
+    "maxY": -5904.671385999999,
+    "unboundedZ": true
+  },
+  "zoneCenterReference": {
+    "x": 1099.9994505,
+    "y": -5976.969238
   }
-,
-  "warningZone": {"minX": 513.673,"maxX": 1804.277,"minY": -8489.547,"maxY": -3470.735,"unboundedZ": true},
-  "zoneCenterReference": {"x":1158.975,"y":-5980.141}
 }

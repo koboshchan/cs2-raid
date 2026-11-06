@@ -44,9 +44,9 @@ public static class SpawnProfileTests
         var solo=new GameplayState();solo.Join("a");solo.Solo("a");Check(SpawnProfile.LayoutReady(solo.Players.Values));
         var zone=p.ExtractionZone!;
         Check(zone.Valid&&zone.UnboundedZ);
-        Check(zone.MinX==943.874&&zone.MaxX==1374.076&&zone.MinY==-6816.610&&zone.MaxY==-5143.672);
-        Check(zone==NativeExtractionZone.FromCorners(1374.076,-5143.672,943.874,-6816.610));
-        Check(zone==NativeExtractionZone.FromCorners(943.874,-6816.610,1374.076,-5143.672));
+        Check(zone.MinX==715.278076&&zone.MaxX==1484.720825&&zone.MinY==-6013.118164&&zone.MaxY==-5940.820312);
+        Check(zone==NativeExtractionZone.FromCorners(1484.720825,-5940.820312,715.278076,-6013.118164));
+        Check(zone==NativeExtractionZone.FromCorners(715.278076,-6013.118164,1484.720825,-5940.820312));
         foreach(var x in new[]{zone.MinX,zone.MaxX})foreach(var y in new[]{zone.MinY,zone.MaxY})
             foreach(var z in new[]{double.MinValue,-1e12,0,1e12,double.MaxValue})Check(zone.Contains(x,y,z));
         Check(zone.Contains(zone.MinX,-6000,0));Check(zone.Contains(zone.MaxX,-6000,0));
@@ -58,7 +58,7 @@ public static class SpawnProfileTests
         }
         Check(SpawnProfile.Parse(JsonSerializer.Serialize(p)).ExtractionZone==zone);
         Reject(json.Replace("\"unboundedZ\": true","\"unboundedZ\": false"));
-        Reject(json.Replace("943.874","1e400"));Reject(json.Replace("1374.076","900"));
+        Reject(json.Replace("715.278076","1e400"));Reject(json.Replace("1484.720825","700"));
         // Legacy bounded radius and vertical distance are unchanged.
         var legacy=new GameplayConfig{ExtractionCenter=new(0,0,0),ExtractionRadius=10};
         Check(new Position(0,0,10).Within(legacy.ExtractionCenter,legacy.ExtractionRadius));
