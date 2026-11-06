@@ -148,6 +148,8 @@ ENV DOTNET_CLI_TELEMETRY_OPTOUT=1 DOTNET_NOLOGO=1 HOME=/work/home DOTNET_CLI_HOM
 RUN --network=none mkdir -p /work/home && chown -R 1000:1000 /work
 WORKDIR /work
 COPY --chown=1000:1000 plugins/Debug/ /work/src/
+COPY --chown=1000:1000 config/spawns/spaceport-default-20261105.json /work/src/ZoneProfile.json
+COPY --chown=1000:1000 config/spawns/spaceport-default-20261105.json /work/src/tests/ZoneProfile.json
 USER 1000:1000
 RUN --network=none <<'BUILD'
 set -eu

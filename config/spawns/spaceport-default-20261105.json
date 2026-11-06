@@ -1,0 +1,83 @@
+{
+  "mapId": "df_spaceport_player_scale_raytrace",
+  "release": "default-20261105",
+  "provenance": "USER_PROVIDED_SETPOS",
+  "coordinateSpace": "native-cs2-setpos",
+  "nativeValidated": false,
+  "spawns": [
+    {
+      "x": 7114.962402,
+      "y": 8056.473633,
+      "z": -153.348633,
+      "yaw": -90,
+      "pitch": 0,
+      "roll": 0
+    },
+    {
+      "x": 10003.610352,
+      "y": 2420.411133,
+      "z": -136.504883,
+      "yaw": 180,
+      "pitch": 0,
+      "roll": 0
+    },
+    {
+      "x": 6658.519531,
+      "y": -3788.969727,
+      "z": -153.133789,
+      "yaw": 135,
+      "pitch": 0,
+      "roll": 0
+    },
+    {
+      "x": -9901.139648,
+      "y": -1260.527832,
+      "z": -25.809937,
+      "yaw": 0,
+      "pitch": 0,
+      "roll": 0
+    },
+    {
+      "x": -10078.707031,
+      "y": 5226.147949,
+      "z": 119.095291,
+      "yaw": 0,
+      "pitch": 0,
+      "roll": 0
+    },
+    {
+      "x": 3431.539795,
+      "y": 3946.397217,
+      "z": 73.000488,
+      "yaw": 0,
+      "pitch": 0,
+      "roll": 0
+    },
+    {
+      "x": -1797.990479,
+      "y": 7724.342773,
+      "z": 223.606323,
+      "yaw": 0,
+      "pitch": 0,
+      "roll": 0
+    }
+  ],
+  "extractionZone": {
+    "minX": 715.278076,
+    "maxX": 1484.720825,
+    "minY": -6013.118164,
+    "maxY": -5940.820312,
+    "unboundedZ": true
+  },
+  "warningZone": {
+    "minX": 330.5567014999999,
+    "maxX": 1869.4421995,
+    "minY": -6049.26709,
+    "maxY": -5904.671385999999,
+    "unboundedZ": true
+  },
+  "zoneCenterReference": {
+    "x": 1099.9994505,
+    "y": -5976.969238
+  }
+}

@@ -9,4 +9,4 @@
     <Reference Include="CounterStrikeSharp.API"><HintPath>$(CSS_API_DIR)/CounterStrikeSharp.API.dll</HintPath><Private>false</Private></Reference>
     <Reference Include="Microsoft.Extensions.Logging.Abstractions"><HintPath>$(CSS_API_DIR)/Microsoft.Extensions.Logging.Abstractions.dll</HintPath><Private>false</Private></Reference>
   </ItemGroup>
-</Project>
+<ItemGroup><EmbeddedResource Include="../../config/spawns/spaceport-default-20261105.json" Condition="!Exists('ZoneProfile.json')" LogicalName="SpaceportZoneProfile" /><EmbeddedResource Include="ZoneProfile.json" Condition="Exists('ZoneProfile.json')" LogicalName="SpaceportZoneProfile" /></ItemGroup></Project>

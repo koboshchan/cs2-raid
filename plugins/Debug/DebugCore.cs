@@ -246,3 +246,30 @@ public sealed class CollisionStore : IDisposable
     }
     public void Dispose() => file.Dispose();
 }
+
+// In-world debug geometry only; never changes collisions or extraction eligibility.
+public static class ExtractBoxGeometry
+{
+    public sealed record Line(Point Start, Point End, bool Warning);
+    public static Line[] Lines()
+    {
+        using var json = JsonDocument.Parse(typeof(ExtractBoxGeometry).Assembly.GetManifestResourceStream("SpaceportZoneProfile")
+            ?? throw new InvalidOperationException("Missing shared extraction bounds"));
+        var result = new List<Line>();
+        foreach (var key in new[]{"extractionZone","warningZone"})
+        {
+            var box=json.RootElement.GetProperty(key);
+            float x0=box.GetProperty("minX").GetSingle(), x1=box.GetProperty("maxX").GetSingle();
+            float y0=box.GetProperty("minY").GetSingle(), y1=box.GetProperty("maxY").GetSingle();
+            var corners=new[]{(x0,y0),(x1,y0),(x1,y1),(x0,y1)};
+            var warning=key=="warningZone";
+            foreach(var z in new[]{0f,150f,300f})
+                for(var i=0;i<4;i++) {
+                    var a=corners[i];var b=corners[(i+1)%4];
+                    result.Add(new(new(a.Item1,a.Item2,z),new(b.Item1,b.Item2,z),warning));
+                }
+            foreach(var (x,y) in corners)result.Add(new(new(x,y,0),new(x,y,300),warning));
+        }
+        return result.ToArray();
+    }
+}

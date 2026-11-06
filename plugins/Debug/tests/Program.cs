@@ -194,4 +194,13 @@ try {
         Check(cs.Undo("1","map")?.Id == "d", "new latest after restart");
     }
 } finally { Directory.Delete(collisionDir,true); }
+
+var outline=ExtractBoxGeometry.Lines();
+Check(outline.Length==32,"bounded 32 extraction beams");
+Check(outline.Count(x=>x.Warning)==16,"16 red and 16 green beams");
+Check(outline.All(x=>x.Start.IsFinite&&x.End.IsFinite),"finite outline geometry");
+Check(outline.All(x=>x.Start.Z>=0&&x.End.Z<=300),"outline 0 through 300 without limiting extraction Z");
+Check(outline.Count(x=>x.Start.Z!=x.End.Z)==8,"eight tall corner beams");
+Check(outline.Any(x=>!x.Warning&&x.Start.X==(float)715.278076&&x.Start.Y==(float)-6013.118164),"green new corner");
+Check(outline.Any(x=>x.Warning&&x.Start.X==(float)330.5567014999999&&x.Start.Y==(float)-6049.26709),"red new corner");
 Console.WriteLine($"ALL {checks} checks passed");

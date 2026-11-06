@@ -20,7 +20,7 @@ public sealed class DebugConfig : BasePluginConfig
 public sealed class DebugPlugin : BasePlugin, IPluginConfig<DebugConfig>
 {
     public override string ModuleName => "Map Debug";
-    public override string ModuleVersion => "0.1.8";
+    public override string ModuleVersion => "0.1.9";
     public override string ModuleAuthor => "koboshchan";
     public override string ModuleDescription => "Debug economy and durable map issue reports";
     public DebugConfig Config { get; set; } = new();
@@ -37,6 +37,45 @@ public sealed class DebugPlugin : BasePlugin, IPluginConfig<DebugConfig>
     private readonly Dictionary<ulong, (Point Pos, Point Angles, Point Eye)> firePoses = [];
     private readonly Dictionary<string, List<CBeam>> markerEntities = [];
     private readonly LinkedList<string> markerOrder = [];
+    private readonly List<CBeam> extractBoxBeams = [];
+    private void ClearExtractBox()
+    {
+        var beams=extractBoxBeams.ToArray();extractBoxBeams.Clear();
+        foreach(var beam in beams)
+            try { if(beam.IsValid)beam.Remove(); }
+            catch(Exception e) { Logger.LogError(e,"Extraction outline cleanup failed"); }
+    }
+    private void ExtractBoxCommand(CCSPlayerController? p, CommandInfo c)
+    {
+        // Console/RCON is permitted for this private visualization, never arbitrary remote servers.
+        if (!active || !Config.EveryoneIsAdmin ||
+            ConVar<int>.Find("hostport")?.Value != 27016 || ConVar<bool>.Find("sv_lan")?.Value != true)
+        { c.ReplyToCommand("Extraction outlines require the private LAN debug server on 27016."); return; }
+        if (p != null && !Human(p)) return;
+        if (c.ArgCount > 2 || (c.ArgCount == 2 && c.GetArg(1) is not ("on" or "off")))
+        { c.ReplyToCommand("Usage: !extractbox [on|off]"); return; }
+        if (c.ArgCount == 2 && c.GetArg(1) == "off")
+        { ClearExtractBox(); c.ReplyToCommand("Extraction outlines off."); return; }
+        if (Server.MapName != "df_spaceport_kat_linked" && Server.MapName != "df_spaceport_player_scale_raytrace")
+        { c.ReplyToCommand("Extraction outlines are only defined for Spaceport."); return; }
+        ClearExtractBox();
+        try {
+            foreach(var line in ExtractBoxGeometry.Lines()) {
+                var beam=Utilities.CreateEntityByName<CBeam>("beam") ?? throw new InvalidOperationException("beam unavailable");
+                extractBoxBeams.Add(beam);
+                beam.BeamType=BeamType_t.BEAM_POINTS;
+                beam.Width=3;beam.EndWidth=3;
+                beam.Render=line.Warning ? System.Drawing.Color.Red : System.Drawing.Color.Lime;
+                beam.Teleport(new Vector(line.Start.X,line.Start.Y,line.Start.Z));
+                beam.EndPos.X=line.End.X;beam.EndPos.Y=line.End.Y;beam.EndPos.Z=line.End.Z;
+                beam.DispatchSpawn();
+            }
+            c.ReplyToCommand($"Extraction outlines on ({extractBoxBeams.Count} beams). Green extraction; red warning. !extractbox off to remove.");
+        } catch(Exception e) {
+            ClearExtractBox();Logger.LogError(e,"Extraction outline failed");
+            c.ReplyToCommand("Extraction outline drawing failed; partial beams removed.");
+        }
+    }
     private void RemoveMarker(string id)
     {
         markerOrder.Remove(id);
@@ -89,6 +128,7 @@ public sealed class DebugPlugin : BasePlugin, IPluginConfig<DebugConfig>
     public override void Load(bool hotReload)
     {
         loaded = true;
+        AddCommand("css_extractbox", "Draw green/red extraction outlines: on|off", ExtractBoxCommand);
         AddCommand("css_mvp", "Preview your private native round MVP panel", MvpCommand);
         AddCommand("css_bannerreset", "Reset your private native banner preview", BannerResetCommand);
         AddCommand("css_banner", "Private native banner: win|lose|draw|reset", SimpleBannerCommand);
@@ -213,6 +253,7 @@ public sealed class DebugPlugin : BasePlugin, IPluginConfig<DebugConfig>
     }
     private void ClearState()
     {
+        ClearExtractBox();
         foreach (var id in markerEntities.Keys.ToArray()) RemoveMarker(id);
         firePoses.Clear();
         shots.Clear(); reportLimiter.Clear(); textureLimiter.Clear(); listLimiter.Clear(); resetLimiter.Clear(); bannerLimiter.Clear(); bannerResetLimiter.Clear(); mvpLimiter.Clear();

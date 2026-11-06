@@ -5,4 +5,4 @@
     <AssemblyName>Debug.Tests</AssemblyName>
   </PropertyGroup>
   <ItemGroup><Compile Include="../DebugCore.cs" Link="DebugCore.cs" /></ItemGroup>
-</Project>
+<ItemGroup><EmbeddedResource Include="../../../config/spawns/spaceport-default-20261105.json" Condition="!Exists('ZoneProfile.json')" LogicalName="SpaceportZoneProfile" /><EmbeddedResource Include="ZoneProfile.json" Condition="Exists('ZoneProfile.json')" LogicalName="SpaceportZoneProfile" /></ItemGroup></Project>
