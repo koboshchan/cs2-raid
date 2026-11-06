@@ -5,6 +5,7 @@ using CounterStrikeSharp.API.Modules.Admin;
 using CounterStrikeSharp.API.Modules.Entities;
 using CounterStrikeSharp.API.Modules.Cvars;
 using Microsoft.Extensions.Logging;
+using CounterStrikeSharp.API.Modules.Utils;
 
 namespace Cs2Debug;
 
@@ -19,7 +20,7 @@ public sealed class DebugConfig : BasePluginConfig
 public sealed class DebugPlugin : BasePlugin, IPluginConfig<DebugConfig>
 {
     public override string ModuleName => "Map Debug";
-    public override string ModuleVersion => "0.1.7";
+    public override string ModuleVersion => "0.1.8";
     public override string ModuleAuthor => "koboshchan";
     public override string ModuleDescription => "Debug economy and durable map issue reports";
     public DebugConfig Config { get; set; } = new();
@@ -32,6 +33,39 @@ public sealed class DebugPlugin : BasePlugin, IPluginConfig<DebugConfig>
     private readonly ReportLimiter bannerResetLimiter = new();
     private readonly ReportLimiter mvpLimiter = new();
     private ReportStore? store;
+    private CollisionStore? marks;
+    private readonly Dictionary<ulong, (Point Pos, Point Angles, Point Eye)> firePoses = [];
+    private readonly Dictionary<string, List<CBeam>> markerEntities = [];
+    private void RemoveMarker(string id)
+    {
+        if (markerEntities.Remove(id, out var entities))
+            foreach (var entity in entities) if (entity.IsValid) entity.Remove();
+    }
+    private void DrawMarker(CollisionMark mark)
+    {
+        RemoveMarker(mark.Id);
+        var entities = new List<CBeam>();
+        markerEntities[mark.Id] = entities;
+        var p = mark.Position;
+        for (var axis = 0; axis < 3; axis++)
+        {
+            var beam = Utilities.CreateEntityByName<CBeam>("beam") ?? throw new InvalidOperationException("beam unavailable");
+            entities.Add(beam);
+            beam.Width = 2; beam.EndWidth = 2;
+            beam.Render = System.Drawing.Color.Magenta;
+            beam.Teleport(new Vector(p.X + (axis==0?-6:0), p.Y + (axis==1?-6:0), p.Z + (axis==2?-6:0)));
+            beam.EndPos.X = p.X + (axis==0?6:0);
+            beam.EndPos.Y = p.Y + (axis==1?6:0);
+            beam.EndPos.Z = p.Z + (axis==2?6:0);
+            beam.DispatchSpawn();
+        }
+    }
+    private void RestoreMarkers()
+    {
+        if (!active || marks == null) return;
+        foreach (var mark in marks.Active.Where(x => x.Map == Server.MapName))
+            try { DrawMarker(mark); } catch (Exception e) { Logger.LogError(e, "Restore marker failed"); }
+    }
     private readonly HashSet<ulong> grantedAdmins = [];
     private bool loaded;
     private bool active;
@@ -57,18 +91,35 @@ public sealed class DebugPlugin : BasePlugin, IPluginConfig<DebugConfig>
         AddCommand("css_testdraw", "Preview a private native round-draw banner", (p, c) => BannerCommand(p, c, BannerResult.Draw));
         AddCommand("css_report", "Save a map issue at your current position", ReportCommand);
         AddCommand("css_reports", "List latest reports (1-20, default 5)", ReportsCommand);
-        AddCommand("css_markreset", "Reset your two AK ladder shots", (p, c) =>
+        AddCommand("css_undo", "Undo your latest nocollide mark on this map", (p, c) =>
         {
             if (!Ready(p, c)) return;
-            if (!resetLimiter.Allow(p!.SteamID, Environment.TickCount64, 1000))
-            { c.ReplyToCommand("Wait one second between marker resets."); return; }
-            Tracker(p!).Reset();
-            c.ReplyToCommand("AK ladder markers reset. Fire two single shots.");
+            try {
+                var removed = marks?.Undo(p!.SteamID.ToString(), Server.MapName);
+                if (removed == null) { c.ReplyToCommand("No mark to undo."); return; }
+                RemoveMarker(removed.Id);
+                c.ReplyToCommand("Last nocollide mark removed.");
+            } catch (Exception e) { Logger.LogError(e, "Undo failed"); c.ReplyToCommand("Undo NOT saved."); }
+        });
+        AddCommand("css_marks", "Count your active nocollide marks on this map", (p, c) =>
+        {
+            if (!Ready(p, c)) return;
+            c.ReplyToCommand(marks == null ? "Mark storage unavailable." :
+                $"Your nocollide marks on this map: {marks.Active.Count(x => x.SteamId == p!.SteamID.ToString() && x.Map == Server.MapName)}");
         });
         RegisterEventHandler<EventWeaponFire>((e, info) =>
         {
             if (active && Human(e.Userid))
+            {
                 Tracker(e.Userid!).Fire(e.Weapon, Server.TickCount);
+                firePoses.Remove(e.Userid!.SteamID);
+                if (TryPose(e.Userid!, out var pos, out var angles))
+                {
+                    var pawn = e.Userid!.PlayerPawn.Value!;
+                    var offset = pawn.ViewOffset;
+                    firePoses[e.Userid.SteamID] = (pos, angles, new Point(pos.X + offset.X, pos.Y + offset.Y, pos.Z + offset.Z));
+                }
+            }
             return HookResult.Continue;
         });
         RegisterEventHandler<EventBulletImpact>((e, info) =>
@@ -79,23 +130,30 @@ public sealed class DebugPlugin : BasePlugin, IPluginConfig<DebugConfig>
             var tracker = Tracker(p!);
             var kind = tracker.Impact(Server.TickCount, position);
             if (kind == null) return HookResult.Continue;
-            // Glock burst/spray still consumes each fire's ticket but is limited to one saved report/sec.
-            if (kind == "texture" && !textureLimiter.Allow(p!.SteamID, Environment.TickCount64, 1000))
-            { p.PrintToChat("Texture marker not saved: wait one second between marks."); return HookResult.Continue; }
-            if (!TryPose(p!, out _, out var angles))
-            { p!.PrintToChat("Marker not saved: valid living player pose unavailable."); return HookResult.Continue; }
-            var start = kind == "ladder_end" ? tracker.LadderStart : null;
-            var saved = Save(p!, kind == "ladder_end" && start != null ? "ladder" : kind, kind == "texture" ? "Texture error" : "Requested ladder endpoint", position, angles, start);
-            if (!saved && kind == "ladder_start") tracker.InvalidateLadderStart();
-            p!.PrintToChat(saved
-                ? kind switch {
-                    "ladder_start" => "Ladder point 1 saved (first reported impact).",
-                    "ladder_end" => start == null
-                        ? "Ladder point 2 saved without point 1; use !markreset and retry."
-                        : "Ladder point 2 saved. Use !markreset for another ladder.",
-                    _ => "Texture error saved (first reported impact)."
-                }
-                : "Marker NOT confirmed saved. Report storage unavailable or invalid data; ask the server owner, then !markreset.");
+            if (marks == null || !firePoses.Remove(p!.SteamID, out var pose))
+            { p!.PrintToChat("Mark NOT saved: storage or shot pose unavailable."); return HookResult.Continue; }
+            try
+            {
+                // Trace across the actual impact along its bullet direction, not the current crosshair.
+                var dx = position.X - pose.Eye.X; var dy = position.Y - pose.Eye.Y; var dz = position.Z - pose.Eye.Z;
+                var length = MathF.Sqrt(dx*dx + dy*dy + dz*dz);
+                if (length < 0.01f) throw new InvalidOperationException("Invalid shot ray");
+                dx /= length; dy /= length; dz /= length;
+                var hit = Trace.TraceEndShape(new Vector(position.X-dx*4, position.Y-dy*4, position.Z-dz*4),
+                    new Vector(position.X+dx*4, position.Y+dy*4, position.Z+dz*4), p.PlayerPawn.Value);
+                var n = hit.Normal;
+                var normal = new Point(n.X, n.Y, n.Z);
+                if (!hit.DidHit() || hit.IsAllSolid || !normal.IsFinite ||
+                    n.X*n.X+n.Y*n.Y+n.Z*n.Z < 0.5f)
+                    throw new InvalidOperationException("Surface normal unavailable");
+                var mark = new CollisionMark(Guid.NewGuid().ToString("N"), DateTimeOffset.UtcNow,
+                    "nocollide", Server.MapName, p.SteamID.ToString(), position, normal, pose.Pos, pose.Angles);
+                marks.Add(mark);
+                p.PrintToChat("nocollide mark saved.");
+                try { DrawMarker(mark); }
+                catch (Exception ex) { Logger.LogError(ex, "Marker visual failed"); p.PrintToChat("Saved, but marker drawing failed."); }
+            }
+            catch (Exception ex) { Logger.LogError(ex, "nocollide mark failed"); p.PrintToChat("Mark NOT saved: storage/normal unavailable."); }
             return HookResult.Continue;
         });
         RegisterEventHandler<EventRoundStart>((e, info) => { shots.Clear(); return HookResult.Continue; });
@@ -112,7 +170,7 @@ public sealed class DebugPlugin : BasePlugin, IPluginConfig<DebugConfig>
             return HookResult.Continue;
         }, HookMode.Pre);
         RegisterListener<Listeners.OnMapEnd>(() => { RestoreCvars(); ClearState(); });
-        RegisterListener<Listeners.OnMapStart>(_ => { ClearState(); if (active) Server.NextFrame(ApplyCvars); });
+        RegisterListener<Listeners.OnMapStart>(_ => { ClearState(); if (active) Server.NextFrame(() => { ApplyCvars(); RestoreMarkers(); }); });
         RegisterListener<Listeners.OnTick>(Tick);
         Reconfigure();
     }
@@ -120,13 +178,13 @@ public sealed class DebugPlugin : BasePlugin, IPluginConfig<DebugConfig>
     {
         RevokeTestAdmins();
         active = false; loaded = false;
-        RestoreCvars(); ClearState(); store?.Dispose(); store = null;
+        RestoreCvars(); ClearState(); store?.Dispose(); store = null; marks?.Dispose(); marks = null;
     }
     private void Reconfigure()
     {
         RevokeTestAdmins();
         active = false;
-        RestoreCvars(); ClearState(); store?.Dispose(); store = null;
+        RestoreCvars(); ClearState(); store?.Dispose(); store = null; marks?.Dispose(); marks = null;
         if (!Config.Enabled) return;
         // Debug's unlimited-money/Glock markers and gameplay are mutually exclusive.
         var raidConfig = Path.Combine(ModuleDirectory, "..", "RaidPlugin", "gameplay.json");
@@ -141,11 +199,16 @@ public sealed class DebugPlugin : BasePlugin, IPluginConfig<DebugConfig>
         store = new ReportStore(Config.ReportDirectory);
         if (!store.Available)
             Logger.LogError("Map Debug reports unavailable ({Failure}); check configured directory permissions. No reports will be acknowledged.", store.Failure);
+        try { marks = new CollisionStore(Config.ReportDirectory); }
+        catch (Exception e) { Logger.LogError(e, "nocollide storage unavailable"); }
         active = true;
+        RestoreMarkers();
         ApplyCvars();
     }
     private void ClearState()
     {
+        foreach (var id in markerEntities.Keys.ToArray()) RemoveMarker(id);
+        firePoses.Clear();
         shots.Clear(); reportLimiter.Clear(); textureLimiter.Clear(); listLimiter.Clear(); resetLimiter.Clear(); bannerLimiter.Clear(); bannerResetLimiter.Clear(); mvpLimiter.Clear();
     }
     private static bool Human(CCSPlayerController? p) => p is { IsValid: true, IsBot: false } && p.SteamID != 0;
@@ -162,7 +225,7 @@ public sealed class DebugPlugin : BasePlugin, IPluginConfig<DebugConfig>
     private void ForgetId(ulong id)
     {
         if (grantedAdmins.Remove(id)) AdminManager.RemovePlayerPermissions(new SteamID(id), "@css/root");
-        shots.Remove(id); reportLimiter.Remove(id);
+        shots.Remove(id); firePoses.Remove(id); reportLimiter.Remove(id);
         textureLimiter.Remove(id); listLimiter.Remove(id); resetLimiter.Remove(id); bannerLimiter.Remove(id); bannerResetLimiter.Remove(id); mvpLimiter.Remove(id);
     }
     private bool Ready(CCSPlayerController? p, CommandInfo c)

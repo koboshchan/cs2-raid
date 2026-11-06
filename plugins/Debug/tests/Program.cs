@@ -46,36 +46,23 @@ var b = new Point(4, 5, 6);
 var tracker = new ShotTracker();
 Check(tracker.Impact(10, a) == null, "impact without fire ignored");
 tracker.Fire("ak47", 10);
-Check(tracker.Impact(10, a) == "ladder_start", "AK first shot marks point one");
-Check(tracker.LadderStart == a, "ladder endpoint retained as value");
-Check(tracker.Impact(10, b) == null, "penetration impact ignored");
-tracker.Fire("weapon_ak47", 11);
-Check(tracker.Impact(11, b) == "ladder_end", "AK second shot marks point two");
-tracker.Fire("ak47", 12);
-Check(tracker.Impact(12, a) == null, "third AK spray ignored");
-for (var i = 0; i < 10000; ++i) tracker.Fire("ak47", 12);
-Check(tracker.Impact(12, a) == null, "continued AK spray never rearms");
-tracker.Reset();
-Check(tracker.LadderStart == null, "reset clears endpoints");
-tracker.Fire("ak47", 30);
-Check(tracker.Impact(31, a) == null, "next tick impact expires");
-Check(tracker.Impact(30, a) == null, "expired ticket consumed even when tick rewinds");
-tracker.Fire("ak47", 32);
-Check(tracker.Impact(32, b) == "ladder_end", "missed first shot still consumes first ordinal");
-tracker.Reset();
+Check(tracker.Impact(10,a) == null, "AK feature removed");
+tracker.Fire("weapon_ak47", 10);
+Check(tracker.Impact(10,a) == null, "prefixed AK feature removed");
 tracker.Fire("glock", 50);
-Check(tracker.Impact(50, a) == "texture", "Glock first impact marks texture");
-Check(tracker.Impact(50, b) == null, "Glock penetration ignored");
-tracker.Fire("weapon_glock", 51);
-Check(tracker.Impact(51, b) == "texture", "each Glock fire gets a ticket");
-tracker.Fire("glock", 52);
-tracker.Fire("awp", 52);
-Check(tracker.Impact(52, a) == null, "unsupported weapon invalidates ticket");
-tracker.Fire("glock", 53);
-Check(tracker.Impact(53, new(float.NaN, 0, 0)) == null, "nonfinite first impact rejected");
-Check(tracker.Impact(53, a) == null, "invalid impact still consumes first impact");
-tracker.Fire("ak47", 54); tracker.Reset();
-Check(tracker.Impact(54, a) == null, "disconnect death spawn round map reset clears pending");
+Check(tracker.Impact(50,a) == "nocollide", "Glock nocollide");
+Check(tracker.Impact(50,b) == null, "penetration ignored");
+tracker.Fire("weapon_glock",51);
+Check(tracker.Impact(51,b) == "nocollide", "prefixed Glock");
+tracker.Fire("glock",52); tracker.Fire("awp",52);
+Check(tracker.Impact(52,a) == null, "other weapon clears");
+tracker.Fire("glock",53);
+Check(tracker.Impact(54,a) == null, "stale impact rejected");
+tracker.Fire("glock",54);
+Check(tracker.Impact(54,new(float.NaN,0,0)) == null, "invalid impact rejected");
+Check(tracker.Impact(54,a) == null, "invalid impact consumed");
+tracker.Fire("glock",55); tracker.Reset();
+Check(tracker.Impact(55,a) == null, "reset clears ticket");
 Check(ReportInput.TryReason("  missing ladder  ", out var reason) && reason == "missing ladder", "reason trim");
 Check(!ReportInput.TryReason(" \t ", out _), "empty reason rejected");
 Check(!ReportInput.TryReason("bad\nreason", out _), "control characters rejected");
@@ -113,12 +100,6 @@ Check(buytime.Observe(0f), "zero buytime requires override");
 buytime.Applied(1000000f);
 Check(!buytime.Observe(1000000f) && buytime.Baseline == 0f, "buytime restores intended zero baseline");
 tracker.Reset();
-tracker.Fire("ak47", 100);
-Check(tracker.Impact(100, a) == "ladder_start", "new first marker candidate");
-tracker.InvalidateLadderStart();
-Check(tracker.LadderStart == null, "failed durable first save invalidates ladder start");
-tracker.Fire("ak47", 101);
-Check(tracker.Impact(101, b) == "ladder_end" && tracker.LadderStart == null, "second endpoint cannot claim durable pair after failed first save");
 
 var root = Path.Combine(Path.GetTempPath(), "debug-test-" + Guid.NewGuid().ToString("N"));
 Directory.CreateDirectory(root);
@@ -195,3 +176,22 @@ try
 }
 finally { Directory.Delete(root, true); }
 Console.WriteLine($"ALL {checks} CHECKS PASSED");
+
+var collisionDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
+try {
+    var m = new CollisionMark("a",DateTimeOffset.UtcNow,"nocollide","map","1",a,new(0,0,1),b,a);
+    using(var cs = new CollisionStore(collisionDir)) {
+        cs.Add(m);
+        cs.Add(m with { Id = "b", SteamId = "2" });
+        cs.Add(m with { Id = "c", Map = "other" });
+        Check(cs.Undo("1","map")?.Id == "a", "undo scoped by player and map");
+        Check(cs.Active.Count == 2, "undo removes only own mark");
+        Check(cs.Undo("1","map") == null, "empty undo");
+    }
+    using(var cs = new CollisionStore(collisionDir)) {
+        Check(cs.Active.Count == 2, "durable reload and tombstone");
+        cs.Add(m with {Id="d"});
+        Check(cs.Undo("1","map")?.Id == "d", "new latest after restart");
+    }
+} finally { Directory.Delete(collisionDir,true); }
+Console.WriteLine($"ALL {checks} checks passed");

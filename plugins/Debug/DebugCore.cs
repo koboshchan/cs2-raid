@@ -15,32 +15,16 @@ public sealed record MapReport(string Id, DateTimeOffset Timestamp, string Kind,
 // after a qualifying fire, and clear the ticket for every fire (including other weapons).
 public sealed class ShotTracker
 {
-    private int akShots;
     private int? pendingTick;
-    private string? pendingKind;
-    public Point? LadderStart { get; private set; }
-    public void Fire(string weapon, int tick)
-    {
-        pendingTick = null; pendingKind = null;
-        if (weapon is "ak47" or "weapon_ak47")
-        {
-            if (akShots >= 2) return;
-            ++akShots;
-            pendingKind = akShots == 1 ? "ladder_start" : "ladder_end";
-        }
-        else if (weapon is "glock" or "weapon_glock") pendingKind = "texture";
-        if (pendingKind != null) pendingTick = tick;
-    }
+    public void Fire(string weapon, int tick) =>
+        pendingTick = weapon is "glock" or "weapon_glock" ? tick : null;
     public string? Impact(int tick, Point position)
     {
-        var kind = pendingTick == tick ? pendingKind : null;
-        pendingTick = null; pendingKind = null; // even a malformed first impact consumes the ticket
-        if (!position.IsFinite || kind == null) return null;
-        if (kind == "ladder_start") LadderStart = position;
-        return kind;
+        var accept = pendingTick == tick;
+        pendingTick = null;
+        return accept && position.IsFinite ? "nocollide" : null;
     }
-    public void InvalidateLadderStart() => LadderStart = null;
-    public void Reset() { akShots = 0; pendingTick = null; pendingKind = null; LadderStart = null; }
+    public void Reset() => pendingTick = null;
 }
 
 // Tracks the last value the engine actually accepted, including any cvar clamp.
@@ -196,4 +180,69 @@ public static class BannerInput
     }
     public static string NativeColor(int team, BannerResult result) =>
         result == BannerResult.Lose ? "red" : result == BannerResult.Draw ? "gray" : team == 2 ? "gold" : "blue";
+}
+
+public sealed record CollisionMark(string Id, DateTimeOffset Timestamp, string Label, string Map,
+    string SteamId, Point Position, Point Normal, Point PlayerPosition, Point EyeAngles);
+public sealed record CollisionEntry(string Action, CollisionMark? Mark, string? RemovedId, DateTimeOffset Timestamp);
+
+// Append-only journal. Undo tombstones remove marks from the active set, never erase history.
+public sealed class CollisionStore : IDisposable
+{
+    private readonly FileStream file;
+    private readonly List<CollisionMark> active = [];
+    public IReadOnlyList<CollisionMark> Active => active;
+    public CollisionStore(string directory)
+    {
+        if (!Path.IsPathFullyQualified(directory)) throw new IOException("Absolute directory required");
+        Directory.CreateDirectory(directory);
+        var path = Path.Combine(directory, "nocollide.jsonl");
+        file = new FileStream(path, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.Read,
+            4096, FileOptions.WriteThrough);
+        try
+        {
+            using var reader = new StreamReader(file, Encoding.UTF8, false, 4096, leaveOpen: true);
+            string? line;
+            while ((line = reader.ReadLine()) != null)
+            {
+                var entry = JsonSerializer.Deserialize<CollisionEntry>(line) ?? throw new IOException("Invalid journal");
+                if (entry.Action == "add" && entry.Mark is {} mark && Valid(mark)) active.Add(mark);
+                else if (entry.Action == "undo" && entry.RemovedId != null) active.RemoveAll(x => x.Id == entry.RemovedId);
+                else throw new IOException("Invalid journal entry");
+            }
+            // A valid last record without LF must still be separated from the next append.
+            if (file.Length > 0) {
+                file.Position = file.Length - 1;
+                if (file.ReadByte() != 10) { file.Position = file.Length; file.WriteByte(10); file.Flush(true); }
+            }
+            file.Position = file.Length;
+        }
+        catch { file.Dispose(); throw; } // Never silently discard corrupt history.
+    }
+    private static bool Valid(CollisionMark m) => m.Label == "nocollide" && m.Position.IsFinite &&
+        m.Normal.IsFinite && m.PlayerPosition.IsFinite && m.EyeAngles.IsFinite &&
+        m.Normal.X*m.Normal.X+m.Normal.Y*m.Normal.Y+m.Normal.Z*m.Normal.Z is > 0.5f and < 1.5f;
+    private bool failed;
+    private void Append(CollisionEntry entry)
+    {
+        if (failed) throw new IOException("Journal disabled after failed write; reload required");
+        try {
+            var bytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(entry) + "\n");
+            file.Write(bytes); file.Flush(true);
+        } catch { failed = true; throw; }
+    }
+    public void Add(CollisionMark mark)
+    {
+        if (!Valid(mark)) throw new ArgumentException("Invalid mark");
+        Append(new("add", mark, null, mark.Timestamp));
+        active.Add(mark);
+    }
+    public CollisionMark? Undo(string steamId, string map)
+    {
+        var mark = active.LastOrDefault(x => x.SteamId == steamId && x.Map == map);
+        if (mark == null) return null;
+        Append(new("undo", null, mark.Id, DateTimeOffset.UtcNow));
+        active.Remove(mark); return mark;
+    }
+    public void Dispose() => file.Dispose();
 }
