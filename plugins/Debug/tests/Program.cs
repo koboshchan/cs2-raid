@@ -214,7 +214,7 @@ Check(clock.Tick(15000,2,true,true)=="","zero owned clear (never sent)");
 Check(clock.Tick(15001,2,true,true)==null,"idempotent clear");
 foreach(var z in new[]{-1e200,0,1e200}){
  Check(PreviewClock.Zone(715.278076,-6013.118164,z)==2,"real edge priority");
- Check(PreviewClock.Zone(341.3649148725517,-6052.782085122279,z)==1,"warning edge");
+ Check(PreviewClock.Zone(-406.461407382345,-6132.109927366835,z)==1,"warning edge");
 }
 Check(PreviewClock.Zone(1100,-6000,double.NaN)==0,"nonfinite reject");
 var dedupe=new PreviewClock(0,15);
@@ -283,6 +283,7 @@ using(var authority=System.Text.Json.JsonDocument.Parse(File.ReadAllText("config
  foreach(var z in new[]{double.MinValue,-1e100,0,1e100,double.MaxValue}){
   for(var i=0;i<4;i++){
    var ga=green[i];var gb=green[(i+1)%4];var ra=red[i];var rb=red[(i+1)%4];
+   Check(Math.Abs(ra.X-(4*ga.X-3*1089.1912371274484))<1e-9&&Math.Abs(ra.Y-(4*ga.Y-3*-5973.454242877722))<1e-9,"red four times green about area centroid");
    Check(PreviewClock.Zone(ga.X,ga.Y,z)==2,"green vertices inclusive priority");
    Check(PreviewClock.Zone((ga.X+gb.X)/2,(ga.Y+gb.Y)/2,z)==2,"sloping green edges inclusive");
    Check(PreviewClock.Zone(ra.X,ra.Y,z)==1,"red vertices inclusive");
@@ -290,7 +291,7 @@ using(var authority=System.Text.Json.JsonDocument.Parse(File.ReadAllText("config
   }
   Check(PreviewClock.Zone(1089.1912371274484,-5973.454242877722,z)==2,"area centroid green");
   Check(PreviewClock.Zone(720,-6360,z)==1,"green bbox corner outside green but inside red");
-  Check(PreviewClock.Zone(350,-6750,z)==0,"red bbox corner outside red");
+  Check(PreviewClock.Zone(-400,-7550,z)==0,"red bbox corner outside red");
   Check(PreviewClock.Zone(500,-6000,z)==1,"left warning ring");
   Check(PreviewClock.Zone(1600,-6000,z)==1,"right warning ring");
  }

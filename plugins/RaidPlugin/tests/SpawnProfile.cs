@@ -64,7 +64,7 @@ public static class SpawnProfileTests
             var dx=b.X-a.X;var dy=b.Y-a.Y;var length=Math.Sqrt(dx*dx+dy*dy);
             Check(zone.Contains(mx-dy/length*.01,my+dx/length*.01,0));
             Check(!zone.Contains(mx+dy/length*.01,my-dx/length*.01,0));
-            Check(Math.Abs(red.X-(2*a.X-center.X))<1e-9&&Math.Abs(red.Y-(2*a.Y-center.Y))<1e-9);
+            Check(Math.Abs(red.X-(4*a.X-3*center.X))<1e-9&&Math.Abs(red.Y-(4*a.Y-3*center.Y))<1e-9);
             foreach(var z in new[]{double.MinValue,-1e12,0,1e12,double.MaxValue}){
                 Check(p.Zone(a.X,a.Y,z)==2);
                 Check(p.Zone((a.X+b.X)/2,(a.Y+b.Y)/2,z)==2);
@@ -76,7 +76,7 @@ public static class SpawnProfileTests
         }
         // Inside bounding boxes does not imply inside the rotated polygon.
         Check(!zone.Contains(720,-6360,0));Check(!zone.Contains(1480,-5580,0));
-        Check(p.Zone(720,-6360,0)==1);Check(p.Zone(350,-6750,0)==0);
+        Check(p.Zone(720,-6360,0)==1);Check(p.Zone(-400,-7550,0)==0);
         Check(p.Zone(500,-6000,0)==1);Check(p.Zone(0,0,0)==0);
         foreach(var bad in new[]{double.NaN,double.PositiveInfinity,double.NegativeInfinity}){
             Check(p.Zone(bad,center.Y,0)==0);Check(p.Zone(center.X,bad,0)==0);Check(p.Zone(center.X,center.Y,bad)==0);

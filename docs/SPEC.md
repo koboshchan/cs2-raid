@@ -74,7 +74,7 @@ No ground/collision/clearance/native spawn acceptance is claimed. All seven grou
 
 ### Ordered rotated extraction polygon for the qualified profile
 
-The latest ordered quad replaces every older axis-aligned extraction box and width/length expansion rule. Green vertices in order are (715.278076,-6013.118164), (1039.138794,-6369.889648), (1484.720825,-5940.820312), (1095.046509,-5576.641113). The translation-stable shoelace AREA centroid is (1089.1912371274484,-5973.454242877722), not the vertex mean. Each red vertex is centroid + 2 * (green vertex - centroid), stored without independent rounding in the shared config/spawns/spaceport-default-20261105.json.
+The latest ordered quad replaces every older axis-aligned extraction box and width/length expansion rule. Green vertices in order are (715.278076,-6013.118164), (1039.138794,-6369.889648), (1484.720825,-5940.820312), (1095.046509,-5576.641113). The translation-stable shoelace AREA centroid is (1089.1912371274484,-5973.454242877722), not the vertex mean. Each red vertex is centroid + 4 * (green vertex - centroid), stored without independent rounding in the shared config/spawns/spaceport-default-20261105.json.
 
 Ordered vertices are authoritative. minX/maxX/minY/maxY remain bounding-box compatibility metadata only and never decide membership. Inclusive point-in-polygon checks accept all vertices and edges, with only a floating arithmetic roundoff allowance for collinearity. Both zones accept any finite Z and reject nonfinite input. Green wins on overlap; the red-only ring never grants extraction.
 
