@@ -74,3 +74,5 @@ Debug 0.1.12 sets the Safe7 marker to absolute scale 0.21, 7% of its former 3x s
 Debug 0.1.13 expands the red warning polygon to 4x green side lengths about the same area centroid, twice its previous size. Green extraction and Safe7 remain unchanged.
 
 Debug 0.1.14 adds console-only css_bigsafes on|off for exactly nine c_safe entries from the web dump loot.json, using CS2 coordinates as-is. Each marker is a yellow non-solid stationary soccerball at scale 0.21. Separate Safe7 and extraction geometry are unchanged; owned dump markers are removed on lifecycle cleanup.
+
+Debug 0.1.15 adds the separate old-big-safe-10 marker at (-110.16,-2472.48,924.12), retaining all nine dump safe markers and separate Safe7. It uses the same yellow non-solid stationary 0.21-scale soccerball. Entity name is kat_debug_big_safe_old-big-safe-10.

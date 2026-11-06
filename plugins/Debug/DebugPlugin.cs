@@ -20,7 +20,7 @@ public sealed class DebugConfig : BasePluginConfig
 public sealed class DebugPlugin : BasePlugin, IPluginConfig<DebugConfig>
 {
     public override string ModuleName => "Map Debug";
-    public override string ModuleVersion => "0.1.14";
+    public override string ModuleVersion => "0.1.15";
     public override string ModuleAuthor => "koboshchan";
     public override string ModuleDescription => "Debug economy and durable map issue reports";
     public DebugConfig Config { get; set; } = new();
@@ -40,6 +40,7 @@ public sealed class DebugPlugin : BasePlugin, IPluginConfig<DebugConfig>
     private readonly List<CBeam> extractBoxBeams = [];
     private readonly List<CDynamicProp> bigSafeMarkers=[];
     private static readonly (string Id,Point Position)[] BigSafePositions=[
+        ("old-big-safe-10",new Point(-110.16f,-2472.48f,924.12f)),
         ("2030201029",new Point(259.62890625f,-2178.720703125f,926.2083471679687f)),
         ("2030201030",new Point(311.8359375f,-2177.6484375f,926.2083471679687f)),
         ("2030201031",new Point(-2299.552734375f,-2594.513671875f,488.23178466796867f)),
@@ -232,7 +233,7 @@ public sealed class DebugPlugin : BasePlugin, IPluginConfig<DebugConfig>
     {
         loaded = true;
         RegisterListener<Listeners.OnServerPrecacheResources>(m=>m.AddResource(Safe7Model));
-        AddCommand("css_bigsafes", "Draw nine dump big safe markers: on|off", BigSafeCommand);
+        AddCommand("css_bigsafes", "Draw dump and legacy big safe markers: on|off", BigSafeCommand);
         AddCommand("css_safe7_scale", "Set and report Safe7 scale 0.21", Safe7ScaleCommand);
         AddCommand("css_safe7", "Draw yellow Safe7 marker: on|off", Safe7Command);
         AddCommand("css_extractbox", "Draw green/red extraction outlines: on|off", ExtractBoxCommand);
