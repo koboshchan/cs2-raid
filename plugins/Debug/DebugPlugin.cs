@@ -36,8 +36,10 @@ public sealed class DebugPlugin : BasePlugin, IPluginConfig<DebugConfig>
     private CollisionStore? marks;
     private readonly Dictionary<ulong, (Point Pos, Point Angles, Point Eye)> firePoses = [];
     private readonly Dictionary<string, List<CBeam>> markerEntities = [];
+    private readonly LinkedList<string> markerOrder = [];
     private void RemoveMarker(string id)
     {
+        markerOrder.Remove(id);
         if (markerEntities.Remove(id, out var entities))
             foreach (var entity in entities) if (entity.IsValid) entity.Remove();
     }
@@ -45,14 +47,16 @@ public sealed class DebugPlugin : BasePlugin, IPluginConfig<DebugConfig>
     {
         RemoveMarker(mark.Id);
         // Bound engine entities without dropping any durable marks.
-        while (markerEntities.Count >= 128) RemoveMarker(markerEntities.Keys.First());
+        while (markerEntities.Count >= 128) RemoveMarker(markerOrder.First!.Value);
         var entities = new List<CBeam>();
         markerEntities[mark.Id] = entities;
+        markerOrder.AddLast(mark.Id);
         var p = mark.Position;
         for (var axis = 0; axis < 3; axis++)
         {
             var beam = Utilities.CreateEntityByName<CBeam>("beam") ?? throw new InvalidOperationException("beam unavailable");
             entities.Add(beam);
+            beam.BeamType = BeamType_t.BEAM_POINTS;
             beam.Width = 2; beam.EndWidth = 2;
             beam.Render = System.Drawing.Color.Magenta;
             beam.Teleport(new Vector(p.X + (axis==0?-6:0), p.Y + (axis==1?-6:0), p.Z + (axis==2?-6:0)));
