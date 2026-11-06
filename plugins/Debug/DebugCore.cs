@@ -193,7 +193,7 @@ public static class BannerInput
 
 public sealed record CollisionMark(string Id, DateTimeOffset Timestamp, string Label, string Map,
     string SteamId, Point Position, Point Normal, Point PlayerPosition, Point EyeAngles, string? Weapon = null, string? Tag = null);
-public sealed record CollisionEntry(string Action, CollisionMark? Mark, string? RemovedId, DateTimeOffset Timestamp);
+public sealed record CollisionEntry(string Action, CollisionMark? Mark, string? RemovedId, DateTimeOffset Timestamp, string? ReferenceMarkId = null, string? Note = null, string? AuthorSteamID = null);
 
 // Append-only journal. Undo tombstones remove marks from the active set, never erase history.
 public sealed class CollisionStore : IDisposable
@@ -217,6 +217,7 @@ public sealed class CollisionStore : IDisposable
                 var entry = JsonSerializer.Deserialize<CollisionEntry>(line) ?? throw new IOException("Invalid journal");
                 if (entry.Action == "add" && entry.Mark is {} mark && Valid(mark)) active.Add(mark);
                 else if (entry.Action == "undo" && entry.RemovedId != null) active.RemoveAll(x => x.Id == entry.RemovedId);
+                else if (entry.Action == "annotation" && entry.ReferenceMarkId != null && entry.Note != null && entry.AuthorSteamID != null) { /* linked metadata, never a mark */ }
                 else throw new IOException("Invalid journal entry");
             }
             // A valid last record without LF must still be separated from the next append.
@@ -248,6 +249,15 @@ public sealed class CollisionStore : IDisposable
         if (!Valid(mark)) throw new ArgumentException("Invalid mark");
         Append(new("add", mark, null, mark.Timestamp));
         active.Add(mark);
+    }
+    public CollisionMark? Annotate(string steamId, string map, string raw)
+    {
+        var note = new string(raw.Select(c => char.IsControl(c) || c is '<' or '>' ? ' ' : c).ToArray()).Trim();
+        if (note.Length is < 1 or > 300) throw new ArgumentException("Note must contain 1-300 characters");
+        var mark = active.LastOrDefault(x => x.SteamId == steamId && x.Map == map && x.Weapon == "glock" && x.Tag == "texture");
+        if (mark == null) return null;
+        Append(new("annotation", null, null, DateTimeOffset.UtcNow, mark.Id, note, steamId));
+        return mark;
     }
     public CollisionMark? Undo(string steamId, string map)
     {

@@ -235,3 +235,25 @@ try {
  using(var cs=new CollisionStore(typedDir)) {Check(cs.Active.Single().Tag==null,"legacy replay untyped");Check(cs.Undo(legacy.SteamId,legacy.Map)?.Id=="legacy","legacy undo supported");}
 } finally {Directory.Delete(typedDir,true);}
 Console.WriteLine("Typed tag fixtures passed.");
+
+var nd=Path.Combine(Path.GetTempPath(),"debug-note-"+Guid.NewGuid().ToString("N"));Directory.CreateDirectory(nd);
+try {
+ var m=new CollisionMark("g",DateTimeOffset.UtcNow,"nocollide","v24","owner",a,new(0,0,1),b,a,"glock","texture");
+ using(var cs=new CollisionStore(nd)) {
+ cs.Add(m with {Id="legacy",Weapon=null,Tag=null});
+ Check(cs.Annotate("owner","v24","no legacy")==null,"notes never classify legacy");
+ cs.Add(m); cs.Add(m with {Id="m4",Weapon="m4a1",Tag="nocollide"});
+ Check(cs.Annotate("other","v24","not mine")==null,"note ownership isolation");
+ Check(cs.Annotate("owner","other","wrongmap")==null,"note map isolation");
+ Check(cs.Annotate("owner","v24","墙壁\n<test>")==m,"note skips M4 and preserves Unicode");
+ bool empty=false;try{cs.Annotate("owner","v24"," \n ");}catch(ArgumentException){empty=true;}Check(empty,"empty note rejected");
+ Check(cs.Active.Count==3,"annotations not marks");
+ }
+ using(var cs=new CollisionStore(nd)) {
+ Check(cs.Active.Count==3,"annotations reload without resurrection");
+ cs.Undo("owner","v24");Check(cs.Undo("owner","v24")?.Id=="g","undo original Glock ID");
+ Check(cs.Annotate("owner","v24","gone")==null,"undone Glock ineligible");
+ }
+ using(var cs=new CollisionStore(nd))Check(cs.Active.Single().Id=="legacy","annotation never resurrects undone mark");
+}finally{Directory.Delete(nd,true);}
+Console.WriteLine("Annotation fixtures passed.");

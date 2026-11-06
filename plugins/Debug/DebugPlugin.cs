@@ -20,7 +20,7 @@ public sealed class DebugConfig : BasePluginConfig
 public sealed class DebugPlugin : BasePlugin, IPluginConfig<DebugConfig>
 {
     public override string ModuleName => "Map Debug";
-    public override string ModuleVersion => "0.1.27";
+    public override string ModuleVersion => "0.1.28";
     public override string ModuleAuthor => "koboshchan";
     public override string ModuleDescription => "Debug economy and durable map issue reports";
     public DebugConfig Config { get; set; } = new();
@@ -901,6 +901,16 @@ public sealed class DebugPlugin : BasePlugin, IPluginConfig<DebugConfig>
                 RemoveMarker(removed.Id);
                 c.ReplyToCommand("Last nocollide mark removed.");
             } catch (Exception e) { Logger.LogError(e, "Undo failed"); c.ReplyToCommand("Undo NOT saved."); }
+        });
+        AddCommand("css_tag", "Annotate your latest active typed Glock texture mark: !tag text", (p,c) =>
+        {
+            if (!Ready(p,c)) return;
+            try {
+                if(marks == null) {c.ReplyToCommand("Mark storage unavailable."); return;}
+                var mark=marks.Annotate(p!.SteamID.ToString(),Server.MapName,c.ArgString);
+                c.ReplyToCommand(mark == null ? "No active typed Glock texture mark to annotate." : "Note saved on your latest Glock texture mark.");
+            } catch(ArgumentException) {c.ReplyToCommand("Use !tag with 1-300 characters of note text.");}
+            catch(Exception e) {Logger.LogError("Annotation storage failed ({Failure}).",e.GetType().Name);c.ReplyToCommand("Note NOT saved.");}
         });
         AddCommand("css_markhelp", "Glock texture; M4 nocollide; append-only marks and undo", (p,c) => c.ReplyToCommand("Glock = texture (WRONG TEXTURE); M4A4/M4A1-S = nocollide (REMOVE COLLISION). No automatic fixes. !marks / !undo also support legacy untyped marks."));
         AddCommand("css_marks", "Count your active nocollide marks on this map", (p, c) =>
