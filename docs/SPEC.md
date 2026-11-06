@@ -76,7 +76,7 @@ All 11 gameplay ziplines in the selected DF Level2 closure must be rideable in b
 
 Movement along the rope is player-controlled using movement keys in both directions: horizontal left/right and vertical up/down, not an automatic one-way slide. The controls-relative frame, exact key mapping, camera rules and speed are unspecified.
 
-Fall damage after dismount or bail is explicitly UNDECIDED, pending Lucas's decision; neither immunity nor normal fall damage is selected.
+Normal fall damage applies after dismount or bail. No fall-damage immunity is granted by zipline use.
 
 Press E near the rope to get on. Proximity distance is unspecified. Jump cancels a ride mid-ride, dropping the player off with the same small forward push in the player's view direction as normal dismount.
 
