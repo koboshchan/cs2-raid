@@ -44,21 +44,52 @@ public static class SpawnProfileTests
         var solo=new GameplayState();solo.Join("a");solo.Solo("a");Check(SpawnProfile.LayoutReady(solo.Players.Values));
         var zone=p.ExtractionZone!;
         Check(zone.Valid&&zone.UnboundedZ);
-        Check(zone.MinX==715.278076&&zone.MaxX==1484.720825&&zone.MinY==-6013.118164&&zone.MaxY==-5940.820312);
-        Check(zone==NativeExtractionZone.FromCorners(1484.720825,-5940.820312,715.278076,-6013.118164));
-        Check(zone==NativeExtractionZone.FromCorners(715.278076,-6013.118164,1484.720825,-5940.820312));
-        foreach(var x in new[]{zone.MinX,zone.MaxX})foreach(var y in new[]{zone.MinY,zone.MaxY})
-            foreach(var z in new[]{double.MinValue,-1e12,0,1e12,double.MaxValue})Check(zone.Contains(x,y,z));
-        Check(zone.Contains(zone.MinX,-6000,0));Check(zone.Contains(zone.MaxX,-6000,0));
-        Check(zone.Contains(1100,zone.MinY,0));Check(zone.Contains(1100,zone.MaxY,0));
-        Check(!zone.Contains(Math.BitDecrement(zone.MinX),-6000,0));Check(!zone.Contains(Math.BitIncrement(zone.MaxX),-6000,0));
-        Check(!zone.Contains(1100,Math.BitDecrement(zone.MinY),0));Check(!zone.Contains(1100,Math.BitIncrement(zone.MaxY),0));
-        foreach(var bad in new[]{double.NaN,double.PositiveInfinity,double.NegativeInfinity}){
-            Check(!zone.Contains(bad,-6000,0));Check(!zone.Contains(1100,bad,0));Check(!zone.Contains(1100,-6000,bad));
+        Check(zone.Vertices.Length==4&&p.WarningZone!.Vertices.Length==4);
+        Check(zone.MinX==715.278076&&zone.MaxX==1484.720825&&zone.MinY==-6369.889648&&zone.MaxY==-5576.641113);
+        var center=new NativeZoneVertex(1089.1912371274484,-5973.454242877722);
+        // Translation-stable shoelace centroid, deliberately not the vertex mean.
+        var origin=zone.Vertices[0];double twiceArea=0,cxNumerator=0,cyNumerator=0;
+        for(var i=0;i<4;i++){
+            var a=zone.Vertices[i];var b=zone.Vertices[(i+1)%4];
+            var ax=a.X-origin.X;var ay=a.Y-origin.Y;var bx=b.X-origin.X;var by=b.Y-origin.Y;
+            var cross=ax*by-bx*ay;
+            twiceArea+=cross;cxNumerator+=(ax+bx)*cross;cyNumerator+=(ay+by)*cross;
         }
-        Check(SpawnProfile.Parse(JsonSerializer.Serialize(p)).ExtractionZone==zone);
+        Check(Math.Abs(origin.X+cxNumerator/(3*twiceArea)-center.X)<1e-9);
+        Check(Math.Abs(origin.Y+cyNumerator/(3*twiceArea)-center.Y)<1e-9);
+        Check(Math.Abs(zone.Vertices.Average(v=>v.X)-center.X)>1);
+        for(var i=0;i<4;i++){
+            var a=zone.Vertices[i];var b=zone.Vertices[(i+1)%4];var red=p.WarningZone!.Vertices[i];
+            var mx=(a.X+b.X)/2;var my=(a.Y+b.Y)/2;
+            var dx=b.X-a.X;var dy=b.Y-a.Y;var length=Math.Sqrt(dx*dx+dy*dy);
+            Check(zone.Contains(mx-dy/length*.01,my+dx/length*.01,0));
+            Check(!zone.Contains(mx+dy/length*.01,my-dx/length*.01,0));
+            Check(Math.Abs(red.X-(2*a.X-center.X))<1e-9&&Math.Abs(red.Y-(2*a.Y-center.Y))<1e-9);
+            foreach(var z in new[]{double.MinValue,-1e12,0,1e12,double.MaxValue}){
+                Check(p.Zone(a.X,a.Y,z)==2);
+                Check(p.Zone((a.X+b.X)/2,(a.Y+b.Y)/2,z)==2);
+                Check(p.Zone(center.X,center.Y,z)==2);
+                Check(p.Zone(red.X,red.Y,z)==1);
+                var next=p.WarningZone.Vertices[(i+1)%4];
+                Check(p.Zone((red.X+next.X)/2,(red.Y+next.Y)/2,z)==1);
+            }
+        }
+        // Inside bounding boxes does not imply inside the rotated polygon.
+        Check(!zone.Contains(720,-6360,0));Check(!zone.Contains(1480,-5580,0));
+        Check(p.Zone(720,-6360,0)==1);Check(p.Zone(350,-6750,0)==0);
+        Check(p.Zone(500,-6000,0)==1);Check(p.Zone(0,0,0)==0);
+        foreach(var bad in new[]{double.NaN,double.PositiveInfinity,double.NegativeInfinity}){
+            Check(p.Zone(bad,center.Y,0)==0);Check(p.Zone(center.X,bad,0)==0);Check(p.Zone(center.X,center.Y,bad)==0);
+        }
+        Check(SpawnProfile.Parse(JsonSerializer.Serialize(p)).ExtractionZone!.Vertices.SequenceEqual(zone.Vertices));
+        // Bbox metadata is not consulted for membership.
+        Check((zone with {MinX=0,MaxX=0,MinY=0,MaxY=0}).Contains(center.X,center.Y,0));
+        Check((zone with {Vertices=zone.Vertices.Reverse().ToArray()}).Contains(center.X,center.Y,0));
+        Check(!(zone with {Vertices=[]}).Valid);
+        Check(!(zone with {Vertices=[zone.Vertices[0],zone.Vertices[2],zone.Vertices[1],zone.Vertices[3]]}).Valid);
         Reject(json.Replace("\"unboundedZ\": true","\"unboundedZ\": false"));
-        Reject(json.Replace("715.278076","1e400"));Reject(json.Replace("1484.720825","700"));
+        Reject(json.Replace("715.278076","1e400"));
+        Reject(json.Replace("\"vertices\": [","\"vertices\": [null,"));
         // Legacy bounded radius and vertical distance are unchanged.
         var legacy=new GameplayConfig{ExtractionCenter=new(0,0,0),ExtractionRadius=10};
         Check(new Position(0,0,10).Within(legacy.ExtractionCenter,legacy.ExtractionRadius));
