@@ -213,8 +213,8 @@ Check(clock.Tick(14000,2,true,true)=="00:01 Extracting","one bracket");
 Check(clock.Tick(15000,2,true,true)=="","zero owned clear (never sent)");
 Check(clock.Tick(15001,2,true,true)==null,"idempotent clear");
 foreach(var z in new[]{-1e200,0,1e200}){
- Check(PreviewClock.Zone(715.278076,-6000,z)==2,"real edge priority");
- Check(PreviewClock.Zone(330.5567014999999,-6000,z)==1,"warning edge");
+ Check(PreviewClock.Zone(715.278076,-6013.118164,z)==2,"real edge priority");
+ Check(PreviewClock.Zone(341.3649148725517,-6052.782085122279,z)==1,"warning edge");
 }
 Check(PreviewClock.Zone(1100,-6000,double.NaN)==0,"nonfinite reject");
 var dedupe=new PreviewClock(0,15);
@@ -276,24 +276,24 @@ try{cancelFirst.Clear(()=>{Check(detachedFirst,"cancellation before throwing nat
 Check(detachedFirst,"failure preserves cancellation");
 
 Check(!cancelFirst.Available,"native cleanup failure invalidates availability before rethrow");
-foreach(var z in new[]{double.MinValue,-1e100,0,1e100,double.MaxValue}){
- foreach(var x in new[]{715.278076,1484.720825})foreach(var y in new[]{-6013.118164,-5940.820312}){
-  Check(PreviewClock.Zone(x,y,z)==2,"exact real corner precedence finiteZ");
-  Check(PreviewClock.Zone(Math.BitIncrement(x),y,z)>=1,"epsilon corner neighborhood");
+using(var authority=System.Text.Json.JsonDocument.Parse(File.ReadAllText("config/spawns/spaceport-default-20261105.json"))){
+ var polygonRoot=authority.RootElement;
+ var green=polygonRoot.GetProperty("extractionZone").GetProperty("vertices").EnumerateArray().Select(v=>(X:v.GetProperty("x").GetDouble(),Y:v.GetProperty("y").GetDouble())).ToArray();
+ var red=polygonRoot.GetProperty("warningZone").GetProperty("vertices").EnumerateArray().Select(v=>(X:v.GetProperty("x").GetDouble(),Y:v.GetProperty("y").GetDouble())).ToArray();
+ foreach(var z in new[]{double.MinValue,-1e100,0,1e100,double.MaxValue}){
+  for(var i=0;i<4;i++){
+   var ga=green[i];var gb=green[(i+1)%4];var ra=red[i];var rb=red[(i+1)%4];
+   Check(PreviewClock.Zone(ga.X,ga.Y,z)==2,"green vertices inclusive priority");
+   Check(PreviewClock.Zone((ga.X+gb.X)/2,(ga.Y+gb.Y)/2,z)==2,"sloping green edges inclusive");
+   Check(PreviewClock.Zone(ra.X,ra.Y,z)==1,"red vertices inclusive");
+   Check(PreviewClock.Zone((ra.X+rb.X)/2,(ra.Y+rb.Y)/2,z)==1,"sloping red edges inclusive");
+  }
+  Check(PreviewClock.Zone(1089.1912371274484,-5973.454242877722,z)==2,"area centroid green");
+  Check(PreviewClock.Zone(720,-6360,z)==1,"green bbox corner outside green but inside red");
+  Check(PreviewClock.Zone(350,-6750,z)==0,"red bbox corner outside red");
+  Check(PreviewClock.Zone(500,-6000,z)==1,"left warning ring");
+  Check(PreviewClock.Zone(1600,-6000,z)==1,"right warning ring");
  }
- foreach(var x in new[]{330.5567014999999,1869.4421995})foreach(var y in new[]{-6049.26709,-5904.671385999999})Check(PreviewClock.Zone(x,y,z)==1,"warning corners inclusive");
- Check(PreviewClock.Zone(500,-5976.969238,z)==1,"left ring");Check(PreviewClock.Zone(1600,-5976.969238,z)==1,"right ring");
- Check(PreviewClock.Zone(1099.9994505,-6030,z)==1,"bottom ring");Check(PreviewClock.Zone(1099.9994505,-5920,z)==1,"top ring");
- foreach(var x in new[]{715.278076,1484.720825})Check(PreviewClock.Zone(x,-5976.969238,z)==2,"real xedge");
- foreach(var y in new[]{-6013.118164,-5940.820312})Check(PreviewClock.Zone(1099.9994505,y,z)==2,"real yedge");
- Check(PreviewClock.Zone(Math.BitDecrement(715.278076),-5976.969238,z)==1,"left real epsilon");
- Check(PreviewClock.Zone(Math.BitIncrement(1484.720825),-5976.969238,z)==1,"right real epsilon");
- Check(PreviewClock.Zone(1099.9994505,Math.BitDecrement(-6013.118164),z)==1,"bottom real epsilon");
- Check(PreviewClock.Zone(1099.9994505,Math.BitIncrement(-5940.820312),z)==1,"top real epsilon");
- Check(PreviewClock.Zone(Math.BitDecrement(330.5567014999999),-5976.969238,z)==0,"left warning epsilon");
- Check(PreviewClock.Zone(Math.BitIncrement(1869.4421995),-5976.969238,z)==0,"right warning epsilon");
- Check(PreviewClock.Zone(1099.9994505,Math.BitDecrement(-6049.26709),z)==0,"bottom warning epsilon");
- Check(PreviewClock.Zone(1099.9994505,Math.BitIncrement(-5904.671385999999),z)==0,"top warning epsilon");
 }
 Check(LootCatalog.Entries.Count==247,"loot active247 only");
 Check(LootCatalog.Entries.Select(e=>e.Id).Distinct().Count()==247,"loot unique ids");
@@ -303,7 +303,7 @@ Check(LootCatalog.Entries[0].X==544.23495&&LootCatalog.Entries[0].Y==41.55400000
 Check(LootCatalog.MapAllowed("df_spaceport_player_scale_raytrace","default-20261105"),"loot exact binding");
 Check(!LootCatalog.MapAllowed("de_dust2","default-20261105")&&!LootCatalog.MapAllowed(LootCatalog.Map,"old"),"loot map release denied");
 Check(!LootCatalog.SafeModel("models/../bad.vmdl")&&!LootCatalog.SafeModel("models/bad.vmdl;quit")&&LootCatalog.SafeModel("models/test.vmdl"),"loot model path validation");
-Console.WriteLine($"ALL {checks} CHECKS PASSED");
+
 
 foreach(var n in new[]{0,1,9,10,11,59,60,300,3600}){
  var expected=(n/60).ToString("00")+":"+(n%60).ToString("00");
@@ -312,6 +312,8 @@ foreach(var n in new[]{0,1,9,10,11,59,60,300,3600}){
 }
 foreach(var z in new[]{double.NaN,double.NegativeInfinity,double.PositiveInfinity}){
  Check(PreviewClock.Zone(1100,-6000,z)==0,"nonfinite Z rejected");
+ Check(PreviewClock.Zone(z,-6000,0)==0,"nonfinite X rejected");
+ Check(PreviewClock.Zone(1100,z,0)==0,"nonfinite Y rejected");
 }
 var moving=new PreviewClock(0,15);
 Check(moving.Tick(0,PreviewClock.Zone(1100,-6000,0),true,true)=="00:15 Extracting","current green position");
