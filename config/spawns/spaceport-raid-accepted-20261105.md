@@ -1,0 +1,3 @@
+Accepted Spaceport raid data
+
+447 unique placements, 295 loot/containers, 8 Heart of Africa, 136 other red-layer items with decoded types, and 8 spawn POIs. Canonical file spaceport-raid-accepted-20261105.json embeds all records and original source hashes. All positions are MODEL BOTTOM CENTER, explicitly accepted by Lucas. Preserve XYZ exactly and compensate model-specific origin only in placement code. Do not use debug sphere center or add ball radius. Five keycards retain documented official WorldPos fallback provenance. Three orange debug route annotations and duplicate Safe7 are excluded. Model mesh assignments and collision/glass/water compilation remain map build owner work.
