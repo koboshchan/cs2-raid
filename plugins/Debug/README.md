@@ -84,3 +84,5 @@ Debug 0.1.17 draws all 295 dump loot spots using css_lootmarkers on|off (css_big
 Debug 0.1.18 uses yellow for nine big safes, blue for other 286 loot, red for three Spaceport Heart of Africa route annotation locations. These are route-marker positions, not guaranteed precise item positions. Excludes keycard annotation and all player spawn POIs. Fixture preserves route name/key/worldPos evidence. 298 markers plus separate Safe7, extraction unchanged.
 
 Debug 0.1.19 adds the eight player spawn POIs from start-positions.json as green scale-3.0 non-solid balls. Site POIs are not verified exact player spawn coordinates. Existing 298 loot/Heart markers stay scale 0.21; Safe7 and extraction remain. Status reports separate scale-3 count.
+
+Debug 0.1.20 enlarges only the three red Heart route markers to scale 1.0 and adds individual entity position/model/color/solid/scale readback to css_loot_status. All source coordinates unchanged.
