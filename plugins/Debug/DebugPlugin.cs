@@ -44,6 +44,8 @@ public sealed class DebugPlugin : BasePlugin, IPluginConfig<DebugConfig>
     private void DrawMarker(CollisionMark mark)
     {
         RemoveMarker(mark.Id);
+        // Bound engine entities without dropping any durable marks.
+        while (markerEntities.Count >= 128) RemoveMarker(markerEntities.Keys.First());
         var entities = new List<CBeam>();
         markerEntities[mark.Id] = entities;
         var p = mark.Position;
@@ -63,7 +65,7 @@ public sealed class DebugPlugin : BasePlugin, IPluginConfig<DebugConfig>
     private void RestoreMarkers()
     {
         if (!active || marks == null) return;
-        foreach (var mark in marks.Active.Where(x => x.Map == Server.MapName))
+        foreach (var mark in marks.Active.Where(x => x.Map == Server.MapName).TakeLast(128))
             try { DrawMarker(mark); } catch (Exception e) { Logger.LogError(e, "Restore marker failed"); }
     }
     private readonly HashSet<ulong> grantedAdmins = [];

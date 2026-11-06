@@ -8,7 +8,7 @@ Debug 0.1.8 removes AK ladder marking and !markreset. Glock shots now tag collis
 
 Marks are durably flushed to ReportDirectory/nocollide.jsonl, separate from older reports.jsonl. Each line is an add or undo journal entry. Add entries contain a Mark object with Label=nocollide and all coordinates. Undo entries reference RemovedId. Consumers must replay entries in order and exclude undone IDs. !undo removes only the invoking player's latest active mark on the current map, including after reload; !marks prints that player's active count on this map. Undo preserves history on disk. Corrupt history disables this store instead of silently deleting marks; owner repair/reload is required. A failed write disables subsequent writes until reload.
 
-Active marks draw a magenta three-axis cross using non-solid beam entities. Undo removes its cross; unload/map-end removes all plugin-owned beams; reload and map-start redraw active marks for the current map. Mark storage success and visual success are reported separately. Engine trace/beam rendering still need real gameplay acceptance.
+The latest 128 active marks draw a magenta three-axis cross using non-solid beam entities. Undo removes its cross; unload/map-end removes all plugin-owned beams; reload and map-start redraw the latest 128 active marks for the current map. Mark storage success and visual success are reported separately. Engine trace/beam rendering still need real gameplay acceptance.
 
 !report and !reports retain their existing position-report behavior.
 
