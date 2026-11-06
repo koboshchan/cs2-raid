@@ -78,3 +78,5 @@ Debug 0.1.14 adds console-only css_bigsafes on|off for exactly nine c_safe entri
 Debug 0.1.15 adds the separate old-big-safe-10 marker at (-110.16,-2472.48,924.12), retaining all nine dump safe markers and separate Safe7. It uses the same yellow non-solid stationary 0.21-scale soccerball. Entity name is kat_debug_big_safe_old-big-safe-10.
 
 Debug 0.1.16 removes the cancelled old-big-safe-10 comparison marker. Final set is nine dump safes plus separate Safe7, with extraction unchanged.
+
+Debug 0.1.17 draws all 295 dump loot spots using css_lootmarkers on|off (css_bigsafes alias). Ten markers per 100ms batch avoid a single spawn spike. All use scale 0.21 and SOLID_NONE, big safes yellow and other types stable type colors, without 295 glow effects. css_loot_status reports progress/counts/solid/scale. Lifecycle/off cancels timer and removes owned entities. Separate Safe7 and extraction remain. Cancelled legacy marker is absent.

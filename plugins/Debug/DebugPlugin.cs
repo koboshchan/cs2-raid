@@ -20,7 +20,7 @@ public sealed class DebugConfig : BasePluginConfig
 public sealed class DebugPlugin : BasePlugin, IPluginConfig<DebugConfig>
 {
     public override string ModuleName => "Map Debug";
-    public override string ModuleVersion => "0.1.16";
+    public override string ModuleVersion => "0.1.17";
     public override string ModuleAuthor => "koboshchan";
     public override string ModuleDescription => "Debug economy and durable map issue reports";
     public DebugConfig Config { get; set; } = new();
@@ -39,19 +39,315 @@ public sealed class DebugPlugin : BasePlugin, IPluginConfig<DebugConfig>
     private readonly LinkedList<string> markerOrder = [];
     private readonly List<CBeam> extractBoxBeams = [];
     private readonly List<CDynamicProp> bigSafeMarkers=[];
-    private static readonly (string Id,Point Position)[] BigSafePositions=[
-        ("2030201029",new Point(259.62890625f,-2178.720703125f,926.2083471679687f)),
-        ("2030201030",new Point(311.8359375f,-2177.6484375f,926.2083471679687f)),
-        ("2030201031",new Point(-2299.552734375f,-2594.513671875f,488.23178466796867f)),
-        ("2030201032",new Point(-2645.33203125f,-442.072265625f,-1987.4521142578126f)),
-        ("2030201033",new Point(2381.2734375f,-162.0f,672.5516088867187f)),
-        ("2030201034",new Point(2262.603515625f,602.6484375f,-41.90414062500008f)),
-        ("2030201035",new Point(-196.55859375f,-767.8828125f,868.2115209960937f)),
-        ("2030201036",new Point(-232.69921875f,7667.279296875f,576.3602636718749f)),
-        ("2030201272",new Point(-1926.685546875f,-6183.685546875f,363.2397802734374f))
+    private static readonly (string Id,string Type,Point Position)[] LootPositions=[
+        ("2030201001","c_piece_of_clothing",new Point(-2716.55859375f,-2169.474609375f,519.3000219726562f)),
+        ("2030201002","c_piece_of_clothing",new Point(1271.021484375f,750.955078125f,148.96847900390617f)),
+        ("2030201003","c_piece_of_clothing",new Point(9566.841796875f,5201.96484375f,-90.00008789062508f)),
+        ("2030201004","c_piece_of_clothing",new Point(9737.349609375f,5201.560546875f,-90.35989013671883f)),
+        ("2030201005","c_piece_of_clothing",new Point(9641.478515625f,2265.837890625f,120.74405273437492f)),
+        ("2030201006","c_piece_of_clothing",new Point(-9220.640625f,4511.84765625f,250.77603515624992f)),
+        ("2030201007","c_piece_of_clothing",new Point(-1977.22265625f,499.32421875f,893.6283911132812f)),
+        ("2030201008","c_piece_of_clothing",new Point(-1977.802734375f,459.720703125f,893.6283911132812f)),
+        ("2030201009","c_piece_of_clothing",new Point(-1893.849609375f,6631.55859375f,602.3517187499999f)),
+        ("2030201010","c_piece_of_clothing",new Point(-1893.603515625f,6850.79296875f,602.3517187499999f)),
+        ("2030201011","c_piece_of_clothing",new Point(-1689.767578125f,6299.349609375f,602.3517187499999f)),
+        ("2030201012","c_piece_of_clothing",new Point(9708.29296875f,4418.89453125f,-95.76021972656258f)),
+        ("2030201026","c_piece_of_clothing",new Point(2511.10546875f,-2614.271484375f,207.44101318359367f)),
+        ("2030201027","c_piece_of_clothing",new Point(2533.658203125f,-2771.859375f,207.86783203124992f)),
+        ("2030201028","c_piece_of_clothing",new Point(-2002.32421875f,-1055.25f,403.5354345703124f)),
+        ("2030201037","c_piece_of_clothing",new Point(-610.927734375f,-1519.34765625f,944.1034277343749f)),
+        ("2030201038","c_piece_of_clothing",new Point(-9250.55859375f,3472.2421875f,209.41580566406242f)),
+        ("2030201039","c_piece_of_clothing",new Point(-624.603515625f,-817.20703125f,890.2440527343749f)),
+        ("2030201040","c_piece_of_clothing",new Point(-1567.44140625f,6827.044921875f,161.64010986328117f)),
+        ("2030201041","c_piece_of_clothing",new Point(2122.927734375f,-1196.6484375f,121.93167480468742f)),
+        ("2030201013","c_piece_of_clothing",new Point(402.416015625f,-1668.234375f,971.6401098632812f)),
+        ("2030201014","c_piece_of_clothing",new Point(402.662109375f,-1711.072265625f,971.6401098632812f)),
+        ("2030201015","c_piece_of_clothing",new Point(2229.416015625f,-2716.20703125f,421.05588134765617f)),
+        ("2030201016","c_piece_of_clothing",new Point(-2390.66015625f,-3082.67578125f,539.6401098632812f)),
+        ("2030201017","c_piece_of_clothing",new Point(9737.279296875f,4758.556640625f,-73.08004394531258f)),
+        ("2030201018","c_piece_of_clothing",new Point(-9412.62890625f,3350.162109375f,210.23978027343742f)),
+        ("2030201019","c_piece_of_clothing",new Point(-8184.603515625f,3770.455078125f,118.44021972656242f)),
+        ("2030201020","c_piece_of_clothing",new Point(-1256.255859375f,-2532.603515625f,541.4402197265624f)),
+        ("2030201021","c_piece_of_clothing",new Point(-4125.603515625f,-3228.22265625f,-131.93984619140633f)),
+        ("2030201022","c_piece_of_clothing",new Point(1757.77734375f,-62.7890625f,737.7840307617187f)),
+        ("2030201023","c_piece_of_clothing",new Point(-559.44140625f,7571.935546875f,766.1880834960937f)),
+        ("2030201024","c_piece_of_clothing",new Point(9009.931640625f,1723.32421875f,130.71579345703117f)),
+        ("2030201025","c_piece_of_clothing",new Point(9345.603515625f,2974.74609375f,131.76004394531242f)),
+        ("2030201029","c_safe",new Point(259.62890625f,-2178.720703125f,926.2083471679687f)),
+        ("2030201030","c_safe",new Point(311.8359375f,-2177.6484375f,926.2083471679687f)),
+        ("2030201031","c_safe",new Point(-2299.552734375f,-2594.513671875f,488.23178466796867f)),
+        ("2030201032","c_safe",new Point(-2645.33203125f,-442.072265625f,-1987.4521142578126f)),
+        ("2030201033","c_safe",new Point(2381.2734375f,-162.0f,672.5516088867187f)),
+        ("2030201034","c_safe",new Point(2262.603515625f,602.6484375f,-41.90414062500008f)),
+        ("2030201035","c_safe",new Point(-196.55859375f,-767.8828125f,868.2115209960937f)),
+        ("2030201036","c_safe",new Point(-232.69921875f,7667.279296875f,576.3602636718749f)),
+        ("2030201272","c_safe",new Point(-1926.685546875f,-6183.685546875f,363.2397802734374f)),
+        ("2030201042","c_courier_carton",new Point(-2251.44140625f,-3103.55859375f,488.69980224609367f)),
+        ("2030201043","c_courier_carton",new Point(1072.79296875f,538.20703125f,488.23178466796867f)),
+        ("2030201044","c_courier_carton",new Point(-1523.162109375f,-2605.32421875f,524.1598242187499f)),
+        ("2030201045","c_courier_carton",new Point(948.603515625f,6372.3515625f,167.43594726562492f)),
+        ("2030201046","c_courier_carton",new Point(-73.6875f,7512.1171875f,612.2883032226562f)),
+        ("2030201047","c_courier_carton",new Point(-51.732421875f,7376.396484375f,576.3602636718749f)),
+        ("2030201048","c_courier_carton",new Point(-1277.6484375f,7577.6484375f,576.3602636718749f)),
+        ("2030201049","c_courier_carton",new Point(9309.708984375f,2314.44140625f,-200.51980224609383f)),
+        ("2030201050","c_courier_carton",new Point(9145.79296875f,2403.0f,-200.51980224609383f)),
+        ("2030201051","c_courier_carton",new Point(9174.234375f,2073.234375f,109.07986816406242f)),
+        ("2030201052","c_courier_carton",new Point(9287.279296875f,2627.6484375f,81.97165283203117f)),
+        ("2030201123","c_courier_carton",new Point(-9130.32421875f,4069.072265625f,208.80002197265617f)),
+        ("2030201124","c_courier_carton",new Point(-2085.486328125f,-1782.0f,139.86026367187492f)),
+        ("2030201125","c_courier_carton",new Point(-2774.162109375f,480.234375f,159.11984619140617f)),
+        ("2030201126","c_courier_carton",new Point(967.32421875f,45.3515625f,149.90396484374992f)),
+        ("2030201127","c_courier_carton",new Point(1199.162109375f,6614.6484375f,616.8602636718749f)),
+        ("2030201128","c_courier_carton",new Point(9410.765625f,2157.1171875f,-171.64828125000008f)),
+        ("2030201249","c_courier_carton",new Point(-3807.0703125f,-6507.615234375f,6.839999999999918f)),
+        ("2030201255","c_courier_carton",new Point(-3602.63671875f,-6621.36328125f,219.23978027343742f)),
+        ("2030201264","c_courier_carton",new Point(-1309.833984375f,-7273.65234375f,188.71207031249992f)),
+        ("2030201266","c_courier_carton",new Point(-1759.376953125f,-7792.06640625f,186.83999999999992f)),
+        ("2030201053","c_climbing_bag",new Point(1670.396484375f,-3306.603515625f,120.23978027343742f)),
+        ("2030201054","c_climbing_bag",new Point(-2091.603515625f,898.20703125f,140.57986816406242f)),
+        ("2030201055","c_climbing_bag",new Point(-2066.396484375f,927.0f,119.59158691406242f)),
+        ("2030201056","c_climbing_bag",new Point(-331.20703125f,6793.20703125f,161.64010986328117f)),
+        ("2030201224","Item/diannaobao.prefab",new Point(-9340.2421875f,4344.1171875f,102.92422851562492f)),
+        ("2030201225","Item/diannaobao.prefab",new Point(1923.15234375f,-2763.861328125f,191.88052734374992f)),
+        ("2030201226","Item/diannaobao.prefab",new Point(-3032.75390625f,352.79296875f,185.40024169921867f)),
+        ("2030201227","Item/diannaobao.prefab",new Point(215.9296875f,-820.23046875f,894.9599340820312f)),
+        ("2030201228","Item/diannaobao.prefab",new Point(-1580.765625f,-2805.591796875f,529.1998022460937f)),
+        ("2030201229","Item/diannaobao.prefab",new Point(852.978515625f,5747.765625f,678.4199560546874f)),
+        ("2030201254","c_climbing_bag",new Point(-4084.48828125f,-6424.48828125f,185.00363525390617f)),
+        ("2030201262","c_climbing_bag",new Point(-1423.001953125f,-6680.6015625f,184.85971435546867f)),
+        ("2030201274","c_climbing_bag",new Point(-2250.31640625f,-6336.31640625f,363.2397802734374f)),
+        ("2030201057","c_hidden_stash",new Point(-6136.927734375f,4541.044921875f,6.119846191406168f)),
+        ("2030201058","c_hidden_stash",new Point(732.603515625f,-7372.44140625f,0.6481054687499181f)),
+        ("2030201059","c_hidden_stash",new Point(-876.955078125f,4177.79296875f,5.616123046874918f)),
+        ("2030201060","c_hidden_stash",new Point(3593.513671875f,5253.486328125f,8.027622070312418f)),
+        ("2030201061","c_hidden_stash",new Point(9135.3515625f,-2227.32421875f,-208.83590332031258f)),
+        ("2030201246","c_hidden_stash",new Point(-5963.4140625f,-5406.99609375f,9.143833007812418f)),
+        ("2030201247","c_hidden_stash",new Point(-4793.396484375f,-6366.603515625f,1.6198461914061681f)),
+        ("2030201062","c_computer_case",new Point(2510.12109375f,-2620.125f,361.5116308593749f)),
+        ("2030201063","c_computer_case",new Point(2699.384765625f,-2663.701171875f,361.5116308593749f)),
+        ("2030201064","c_computer_case",new Point(5677.20703125f,-9658.79296875f,112.96847900390617f)),
+        ("2030201065","c_computer_case",new Point(-2163.234375f,-3335.044921875f,488.41196044921867f)),
+        ("2030201066","c_computer_case",new Point(-1733.009765625f,-2984.0625f,211.75149902343742f)),
+        ("2030201067","c_computer_case",new Point(-173.0390625f,-2413.072265625f,923.9402197265624f)),
+        ("2030201068","c_computer_case",new Point(-2179.845703125f,232.20703125f,361.5116308593749f)),
+        ("2030201069","c_computer_case",new Point(1074.990234375f,421.787109375f,488.1598242187499f)),
+        ("2030201070","c_computer_case",new Point(-194.765625f,6397.5234375f,576.3602636718749f)),
+        ("2030201071","c_computer_case",new Point(9120.955078125f,2588.044921875f,81.61185058593742f)),
+        ("2030201252","c_computer_case",new Point(-4103.068359375f,-6049.86328125f,184.78775390624992f)),
+        ("2030201263","c_computer_case",new Point(-1751.291015625f,-7182.966796875f,187.59585937499992f)),
+        ("2030201072","c_bird_nest",new Point(-5085.0f,-4099.67578125f,64.76431640624992f)),
+        ("2030201073","c_bird_nest",new Point(2220.486328125f,-7263.720703125f,165.53256591796867f)),
+        ("2030201074","c_bird_nest",new Point(6175.072265625f,-233.6484375f,-209.41158691406258f)),
+        ("2030201075","c_bird_nest",new Point(6063.486328125f,3345.1171875f,-202.68026367187508f)),
+        ("2030201076","c_bird_nest",new Point(5411.513671875f,6210.0f,-106.88387695312508f)),
+        ("2030201077","c_bird_nest",new Point(4439.8828125f,7633.072265625f,97.63156494140617f)),
+        ("2030201269","c_bird_nest",new Point(-2072.302734375f,-6769.30078125f,185.97592529296867f)),
+        ("2030201270","c_bird_nest",new Point(-1468.828125f,-7682.080078125f,121.14010986328117f)),
+        ("2030201277","c_bird_nest",new Point(2527.20703125f,-8449.20703125f,56.26803955078117f)),
+        ("2030201078","c_briefcase",new Point(-9339.837890625f,3636.3515625f,51.76803955078117f)),
+        ("2030201079","c_briefcase",new Point(-7997.765625f,4024.44140625f,97.73978027343742f)),
+        ("2030201080","c_briefcase",new Point(2365.927734375f,-2860.927734375f,160.16409667968742f)),
+        ("2030201081","c_briefcase",new Point(-45.03515625f,-2118.955078125f,946.9939306640624f)),
+        ("2030201082","c_briefcase",new Point(-2755.6875f,462.603515625f,135.85904296874992f)),
+        ("2030201083","c_briefcase",new Point(1096.20703125f,5717.162109375f,623.6179541015624f)),
+        ("2030201084","c_briefcase",new Point(1256.396484375f,5728.67578125f,622.4759252929687f)),
+        ("2030201248","c_briefcase",new Point(-3778.013671875f,-6301.107421875f,42.83999999999992f)),
+        ("2030201260","c_briefcase",new Point(-1542.708984375f,-6642.298828125f,192.38370117187492f)),
+        ("2030201267","c_briefcase",new Point(-1934.560546875f,-7699.904296875f,196.99246582031242f)),
+        ("2030201085","c_ammo_crate",new Point(-5117.765625f,-12684.41015625f,625.1999853515624f)),
+        ("2030201086","c_ammo_crate",new Point(-2162.162109375f,-13581.94921875f,245.41250976562492f)),
+        ("2030201176","c_ammo_crate",new Point(-2219.396484375f,-11998.08984375f,334.10788330078117f)),
+        ("2030201177","c_ammo_crate",new Point(-4584.708984375f,-13396.5703125f,627.8130834960937f)),
+        ("2030201178","c_ammo_crate",new Point(-1637.103515625f,-1852.20703125f,148.75369628906242f)),
+        ("2030201179","c_ammo_crate",new Point(2712.287109375f,-8989.189453125f,90.28335937499992f)),
+        ("2030201180","c_ammo_crate",new Point(1224.66796875f,-571.095703125f,150.26541503906242f)),
+        ("2030201181","c_ammo_crate",new Point(8313.1171875f,-2009.654296875f,111.03104003906242f)),
+        ("2030201087","c_small_safe",new Point(1719.66796875f,-3299.765625f,119.30429443359367f)),
+        ("2030201088","c_small_safe",new Point(-2145.603515625f,900.0f,183.13156494140617f)),
+        ("2030201089","c_small_safe",new Point(-2629.125f,-96.837890625f,-1.1514550781250819f)),
+        ("2030201090","c_small_safe",new Point(1036.037109375f,-1272.955078125f,184.42850097656242f)),
+        ("2030201091","c_large_weapon_crate",new Point(329.326171875f,-1554.486328125f,910.5116308593749f)),
+        ("2030201092","c_large_weapon_crate",new Point(1504.072265625f,-422.6484375f,488.41196044921867f)),
+        ("2030201093","c_large_weapon_crate",new Point(-7662.603515625f,4238.279296875f,209.01590332031242f)),
+        ("2030201094","c_large_weapon_crate",new Point(-2902.32421875f,-2995.55859375f,212.76004394531242f)),
+        ("2030201095","c_large_weapon_crate",new Point(3567.955078125f,-10323.0f,8.891696777343668f)),
+        ("2030201096","c_large_weapon_crate",new Point(2603.8828125f,-2011.67578125f,165.63583740234367f)),
+        ("2030201097","c_large_weapon_crate",new Point(141.837890625f,-2001.603515625f,935.3517187499999f)),
+        ("2030201098","c_large_weapon_crate",new Point(-1955.162109375f,598.67578125f,868.3916967773437f)),
+        ("2030201099","c_large_weapon_crate",new Point(1509.169921875f,-600.837890625f,118.44021972656242f)),
+        ("2030201100","c_large_weapon_crate",new Point(4080.603515625f,189.720703125f,-171.00008789062508f)),
+        ("2030201101","c_large_weapon_crate",new Point(9520.20703125f,1463.765625f,82.11612304687492f)),
+        ("2030201102","c_large_weapon_crate",new Point(9067.67578125f,4098.955078125f,-123.80392089843758f)),
+        ("2030201103","c_large_weapon_crate",new Point(8829.0f,4990.67578125f,-123.84017578125008f)),
+        ("2030201104","c_travel_bag",new Point(-698.466796875f,-1954.986328125f,922.0681494140624f)),
+        ("2030201105","c_travel_bag",new Point(-8046.720703125f,2607.837890625f,12.563876953124918f)),
+        ("2030201106","c_travel_bag",new Point(-7359.486328125f,3375.720703125f,112.68008789062492f)),
+        ("2030201107","c_travel_bag",new Point(-3849.556640625f,-1505.302734375f,-171.00008789062508f)),
+        ("2030201108","c_travel_bag",new Point(-1525.32421875f,6331.32421875f,161.64010986328117f)),
+        ("2030201109","c_travel_bag",new Point(2164.32421875f,-513.3515625f,121.39169677734367f)),
+        ("2030201110","c_travel_bag",new Point(947.8828125f,-144.3515625f,488.23178466796867f)),
+        ("2030201111","c_travel_bag",new Point(1240.55859375f,7174.79296875f,602.5681494140624f)),
+        ("2030201112","c_travel_bag",new Point(7210.44140625f,2126.162109375f,-120.59975830078133f)),
+        ("2030201113","c_travel_bag",new Point(4541.044921875f,-735.486328125f,-171.00008789062508f)),
+        ("2030201253","c_travel_bag",new Point(-3758.466796875f,-6180.626953125f,186.83999999999992f)),
+        ("2030201257","c_travel_bag",new Point(-2389.1484375f,-6065.208984375f,204.83999999999992f)),
+        ("2030201258","c_travel_bag",new Point(-2095.5234375f,-6280.681640625f,184.93167480468742f)),
+        ("2030201278","c_travel_bag",new Point(5239.44140625f,-2476.79296875f,-815.7602197265626f)),
+        ("2030201114","c_premium_storage_box",new Point(2601.0f,-2768.396484375f,361.5116308593749f)),
+        ("2030201115","c_premium_storage_box",new Point(1742.765625f,-3414.234375f,120.31174072265617f)),
+        ("2030201116","c_premium_storage_box",new Point(1756.79296875f,-3301.20703125f,119.30429443359367f)),
+        ("2030201117","c_premium_storage_box",new Point(-2086.20703125f,994.67578125f,119.59158691406242f)),
+        ("2030201118","c_premium_storage_box",new Point(1084.32421875f,-1936.44140625f,214.91995605468742f)),
+        ("2030201119","c_premium_storage_box",new Point(-985.32421875f,4269.603515625f,5.616123046874918f)),
+        ("2030201120","c_premium_storage_box",new Point(2199.955078125f,768.603515625f,119.73605712890617f)),
+        ("2030201121","c_premium_storage_box",new Point(1333.79296875f,5785.20703125f,622.4759252929687f)),
+        ("2030201122","c_premium_storage_box",new Point(9056.70703125f,2959.20703125f,81.97165283203117f)),
+        ("2030201250","c_premium_storage_box",new Point(-3436.453125f,-6061.46484375f,6.839999999999918f)),
+        ("2030201268","c_premium_storage_box",new Point(-1045.40625f,-7365.5859375f,363.2397802734374f)),
+        ("2030201273","c_premium_storage_box",new Point(-1997.54296875f,-6097.025390625f,363.2397802734374f)),
+        ("2030201275","c_premium_storage_box",new Point(-2093.115234375f,-6014.162109375f,363.2397802734374f)),
+        ("2030201279","c_premium_storage_box",new Point(4339.828125f,-4960.79296875f,-922.5599633789063f)),
+        ("2030201129","c_premium_suitcase",new Point(-9129.234375f,3322.79296875f,163.07986816406242f)),
+        ("2030201130","c_premium_suitcase",new Point(-7889.765625f,3976.55859375f,210.92422851562492f)),
+        ("2030201131","c_premium_suitcase",new Point(-2425.32421875f,-899.6484375f,361.5116308593749f)),
+        ("2030201259","c_premium_suitcase",new Point(-1817.71875f,-6275.443359375f,183.23978027343742f)),
+        ("2030201265","c_premium_suitcase",new Point(-1571.326171875f,-7694.6484375f,186.83999999999992f)),
+        ("2030201280","c_premium_suitcase",new Point(-5607.0f,-1384.330078125f,-890.1014062500001f)),
+        ("2030201132","c_military_med_kit",new Point(-5561.349609375f,4448.513671875f,-5.040065917968832f)),
+        ("2030201133","c_military_med_kit",new Point(-8069.396484375f,4007.513671875f,101.77176269531242f)),
+        ("2030201134","c_military_med_kit",new Point(-1784.8828125f,-1938.603515625f,136.26004394531242f)),
+        ("2030201135","c_military_med_kit",new Point(-1604.8828125f,-118.072265625f,212.65182861328117f)),
+        ("2030201136","c_military_med_kit",new Point(-2603.8828125f,-1038.603515625f,361.5116308593749f)),
+        ("2030201137","c_military_med_kit",new Point(-2779.62890625f,-899.279296875f,361.54843505859367f)),
+        ("2030201138","c_military_med_kit",new Point(-1830.849609375f,-903.234375f,361.5116308593749f)),
+        ("2030201139","c_military_med_kit",new Point(-2520.3515625f,-1044.0f,361.5116308593749f)),
+        ("2030201140","c_pile_of_medical_supplies",new Point(-8835.169921875f,956.513671875f,-36.43185058593758f)),
+        ("2030201141","c_pile_of_medical_supplies",new Point(-1981.072265625f,-2303.279296875f,119.52017578124992f)),
+        ("2030201142","c_pile_of_medical_supplies",new Point(-2568.955078125f,-1298.8828125f,121.93167480468742f)),
+        ("2030201143","c_pile_of_medical_supplies",new Point(-2370.955078125f,329.765625f,165.67154296874992f)),
+        ("2030201144","c_pile_of_medical_supplies",new Point(-2736.720703125f,-273.603515625f,-257.7602197265626f)),
+        ("2030201145","c_pile_of_medical_supplies",new Point(-1430.279296875f,6182.6484375f,167.43594726562492f)),
+        ("2030201146","c_pile_of_medical_supplies",new Point(4152.603515625f,4240.072265625f,5.651828613281168f)),
+        ("2030201147","c_garbage_bin",new Point(-8409.603515625f,2872.79296875f,14.363986816406168f)),
+        ("2030201148","c_garbage_bin",new Point(-2639.478515625f,-11296.740234375f,308.37570556640617f)),
+        ("2030201149","c_garbage_bin",new Point(3695.396484375f,-10292.396484375f,8.928500976562418f)),
+        ("2030201150","c_garbage_bin",new Point(263.162109375f,5495.044921875f,159.62411865234367f)),
+        ("2030201151","c_garbage_bin",new Point(7813.79296875f,7558.927734375f,-212.79592529296883f)),
+        ("2030201152","c_server",new Point(2832.802734375f,-2709.3515625f,361.5116308593749f)),
+        ("2030201153","c_server",new Point(2734.875f,-2449.79296875f,361.5116308593749f)),
+        ("2030201154","c_server",new Point(-2550.234375f,-2149.55859375f,488.23178466796867f)),
+        ("2030201155","c_server",new Point(2195.701171875f,-264.955078125f,488.41196044921867f)),
+        ("2030201156","c_server",new Point(2337.416015625f,-439.55859375f,488.41196044921867f)),
+        ("2030201157","c_server",new Point(1479.234375f,5877.0f,622.4759252929687f)),
+        ("2030201158","c_storage_box",new Point(2591.6484375f,-2455.55859375f,361.5116308593749f)),
+        ("2030201159","c_storage_box",new Point(2671.927734375f,-345.955078125f,488.41196044921867f)),
+        ("2030201160","c_storage_box",new Point(1546.20703125f,634.67578125f,119.59158691406242f)),
+        ("2030201161","c_storage_box",new Point(9600.486328125f,1501.55859375f,-200.51980224609383f)),
+        ("2030201162","c_storage_box",new Point(9853.20703125f,2075.396484375f,82.04416259765617f)),
+        ("2030201163","c_storage_box",new Point(-2736.0f,-14443.20703125f,347.40024169921867f)),
+        ("2030201164","c_storage_box",new Point(-4123.44140625f,-1872.3515625f,-171.00008789062508f)),
+        ("2030201165","c_storage_box",new Point(1762.55859375f,-2147.396484375f,165.63583740234367f)),
+        ("2030201166","c_storage_box",new Point(1988.279296875f,-2608.55859375f,401.67160400390617f)),
+        ("2030201167","c_storage_box",new Point(-3015.720703125f,-495.720703125f,166.47409423828117f)),
+        ("2030201168","c_storage_box",new Point(-3015.720703125f,-450.0f,166.40378173828117f)),
+        ("2030201169","c_storage_box",new Point(-1526.765625f,7140.234375f,577.8016699218749f)),
+        ("2030201170","c_storage_box",new Point(1153.44140625f,241.927734375f,525.6358374023437f)),
+        ("2030201171","c_storage_box",new Point(1873.86328125f,353.513671875f,6.011630859374918f)),
+        ("2030201172","c_storage_box",new Point(3957.837890625f,6426.720703125f,119.37186035156242f)),
+        ("2030201173","c_storage_box",new Point(1007.279296875f,5730.837890625f,623.3372534179687f)),
+        ("2030201174","c_storage_box",new Point(8019.0f,2316.603515625f,-199.04323974609383f)),
+        ("2030201175","c_storage_box",new Point(8989.787109375f,1149.837890625f,-199.37722412109383f)),
+        ("2030201182","c_tool_cabinet",new Point(-4309.55859375f,-2239.611328125f,-171.00008789062508f)),
+        ("2030201183","c_tool_cabinet",new Point(-1505.759765625f,6613.927734375f,576.3602636718749f)),
+        ("2030201184","c_tool_cabinet",new Point(8004.603515625f,3904.927734375f,-125.60403076171883f)),
+        ("2030201185","c_tool_cabinet",new Point(9473.765625f,4246.20703125f,-125.63973632812508f)),
+        ("2030201221","c_tool_cabinet",new Point(-2005.20703125f,-1989.0f,488.23178466796867f)),
+        ("2030201222","c_tool_cabinet",new Point(9433.79296875f,1508.044921875f,-200.51980224609383f)),
+        ("2030201223","c_tool_cabinet",new Point(131.396484375f,7533.0f,726.1198461914062f)),
+        ("2030201256","c_tool_cabinet",new Point(-3571.171875f,-6511.640625f,370.4402197265624f)),
+        ("2030201281","c_tool_cabinet",new Point(5345.666015625f,-2611.037109375f,-825.1200219726563f)),
+        ("2030201186","c_ammo_crate",new Point(-7120.79296875f,2655.720703125f,112.68008789062492f)),
+        ("2030201187","c_ammo_crate",new Point(-7115.080078125f,-2.162109375f,-90.35989013671883f)),
+        ("2030201188","c_ammo_crate",new Point(-1337.044921875f,-1764.3515625f,119.59158691406242f)),
+        ("2030201189","c_ammo_crate",new Point(-1383.1171875f,478.072265625f,868.3916967773437f)),
+        ("2030201190","c_ammo_crate",new Point(-1993.67578125f,-906.29296875f,361.5116308593749f)),
+        ("2030201191","c_ammo_crate",new Point(-1170.0f,6427.705078125f,576.3602636718749f)),
+        ("2030201192","c_ammo_crate",new Point(-269.279296875f,-1063.44140625f,868.2115209960937f)),
+        ("2030201193","c_ammo_crate",new Point(66.603515625f,-1307.056640625f,869.1481054687499f)),
+        ("2030201194","c_ammo_crate",new Point(1064.0390625f,5888.513671875f,622.4039648437499f)),
+        ("2030201195","c_ammo_crate",new Point(1229.9765625f,5885.6484375f,622.4039648437499f)),
+        ("2030201196","c_ammo_crate",new Point(4078.072265625f,91.986328125f,-169.78719726562508f)),
+        ("2030201197","c_ammo_crate",new Point(8892.052734375f,2933.859375f,-126.18026367187508f)),
+        ("2030201198","c_ammo_crate",new Point(8787.603515625f,3857.765625f,-125.60403076171883f)),
+        ("2030201261","c_ammo_crate",new Point(-1764.0f,-6703.20703125f,183.92367919921867f)),
+        ("2030201295","c_ammo_crate",new Point(-315.439453125f,-1004.044921875f,870.8399999999999f)),
+        ("2030201199","c_flight_case",new Point(-7824.603515625f,4402.79296875f,59.03989013671867f)),
+        ("2030201200","c_flight_case",new Point(-2484.0f,-2916.0f,120.52817138671867f)),
+        ("2030201201","c_flight_case",new Point(2131.751953125f,-2368.79296875f,166.96847900390617f)),
+        ("2030201202","c_flight_case",new Point(-2221.55859375f,-932.765625f,-266.4361230468751f)),
+        ("2030201203","c_flight_case",new Point(2639.162109375f,270.0f,120.67154296874992f)),
+        ("2030201204","c_flight_case",new Point(1608.92578125f,-1325.162109375f,139.93167480468742f)),
+        ("2030201205","c_flight_case",new Point(3828.3046875f,2214.0f,10.079868164062418f)),
+        ("2030201206","c_flight_case",new Point(1433.8125f,6109.20703125f,625.3559912109374f)),
+        ("2030201207","c_drawer",new Point(894.1640625f,599.044921875f,488.23178466796867f)),
+        ("2030201208","c_drawer",new Point(5439.603515625f,-9474.1875f,114.76803955078117f)),
+        ("2030201209","c_drawer",new Point(-1280.1796875f,-2765.513671875f,489.31174072265617f)),
+        ("2030201210","c_drawer",new Point(1609.20703125f,-2548.001953125f,361.5116308593749f)),
+        ("2030201211","c_drawer",new Point(-477.4921875f,-2476.79296875f,935.3517187499999f)),
+        ("2030201212","c_drawer",new Point(-2997.720703125f,633.234375f,119.59158691406242f)),
+        ("2030201213","c_drawer",new Point(-1764.3515625f,6144.486328125f,161.27975830078117f)),
+        ("2030201214","c_drawer",new Point(-1872.791015625f,7227.720703125f,576.3602636718749f)),
+        ("2030201215","c_drawer",new Point(1162.8984375f,5720.396484375f,622.4759252929687f)),
+        ("2030201216","c_drawer",new Point(1206.0f,5720.396484375f,622.4759252929687f)),
+        ("2030201217","c_drawer",new Point(-1698.1875f,7669.037109375f,576.3602636718749f)),
+        ("2030201218","c_drawer",new Point(9081.720703125f,1746.720703125f,-200.51980224609383f)),
+        ("2030201219","c_drawer",new Point(9055.79296875f,2197.265625f,81.97165283203117f)),
+        ("2030201220","c_drawer",new Point(9023.765625f,2484.615234375f,81.97165283203117f)),
+        ("2030201251","c_drawer",new Point(-4073.009765625f,-6246.6328125f,6.839999999999918f)),
+        ("2030201276","c_drawer",new Point(-1744.330078125f,-6264.6328125f,363.2397802734374f)),
+        ("2030201230","c_computer",new Point(-9266.044921875f,3506.044921875f,199.47922119140617f)),
+        ("2030201231","c_computer",new Point(-273.955078125f,-2399.044921875f,956.7360571289062f)),
+        ("2030201232","c_computer",new Point(9138.8671875f,2074.32421875f,108.97165283203117f)),
+        ("2030201245","c_computer",new Point(-4407.01171875f,-14081.765625f,341.24460205078117f)),
+        ("2030201271","c_computer",new Point(-1991.267578125f,-6457.21875f,395.64010986328117f)),
+        ("2030201233","c_locker",new Point(-1699.20703125f,-3355.55859375f,491.1118505859374f)),
+        ("2030201234","c_locker",new Point(-1699.20703125f,-3323.162109375f,491.1118505859374f)),
+        ("2030201235","c_locker",new Point(-1699.20703125f,-3291.1171875f,491.1118505859374f)),
+        ("2030201236","c_locker",new Point(-1699.20703125f,-3259.072265625f,491.1118505859374f)),
+        ("2030201237","c_locker",new Point(1562.765625f,714.603515625f,119.52017578124992f)),
+        ("2030201238","c_locker",new Point(1562.765625f,746.279296875f,119.52017578124992f)),
+        ("2030201239","c_locker",new Point(-2209.67578125f,-1766.8828125f,119.59158691406242f)),
+        ("2030201240","c_locker",new Point(-2177.6484375f,-1766.8828125f,119.59158691406242f)),
+        ("2030201241","c_weapon_crates",new Point(-2631.234375f,-1855.79296875f,119.59158691406242f)),
+        ("2030201242","c_weapon_crates",new Point(-2920.67578125f,-3039.486328125f,488.1598242187499f)),
+        ("2030201243","c_weapon_crates",new Point(2032.20703125f,-646.55859375f,119.52017578124992f)),
+        ("2030201244","c_weapon_crates",new Point(1373.044921875f,-601.55859375f,119.52017578124992f)),
+        ("2030201282","Item/notebook.prefab",new Point(182.8828125f,-875.267578125f,887.3354223632812f)),
+        ("2030201283","Item/notebook.prefab",new Point(1289.583984375f,720.896484375f,146.05215820312492f)),
+        ("2030201284","Item/notebook.prefab",new Point(2283.908203125f,754.5234375f,520.3080175781249f)),
+        ("2030201285","Item/notebook.prefab",new Point(785.98828125f,-318.05859375f,719.6401098632812f)),
+        ("2030201286","Item/notebook.prefab",new Point(1986.732421875f,-1342.30078125f,220.71579345703117f)),
+        ("2030201287","Item/notebook.prefab",new Point(1812.3046875f,-1369.951171875f,140.03989013671867f)),
+        ("2030201288","Item/notebook.prefab",new Point(1916.859375f,-2746.4765625f,401.9039648437499f)),
+        ("2030201289","Item/notebook.prefab",new Point(-3384.755859375f,-2173.939453125f,339.2280615234374f)),
+        ("2030201290","Item/notebook.prefab",new Point(-3191.255859375f,-1730.70703125f,152.74777587890617f)),
+        ("2030201291","Item/notebook.prefab",new Point(-2390.501953125f,-2588.87109375f,255.23978027343742f)),
+        ("2030201292","Item/notebook.prefab",new Point(-1958.73046875f,-663.2578125f,172.44021972656242f)),
+        ("2030201293","Item/notebook.prefab",new Point(-2939.80078125f,806.94140625f,159.87625488281242f)),
+        ("2030201294","Item/notebook.prefab",new Point(-1359.0f,516.779296875f,902.9519384765624f))
     ];
+    private CounterStrikeSharp.API.Modules.Timers.Timer? lootSpawnTimer;
+    private int lootCursor;
+    private static System.Drawing.Color LootColor(string type)
+    {
+        if(type=="c_safe")return System.Drawing.Color.Yellow;
+        uint hash=2166136261;
+        foreach(var c in type)hash=unchecked((hash^c)*16777619);
+        return System.Drawing.Color.FromArgb(100+(int)(hash%156),100+(int)((hash>>8)%156),100+(int)((hash>>16)%156));
+    }
     private void ClearBigSafes()
     {
+        lootSpawnTimer?.Kill();lootSpawnTimer=null;lootCursor=0;
         var markers=bigSafeMarkers.ToArray();bigSafeMarkers.Clear();
         foreach(var marker in markers)
             try { if(marker.IsValid)marker.Remove(); }
@@ -64,29 +360,44 @@ public sealed class DebugPlugin : BasePlugin, IPluginConfig<DebugConfig>
            Server.MapName!="df_spaceport_kat_linked")
         { c.ReplyToCommand("Private Spaceport console only.");return; }
         if(c.ArgCount!=2 || c.GetArg(1) is not ("on" or "off"))
-        { c.ReplyToCommand("Usage: css_bigsafes on|off");return; }
+        { c.ReplyToCommand("Usage: css_lootmarkers on|off");return; }
         ClearBigSafes();
-        if(c.GetArg(1)=="off") { c.ReplyToCommand("Big safe markers off.");return; }
+        if(c.GetArg(1)=="off") { c.ReplyToCommand("Loot markers off.");return; }
+        lootSpawnTimer=AddTimer(0.1f,SpawnLootBatch,CounterStrikeSharp.API.Modules.Timers.TimerFlags.REPEAT|CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
+        c.ReplyToCommand("Loot marker spawn started: 295 positions, batches of 10; css_loot_status for progress.");
+    }
+    private void SpawnLootBatch()
+    {
         try {
-            foreach(var (id,pos) in BigSafePositions) {
+            var end=Math.Min(lootCursor+10,LootPositions.Length);
+            while(lootCursor<end) {
+                var (id,type,pos)=LootPositions[lootCursor];
                 var e=Utilities.CreateEntityByName<CDynamicProp>("prop_dynamic")
                     ??throw new InvalidOperationException("prop_dynamic unavailable");
-                bigSafeMarkers.Add(e);e.Entity!.Name="kat_debug_big_safe_"+id;e.SetModel(Safe7Model);
+                bigSafeMarkers.Add(e);e.Entity!.Name="kat_debug_loot_"+id;e.SetModel(Safe7Model);
                 e.Collision.SolidType=SolidType_t.SOLID_NONE;e.TakesDamage=false;
-                e.Render=System.Drawing.Color.Yellow;e.Glow.GlowColorOverride=System.Drawing.Color.Yellow;
-                e.Glow.GlowType=3;e.Glow.GlowRange=10000;e.Glow.Glowing=true;
+                e.Render=LootColor(type);
+                // No expensive through-wall glow on 295 entities; yellow big safes remain distinct.
                 e.DispatchSpawn();e.Collision.SolidType=SolidType_t.SOLID_NONE;e.MoveType=MoveType_t.MOVETYPE_NONE;
-                if(e.CBodyComponent?.SceneNode is not {} node)throw new InvalidOperationException("Missing safe scene node");
+                if(e.CBodyComponent?.SceneNode is not {} node)throw new InvalidOperationException("Missing loot scene node");
                 node.Scale=0.21f;
                 e.Teleport(new Vector(pos.X,pos.Y,pos.Z),new QAngle(0,0,0),new Vector(0,0,0));
-                c.ReplyToCommand($"Big safe {id}: valid={e.IsValid} scale={node.Scale} solid={e.Collision.SolidType} position={e.AbsOrigin}");
+                lootCursor++;
             }
-            c.ReplyToCommand($"Big safe markers on: {bigSafeMarkers.Count}; separate Safe7 unchanged.");
+            if(lootCursor==LootPositions.Length) {
+                lootSpawnTimer?.Kill();lootSpawnTimer=null;
+                Logger.LogInformation("Loot markers complete: {Count}, plus separate Safe7",bigSafeMarkers.Count);
+            }
         } catch(Exception e) {
-            ClearBigSafes();Logger.LogError(e,"Big safe marker drawing failed");
-            c.ReplyToCommand("Big safe markers failed; partial markers removed.");
+            ClearBigSafes();Logger.LogError(e,"Loot marker spawn failed; partial owned markers removed");
         }
     }
+    private void LootStatusCommand(CCSPlayerController? p,CommandInfo c)
+    {
+        if(p!=null)return;
+        c.ReplyToCommand($"Loot markers={bigSafeMarkers.Count(e=>e.IsValid)}/295, pending={lootSpawnTimer!=null}, nonSolid={bigSafeMarkers.Count(e=>e.IsValid&&e.Collision.SolidType==SolidType_t.SOLID_NONE)}, scale021={bigSafeMarkers.Count(e=>e.IsValid&&e.CBodyComponent?.SceneNode?.Scale==0.21f)}, safe7={safe7Marker is {IsValid:true}}, beams={extractBoxBeams.Count(e=>e.IsValid)}");
+    }
+
     private const string Safe7Model="models/props/de_dust/hr_dust/dust_soccerball/dust_soccer_ball001.vmdl";
     private CDynamicProp? safe7Marker;
     private void ClearSafe7()
@@ -232,7 +543,9 @@ public sealed class DebugPlugin : BasePlugin, IPluginConfig<DebugConfig>
     {
         loaded = true;
         RegisterListener<Listeners.OnServerPrecacheResources>(m=>m.AddResource(Safe7Model));
-        AddCommand("css_bigsafes", "Draw dump and legacy big safe markers: on|off", BigSafeCommand);
+        AddCommand("css_bigsafes", "Draw all 295 dump loot markers: on|off", BigSafeCommand);
+        AddCommand("css_lootmarkers", "Draw all 295 dump loot markers: on|off", BigSafeCommand);
+        AddCommand("css_loot_status", "Read owned loot marker counts", LootStatusCommand);
         AddCommand("css_safe7_scale", "Set and report Safe7 scale 0.21", Safe7ScaleCommand);
         AddCommand("css_safe7", "Draw yellow Safe7 marker: on|off", Safe7Command);
         AddCommand("css_extractbox", "Draw green/red extraction outlines: on|off", ExtractBoxCommand);
