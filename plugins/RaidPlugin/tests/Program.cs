@@ -39,3 +39,5 @@ RaidOutcomeTests.Run();
 SpawnProfileTests.Run();
 
 PrivateRehearsalTests.Run();
+
+PrivateRehearsalSafetyTests.Run();

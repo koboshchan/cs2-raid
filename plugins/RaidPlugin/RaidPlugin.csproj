@@ -6,6 +6,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Remove="tests/**/*.cs" />
+    <Compile Include="../PrivateRaidHandoff.cs" Link="PrivateRaidHandoff.cs" />
     <Reference Include="CounterStrikeSharp.API"><HintPath>$(CSS_API_DIR)/CounterStrikeSharp.API.dll</HintPath><Private>false</Private></Reference>
     <Reference Include="Microsoft.Extensions.Logging.Abstractions"><HintPath>$(CSS_API_DIR)/Microsoft.Extensions.Logging.Abstractions.dll</HintPath><Private>false</Private></Reference>
   </ItemGroup>

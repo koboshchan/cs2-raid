@@ -1,3 +1,4 @@
+using PrivateRaidSafety;
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Commands;
@@ -1241,16 +1242,27 @@ public sealed class DebugPlugin : BasePlugin, IPluginConfig<DebugConfig>
             Logger.LogError("Map Debug report append failed ({Failure}); report acceptance disabled until config reload.", store.Failure);
         return saved;
     }
-    private bool raidOwnsEconomy;
-    private bool RaidOwnsEconomy() {
-        try{var p="/tmp/kat-private-raid-flow-active";raidOwnsEconomy=File.Exists(p)&&(DateTime.UtcNow-File.GetLastWriteTimeUtc(p)).TotalSeconds<15&&File.ReadAllText(p)==Server.MapName&&Server.MapName=="df_spaceport_v261";}
-        catch{raidOwnsEconomy=false;}
-        return raidOwnsEconomy;
-    }
+    private readonly Dictionary<string,Action> pendingEconomyRestore=[];
+    private bool restoringEconomy;
+    private HandoffToken? acknowledgedRaid;
+    private DateTime nextRaidAcknowledgement;
+    private bool RaidOwnsEconomy()=>PrivateRaidHandoff.ReadRequest(Server.MapName)!=null;
     private void ApplyCvars()
     {
         if (!active) return;
-        if(RaidOwnsEconomy()){if(haveSnapshot)RestoreCvars();File.WriteAllText("/tmp/kat-private-raid-flow-debug-ready",Server.MapName);return;}
+        if(PrivateRaidHandoff.ReadRequest(Server.MapName) is {} request){
+            // No economy writes after acknowledgement, including late baseline restoration.
+            if(!RestoreCvars())return;
+            if(acknowledgedRaid!=request||DateTime.UtcNow>=nextRaidAcknowledgement){
+                try{
+                    PrivateRaidHandoff.Acknowledge(request);acknowledgedRaid=request;
+                    nextRaidAcknowledgement=DateTime.UtcNow.AddSeconds(1);
+                }catch(Exception e){Logger.LogError("Raid acknowledgement unavailable ({Failure}).",e.GetType().Name);}
+            }
+            return;
+        }
+        acknowledgedRaid=null;
+        if(restoringEconomy&&!RestoreCvars())return;
         try
         {
             if (!haveSnapshot)
@@ -1280,16 +1292,21 @@ public sealed class DebugPlugin : BasePlugin, IPluginConfig<DebugConfig>
             active = false; RestoreCvars();
         }
     }
-    private void RestoreCvars()
+    private bool RestoreCvars()
     {
-        if (!haveSnapshot) return;
-        try { buyAnywhere!.Value = buyAnywhereSetting!.Baseline; }
-        catch (Exception e) { Logger.LogError("Could not restore mp_buy_anywhere ({Failure}).", e.GetType().Name); }
-        try { buyTime!.Value = buyTimeSetting!.Baseline; }
-        catch (Exception e) { Logger.LogError("Could not restore mp_buytime ({Failure}).", e.GetType().Name); }
-        try { maxMoney!.Value = maxMoneySetting!.Baseline; }
-        catch (Exception e) { Logger.LogError("Could not restore mp_maxmoney ({Failure}).", e.GetType().Name); }
-        haveSnapshot = false; buyAnywhere = null; buyTime = null; maxMoney = null;
+        if (!haveSnapshot) return true;
+        if(!restoringEconomy){
+            restoringEconomy=true;
+            var anywhere=buyAnywhere!;var anywhereValue=buyAnywhereSetting!.Baseline;
+            var time=buyTime!;var timeValue=buyTimeSetting!.Baseline;
+            var maximum=maxMoney!;var maximumValue=maxMoneySetting!.Baseline;
+            pendingEconomyRestore.Add("mp_buy_anywhere",()=>{anywhere.Value=anywhereValue;if(anywhere.Value!=anywhereValue)throw new InvalidOperationException("mp_buy_anywhere restore mismatch");});
+            pendingEconomyRestore.Add("mp_buytime",()=>{time.Value=timeValue;if(time.Value!=timeValue)throw new InvalidOperationException("mp_buytime restore mismatch");});
+            pendingEconomyRestore.Add("mp_maxmoney",()=>{maximum.Value=maximumValue;if(maximum.Value!=maximumValue)throw new InvalidOperationException("mp_maxmoney restore mismatch");});
+        }
+        if(!PrivateRaidHandoff.RestorePending(pendingEconomyRestore,e=>Logger.LogError("Debug baseline restore pending ({Failure}).",e.GetType().Name)))return false;
+        haveSnapshot=false;restoringEconomy=false;buyAnywhere=null;buyTime=null;maxMoney=null;
+        return true;
     }
     private void RevokeTestAdmins()
     {
@@ -1310,7 +1327,7 @@ public sealed class DebugPlugin : BasePlugin, IPluginConfig<DebugConfig>
         if (!active) return;
         ApplyCvars(); // also defeats a late +exec config on the very next tick
         if(RaidOwnsEconomy()){foreach(var p in Utilities.GetPlayers().Where(Human))MaintainTestAdmin(p);return;}
-        if (!active || maxMoney == null) return;
+        if (!active || restoringEconomy || maxMoney == null) return;
         var amount = Math.Max(maxMoney.Value, 0);
         foreach (var p in Utilities.GetPlayers())
         {
