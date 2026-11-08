@@ -5,7 +5,7 @@ using CounterStrikeSharp.API.Modules.Cvars;
 using CounterStrikeSharp.API.Modules.Utils;
 public sealed class Plugin:BasePlugin{
 public override string ModuleName=>"PrivateV24Spawn32";
-public override string ModuleVersion=>"1.2.0-lift100";
+public override string ModuleVersion=>"1.2.1-hullfixed";
 public override string ModuleAuthor=>"koboshchan";
 readonly List<SpawnPoint> owned=new();
 record Site(string Id,float X,float Y,float Z,float Yaw);
@@ -57,6 +57,9 @@ new("info_player_counterterrorist",6850.793f,7858.0723f,-205.10965f),
 new("info_player_counterterrorist",9957.744f,2545.207f,-196.51047f),
 new("info_player_counterterrorist",-9910.793f,5274f,60.964783f),
 };
+// Per-spawn fixed Z, proven by console native 32x32x72 hull traces on v261.
+static float FixedLift(Exact x)=>Math.Abs(x.X-3587.6758f)<0.01f&&Math.Abs(x.Y-3953.8477f)<0.01f?56f:
+Math.Abs(x.X-3523.6758f)<0.01f&&(Math.Abs(x.Y-3953.8477f)<0.01f||Math.Abs(x.Y-3889.8477f)<0.01f)?97f:100f;
 void RestoreExact(){
 if(!Allowed())return;
 var t=Spawns("info_player_terrorist");var ct=Spawns("info_player_counterterrorist");
@@ -66,7 +69,7 @@ try {
 foreach(var x in exact){
  var e=Utilities.CreateEntityByName<SpawnPoint>(x.Class);
  if(e==null||!e.IsValid)throw new Exception("exact spawn allocation failed");
- owned.Add(e);e.Teleport(new Vector(x.X,x.Y,x.Z+100f),new QAngle(0,0,0),new Vector(0,0,0));e.DispatchSpawn();e.Enabled=true;e.Priority=0;
+ owned.Add(e);e.Teleport(new Vector(x.X,x.Y,x.Z+FixedLift(x)),new QAngle(0,0,0),new Vector(0,0,0));e.DispatchSpawn();e.Enabled=true;e.Priority=0;
 }
 Save(new{persistentExactRestored=Snapshot(),source="spawn32-validated-source.json immutable groundvalidated receipt",owned=owned.Select(e=>e.Index).ToArray()});
 }catch(Exception ex){foreach(var e in owned.Where(e=>e.IsValid))e.Remove();owned.Clear();Save(new{persistentError=ex.Message,utc=DateTime.UtcNow});}
@@ -75,12 +78,12 @@ void LiftExisting(){
 if(!Allowed())return;
 var all=Spawns("info_player_terrorist").Concat(Spawns("info_player_counterterrorist")).ToArray();
 if(all.Length!=32||all.Any(e=>!e.Enabled||e.AbsOrigin==null))throw new Exception("Lift requires 32 enabled spawns");
-foreach(var e in all){var v=e.AbsOrigin!;var x=exact.SingleOrDefault(x=>x.Class==e.DesignerName&&Math.Abs(x.X-v.X)<0.01&&Math.Abs(x.Y-v.Y)<0.01);if(x==null||Math.Abs(v.Z-x.Z)>0.01&&Math.Abs(v.Z-x.Z-80)>0.01&&Math.Abs(v.Z-x.Z-130)>0.01&&Math.Abs(v.Z-x.Z-100)>0.01)throw new Exception("Unexpected spawn baseline");}
-foreach(var e in all){var v=e.AbsOrigin!;var x=exact.Single(x=>x.Class==e.DesignerName&&Math.Abs(x.X-v.X)<0.01&&Math.Abs(x.Y-v.Y)<0.01);e.Teleport(new Vector(x.X,x.Y,x.Z+100),e.AbsRotation,new Vector(0,0,0));}
+foreach(var e in all){var v=e.AbsOrigin!;var x=exact.SingleOrDefault(x=>x.Class==e.DesignerName&&Math.Abs(x.X-v.X)<0.01&&Math.Abs(x.Y-v.Y)<0.01);if(x==null||Math.Abs(v.Z-x.Z)>0.01&&Math.Abs(v.Z-x.Z-80)>0.01&&Math.Abs(v.Z-x.Z-130)>0.01&&Math.Abs(v.Z-x.Z-100)>0.01&&Math.Abs(v.Z-x.Z-FixedLift(x))>0.01)throw new Exception("Unexpected spawn baseline");}
+foreach(var e in all){var v=e.AbsOrigin!;var x=exact.Single(x=>x.Class==e.DesignerName&&Math.Abs(x.X-v.X)<0.01&&Math.Abs(x.Y-v.Y)<0.01);e.Teleport(new Vector(x.X,x.Y,x.Z+FixedLift(x)),e.AbsRotation,new Vector(0,0,0));}
 Save(new{lift100=Snapshot()});
 }
 public override void Load(bool hotReload){
-AddCommand("css_v24_spawn32_lift100","Idempotent approved +100 Z lift",(p,c)=>{if(p!=null||!Allowed())return;LiftExisting();c.ReplyToCommand("Lift100 applied");});
+AddCommand("css_v24_spawn32_lift100","Idempotent per-spawn hull-validated Z",(p,c)=>{if(p!=null||!Allowed())return;LiftExisting();c.ReplyToCommand("Lift100 applied");});
 AddCommand("css_v24_spawn32_restore_exact","Restore exact previously validated 32 spawns only on zero baseline",(p,c)=>{if(p!=null||!Allowed())return;RestoreExact();c.ReplyToCommand(JsonSerializer.Serialize(Snapshot()));});
 RegisterListener<Listeners.OnMapStart>(map=>{owned.Clear();Server.NextFrame(RestoreExact);AddTimer(3f,RestoreExact);});
 if(hotReload)Server.NextFrame(RestoreExact);
