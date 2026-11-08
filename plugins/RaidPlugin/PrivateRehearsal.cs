@@ -25,6 +25,7 @@ public sealed partial class RaidPlugin
     private bool LoadPrivateRehearsal() {
         var path=Path.Combine(ModuleDirectory,"private-rehearsal.json");
         if(!File.Exists(path)||JsonSerializer.Deserialize<PrivateSettings>(File.ReadAllText(path),new JsonSerializerOptions{PropertyNameCaseInsensitive=true})?.Enabled!=true)return false;
+        if(TestServer)throw new InvalidOperationException("Private rehearsal requires RAID_TEST_SERVER=0; native economy is unavailable in isolated testmode.");
         if(!PrivateIdentity())throw new InvalidOperationException("Rehearsal refused outside dedicated private27016.");
         privateRehearsal=true;MoneyOffHandler.PrivateRehearsalHardOff=true;
         AddCommand("css_raid_status","Local private rehearsal status",(p,c)=>c.ReplyToCommand($"PRIVATE REHEARSAL | map={Server.MapName} loaded={sessionLoaded} phase={game.Phase} players={game.Players.Count}/7 buySeconds={GameplayState.BuySeconds} ends={game.EndsAt:O} extraction={game.ExtractionAt:O} HTTP=HARD_OFF; kits=OFF; no payouts"));
@@ -74,6 +75,7 @@ public sealed partial class RaidPlugin
         RegisterListener<Listeners.OnMapEnd>(()=>{PrivateStopRound();privateEpoch++;});
         RegisterListener<Listeners.OnMapStart>(_=>{var epoch=++privateEpoch;AddTimer(4,()=>{if(epoch==privateEpoch)PrivateReset();},TimerFlags.STOP_ON_MAPCHANGE);});
         AddTimer(1,PrivateSecond,TimerFlags.REPEAT);
+        File.Delete("/tmp/kat-private-raid-flow-debug-ready");
         File.WriteAllText(PrivateFlowLease,Server.MapName);
         AddTimer(2,PrivateReset,TimerFlags.STOP_ON_MAPCHANGE);
         return true;
@@ -82,8 +84,10 @@ public sealed partial class RaidPlugin
         .Concat(Utilities.FindAllEntitiesByDesignerName<SpawnPoint>("info_player_counterterrorist"))
         .Where(e=>e.IsValid&&e.Enabled&&e.AbsOrigin!=null).Select(e=>new Position(e.AbsOrigin!.X,e.AbsOrigin.Y,e.AbsOrigin.Z+4)).ToArray();
     private void PrivateReset(){
-        PrivateStopRound();privateEpoch++;privateStopping=false;
+        PrivateStopRound(true);privateEpoch++;privateStopping=false;
         if(!PrivateIdentity()||Server.MapName!="df_spaceport_v261")return;
+        var ack="/tmp/kat-private-raid-flow-debug-ready";
+        if(!File.Exists(ack)||File.ReadAllText(ack)!=Server.MapName||(DateTime.UtcNow-File.GetLastWriteTimeUtc(ack)).TotalSeconds>10){PrivateStopRound();Server.PrintToConsole("PRIVATE RAID refused: cooperative Debug economy acknowledgement missing.");return;}
         var spawns=NativePrivateSpawns();if(spawns.Length!=32){Server.PrintToConsole("PRIVATE RAID refuses startup without existing 32 native spawns; helper untouched.");return;}
         File.WriteAllText(PrivateFlowLease,Server.MapName);
         game=new();raidOutcomes=new();privateSpectators.Clear();deathPositions.Clear();roamingPlaced.Clear();nativeProjections.Clear();
@@ -172,10 +176,10 @@ public sealed partial class RaidPlugin
             p.PrintToCenter($"LOCAL RAID | {phase}\n{countdown}\n{zone}");
         }
     }
-    private void PrivateStopRound(){
+    private void PrivateStopRound(bool retainLease=false){
         sessionLoaded=false;
         foreach(var p in Utilities.GetPlayers().Where(Human))SetPresentation(p,false,false);
-        RestoreRaidBuyClock();try{File.WriteAllText(PrivateFlowLease,"");}catch(Exception e){Server.PrintToConsole("Private raid lease release failed: "+e.Message);}
+        RestoreRaidBuyClock();try{if(!retainLease)File.WriteAllText(PrivateFlowLease,"");}catch(Exception e){Server.PrintToConsole("Private raid lease release failed: "+e.Message);}
     }
     private void StopPrivateRehearsal(){privateStopping=true;privateEpoch++;PrivateStopRound();}
 }

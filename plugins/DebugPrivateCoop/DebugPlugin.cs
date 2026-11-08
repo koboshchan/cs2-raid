@@ -1241,11 +1241,8 @@ public sealed class DebugPlugin : BasePlugin, IPluginConfig<DebugConfig>
             Logger.LogError("Map Debug report append failed ({Failure}); report acceptance disabled until config reload.", store.Failure);
         return saved;
     }
-    private DateTime raidLeaseCheck;
     private bool raidOwnsEconomy;
     private bool RaidOwnsEconomy() {
-        if(DateTime.UtcNow<raidLeaseCheck)return raidOwnsEconomy;
-        raidLeaseCheck=DateTime.UtcNow.AddSeconds(1);
         try{var p="/tmp/kat-private-raid-flow-active";raidOwnsEconomy=File.Exists(p)&&(DateTime.UtcNow-File.GetLastWriteTimeUtc(p)).TotalSeconds<15&&File.ReadAllText(p)==Server.MapName&&Server.MapName=="df_spaceport_v261";}
         catch{raidOwnsEconomy=false;}
         return raidOwnsEconomy;
@@ -1253,7 +1250,7 @@ public sealed class DebugPlugin : BasePlugin, IPluginConfig<DebugConfig>
     private void ApplyCvars()
     {
         if (!active) return;
-        if(RaidOwnsEconomy()){if(haveSnapshot)RestoreCvars();return;}
+        if(RaidOwnsEconomy()){if(haveSnapshot)RestoreCvars();File.WriteAllText("/tmp/kat-private-raid-flow-debug-ready",Server.MapName);return;}
         try
         {
             if (!haveSnapshot)
