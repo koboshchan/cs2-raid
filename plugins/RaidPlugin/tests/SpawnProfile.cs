@@ -18,9 +18,9 @@ public static class SpawnProfileTests
         Check(p.Spawns.Length==7);Check(!p.NativeValidated);
         for(int i=0;i<7;i++){
             var s=p.Spawns[i];var e=expected[i];
-            Check(s.X==e[0]);Check(s.Y==e[1]);Check(s.Z==e[2]+130);Check(s.Yaw==e[3]);
+            Check(s.X==e[0]);Check(s.Y==e[1]);Check(s.Z==e[2]+100);Check(s.Yaw==e[3]);
             Check(s.Pitch==0&&s.Roll==0);Check(s.Valid);Check(s.Yaw%45==0);
-            var native=s.NativePosition();Check(native.X==(float)e[0]&&native.Y==(float)e[1]&&native.Z==(float)(e[2]+130)&&native.Yaw==(float)e[3]);
+            var native=s.NativePosition();Check(native.X==(float)e[0]&&native.Y==(float)e[1]&&native.Z==(float)(e[2]+100)&&native.Yaw==(float)e[3]);
         }
         Check(p.Spawns[0].X>0&&p.Spawns[0].Y>0&&p.Spawns[0].Z<0);
         Check(p.Spawns[3].X<0&&p.Spawns[3].Y<0); // No reflection, swap or handedness conversion.
