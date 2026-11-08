@@ -2,6 +2,19 @@ using Cs2Raid;
 static class PrivateRehearsalTests {
 public static void Run(){
 int n=0;void C(bool ok){n++;if(!ok)throw new Exception("Private rehearsal check "+n);}
+// Solo is caller-scoped; preserve an unrelated duo, pending request and unready player.
+var mixed=new GameplayState();foreach(var id in new[]{"solo","duo1","duo2","pending1","pending2","default"})C(mixed.Join(id));
+C(!mixed.ShootRequest("duo1","duo2"));C(mixed.ShootRequest("duo2","duo1"));
+C(!mixed.ShootRequest("pending1","pending2"));
+var duoTeam=mixed.Players["duo1"].Team;
+C(mixed.Solo("solo"));C(mixed.Players["solo"].Team!=null);
+C(mixed.Players["duo1"].Team==duoTeam&&mixed.Players["duo2"].Team==duoTeam);
+C(mixed.Players["pending1"].Team==null&&mixed.Players["pending2"].Team==null);
+C(mixed.Players["default"].Team==null);C(!mixed.BeginPrivateRehearsalBuy(DateTimeOffset.UnixEpoch));
+C(mixed.ShootRequest("pending2","pending1")); // unrelated request survived !team single
+C(mixed.Solo("default"));C(!mixed.SameTeam("solo","default"));
+C(mixed.SameTeam("duo1","duo2"));C(mixed.SameTeam("pending1","pending2"));
+C(mixed.BeginPrivateRehearsalBuy(DateTimeOffset.UnixEpoch));
 var now=DateTimeOffset.UnixEpoch;var g=new GameplayState();
 C(!g.BeginPrivateRehearsalBuy(now));C(g.Join("a"));C(g.Join("b"));C(!g.BeginPrivateRehearsalBuy(now));
 C(!g.ShootRequest("a","b"));C(g.ShootRequest("b","a"));C(g.SameTeam("a","b"));C(g.BeginPrivateRehearsalBuy(now));C(g.Phase==GamePhase.Buy);

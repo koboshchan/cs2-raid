@@ -31,7 +31,7 @@ public sealed partial class RaidPlugin
         if(!PrivateIdentity())throw new InvalidOperationException("Rehearsal refused outside dedicated private27016.");
         privateRehearsal=true;MoneyOffHandler.PrivateRehearsalHardOff=true;
         AddCommand("css_raid_status","Local private rehearsal status",(p,c)=>c.ReplyToCommand($"PRIVATE REHEARSAL | map={Server.MapName} loaded={sessionLoaded} phase={game.Phase} players={game.Players.Count}/7 buySeconds={GameplayState.BuySeconds} ends={game.EndsAt:O} extraction={game.ExtractionAt:O} HTTP=HARD_OFF; kits=OFF; extractionHUD=UNAVAILABLE (packaged HUD not installed); attemptLifecycle=NOT_IMPLEMENTED; no payouts"));
-        AddCommand("css_team","Ready solo with !team single",(p,c)=>{if(sessionLoaded&&Human(p)&&c.ArgString.Trim().Equals("single",StringComparison.OrdinalIgnoreCase)){if(game.Solo(Id(p)))p.PrintToChat("Ready solo. All humans must ready before buying.");}});
+        AddCommand("css_team","Ready solo with !team single",(p,c)=>{if(sessionLoaded&&Human(p)&&c.ArgString.Trim().Equals("single",StringComparison.OrdinalIgnoreCase)){if(game.Solo(Id(p)))p.PrintToChat("You are ready as a solo team. Other players’ teams are unchanged. All humans must ready before buying.");}});
         AddCommand("css_cancelteam","Cancel lobby team",(p,c)=>{if(sessionLoaded&&Human(p))game.Cancel(Id(p));});
         AddCommand("css_cancel","Cancel lobby team",(p,c)=>{if(sessionLoaded&&Human(p)&&c.ArgString.Trim().Equals("team",StringComparison.OrdinalIgnoreCase))game.Cancel(Id(p));});
         AddCommand("css_raid_rehearsal_reset","Private console-only return to lobby",(p,c)=>{if(p==null){PrivateReset();c.ReplyToCommand("Local rehearsal reset; money hard OFF.");}});
