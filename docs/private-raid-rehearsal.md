@@ -1,0 +1,13 @@
+# Private raid rehearsal
+
+This is a separate, opt-in local adapter, not the financial/native-QA gameplay path. Enable with `private-rehearsal.json` containing `{"enabled":true}` beside RaidPlugin.dll. It refuses processes outside dedicated port 27016; only df_spaceport_v261 and the existing 32 enabled spawn entities can start the session. No account linking, SSG routes, deposits, settlement or inventory persistence. HTTP is hard-disabled for the lifetime of this plugin instance. Character abilities/kits and physical lever hookups are not implemented here.
+
+Map Debug 0.1.28-raid-coop and PrivateV24Control 1.2.0-raid-coop cooperate through a short-lived `/tmp/kat-private-raid-flow-active` lease. Debug keeps report/marker commands but yields economy. Control keeps timeout/CQ settings but yields respawn control. Without a fresh lease both return to their ordinary behavior. Preserve the standalone zipline plugin and original spawn helper.
+
+Lobby humans can shoot each other with Glocks for a reciprocal duo, or use `!team single`. Once everyone is ready, a 45-second native B-menu phase grants 15000 explicitly local test credits. Five-second countdown, placement at existing spawn clusters, ten-second freeze, then 30-minute active raid. Health starts at 200; armor must be purchased. Death permits partner spectating or roaming after five seconds. Buying is unavailable outside the buy phase.
+
+Extraction is the axis-aligned strip X 715.278076 through 1484.720825, Y -6013.118164 through -5940.820312, any Z. Warning bounds X 330.5567015 through 1869.4421995, Y -6049.26709 through -5904.671386. Console-only `css_raid_rehearsal_lever 1` and `css_raid_rehearsal_lever 2` start a five-minute extraction countdown during Active. Eligible living players in the strip at the deadline become local extracted spectators, with no payout or persistence. `css_raid_status` reports state and `css_raid_rehearsal_reset` returns to lobby.
+
+Private native checks still required after deployment: joining T/CT without a hang, reciprocal duo and solo readiness, native B menu and cash debit, buy cutoff, spawn placement and freeze release, 200HP/armor, partner death camera and solo roaming, warning/strip HUD, lever timer and deadline extraction. Model tests and successful builds do not prove these native behaviors.
+
+Rollback must preserve backups on D. Unload Raid first so cvars and the economy lease are released, then restore the prior Debug and Control DLL/config if required. No map installation or changes to public servers/other containers.

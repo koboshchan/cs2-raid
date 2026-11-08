@@ -37,3 +37,5 @@ PrivateLinkTests.Run();
 RaidOutcomeTests.Run();
 
 SpawnProfileTests.Run();
+
+PrivateRehearsalTests.Run();

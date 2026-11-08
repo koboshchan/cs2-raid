@@ -9,7 +9,7 @@ namespace Cs2Raid;
 public sealed partial class RaidPlugin : BasePlugin
 {
     public override string ModuleName => "CS2 Raid";
-    public override string ModuleVersion => "0.1.0";
+    public override string ModuleVersion => "0.2.0-private-flow";
     public override string ModuleAuthor => "koboshchan";
     public override string ModuleDescription => "7-player FFA extraction scaffold; map and money delivery fail closed";
     private RaidState raid = new();
@@ -21,6 +21,7 @@ public sealed partial class RaidPlugin : BasePlugin
     private readonly HttpClient linkHttp=new(new LinkOnlyHandler()) {Timeout=Timeout.InfiniteTimeSpan};
     public override void Load(bool hotReload)
     {
+        if(LoadPrivateRehearsal())return;
         privateLinks=new PrivateLink(linkHttp,(session,message)=>privateLinks?.Schedule(session,action=>Server.NextFrame(action),()=>{
             if(privateLinks?.Current(session)!=true||session.Generation!=mapGeneration||testUnloaded)return;
             var current=Utilities.GetPlayers().FirstOrDefault(p=>p.IsValid&&p.EntityHandle.Raw==session.Raw);
@@ -95,6 +96,7 @@ public sealed partial class RaidPlugin : BasePlugin
         });
     }
     public override void Unload(bool hotReload) {
+        if(privateRehearsal){StopPrivateRehearsal();http.Dispose();linkHttp.Dispose();return;}
         privateLinks?.Dispose();linkHttp.Dispose();
         ResetFixtureDeltaOps();StopFixtureDeltaOpsBridge();
         testUnloaded=true;mapGeneration=Guid.NewGuid();

@@ -100,6 +100,16 @@ public sealed class GameplayState
         if (Phase==GamePhase.Active && Players.Values.All(x=>!x.Alive || x.Extracted)) Phase=GamePhase.Closed;
         return StartsAt is {} at ? Math.Max(0,(int)Math.Ceiling((at-now).TotalSeconds)) : null;
     }
+    // Explicit local rehearsal transitions. No backend receipts, deposits or payouts.
+    internal bool BeginPrivateRehearsalBuy(DateTimeOffset now) {
+        if(Phase!=GamePhase.Lobby || Players.Count==0 || Players.Values.Any(x=>x.Team==null))return false;
+        Phase=GamePhase.Buy;StartsAt=now.AddSeconds(BuySeconds);return true;
+    }
+    internal bool CompletePrivateRehearsalExtraction(ExtractionIntent intent) {
+        if(Phase!=GamePhase.Active || !IsIssuedExtraction(intent) || !Living(intent.Player) || ExtractionAt==null)return false;
+        var p=Players[intent.Player];p.Extracted=true;p.Cash=0;p.MoneyExtractedCents=0;
+        holds.Remove(p.Id);extractionIntents.Remove(p.Id);return true;
+    }
     public bool TryPurchase(string id,int price)
     {
         if(Phase!=GamePhase.Buy || !Living(id) || price<0 || Players[id].Cash<price)return false;

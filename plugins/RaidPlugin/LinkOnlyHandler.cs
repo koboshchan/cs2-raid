@@ -6,6 +6,7 @@ internal sealed class LinkOnlyHandler : DelegatingHandler
     internal LinkOnlyHandler(HttpMessageHandler inner):base(inner){}
     protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request,CancellationToken cancellationToken)
     {
+        if(MoneyOffHandler.PrivateRehearsalHardOff)throw new InvalidOperationException("PRIVATE REHEARSAL: all HTTP hard OFF.");
         var uri=request.RequestUri;
         if(request.Method!=HttpMethod.Post||uri==null||uri.Scheme!="http"||uri.Host!="backend"||uri.Port!=3000||
             uri.UserInfo!=""||uri.Query!=""||uri.Fragment!=""||
