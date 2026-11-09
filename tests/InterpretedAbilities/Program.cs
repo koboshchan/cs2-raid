@@ -244,6 +244,16 @@ Check(NativeWorldRecoveryPolicy.Decide(new[]{anchorTicket,worldEffect with{Marke
 Check(NativeWorldRecoveryPolicy.Decide(new[]{anchorTicket,worldEffect with{Serial=0}},processId,true,_=>true)==NativeWorldRecoveryDecision.Block);
 Check(NativeWorldRecoveryPolicy.Decide(new[]{anchorTicket with{World="bad:"+Guid.NewGuid().ToString("N")}},processId,true,_=>true)==NativeWorldRecoveryDecision.Block);
 Check(NativeWorldRecoveryPolicy.Decide(new[]{anchorTicket,null!},processId,true,_=>true)==NativeWorldRecoveryDecision.Block);
+// Incomplete creation failure is retained in the native adapter, before ticket return.
+creation=new CreationMock(Ticket(820)){FailCreate=true};
+transaction=new NativeEntityTransaction(transactionEscrow,creation);
+try{transaction.Activate();Check(false);}catch(InvalidOperationException){}
+Check(!creation.Exists(820));Check(transactionEscrow.Pending==0);Check(creation.Activations==0);
+creation=new CreationMock(Ticket(821)){FailCreate=true,FailRemove=true};
+transaction=new NativeEntityTransaction(transactionEscrow,creation);
+try{transaction.Activate();Check(false);}catch(Exception){}
+Check(creation.Exists(821));Check(transactionEscrow.Pending==0);
+creation.FailRemove=false;transaction.Dispose();Check(!creation.Exists(821));
 Console.WriteLine($"{count} interpreted lifecycle checks PASS; router + lifecycle PASS; CSS calls compile, not native QA");
 sealed class Effect:IDisposable{public bool Disposed;public void Dispose()=>Disposed=true;}
 
@@ -270,8 +280,11 @@ sealed class EntityMock:INativeEntityBoundary{
 
 sealed class CreationMock(NativeEntityTicket ticket):INativeEntityCreation{
  private bool exists;
- public bool FailActivate,FailRemove;public int Activations,Removes;
- public NativeEntityTicket CreateInert(){exists=true;return ticket;}
+ public bool FailActivate,FailRemove,FailCreate;public int Activations,Removes;
+ public NativeEntityTicket CreateInert(){
+  exists=true;if(FailCreate)throw new InvalidOperationException("marker write failed");return ticket;
+ }
+ public void CleanupIncompleteCreation(){if(exists)Remove(ticket);}
  public void Activate(NativeEntityTicket t){
   if(t!=ticket||!exists)throw new Exception("invalid activation");
   Activations++;if(FailActivate)throw new InvalidOperationException("post-spawn failure");

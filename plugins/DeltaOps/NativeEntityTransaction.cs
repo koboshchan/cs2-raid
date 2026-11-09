@@ -6,6 +6,9 @@ namespace DeltaOps;
 public interface INativeEntityCreation:INativeEntityBoundary
 {
     NativeEntityTicket CreateInert();
+    // Creation implementations must retain their allocated handle before any marker write.
+    // This hook covers exceptions before a complete ticket could be returned.
+    void CleanupIncompleteCreation() {}
     void Activate(NativeEntityTicket ticket);
 }
 public sealed class NativeEntityTransaction(NativeEntityEscrow escrow,INativeEntityCreation native):IDisposable
@@ -15,7 +18,8 @@ public sealed class NativeEntityTransaction(NativeEntityEscrow escrow,INativeEnt
     public void Activate()
     {
         if(closed||created!=null)throw new InvalidOperationException("Entity transaction reused");
-        created=native.CreateInert();
+        try{created=native.CreateInert();}
+        catch{native.CleanupIncompleteCreation();throw;}
         escrow.Record(created);
         recorded=true;
         native.Activate(created);
@@ -23,6 +27,7 @@ public sealed class NativeEntityTransaction(NativeEntityEscrow escrow,INativeEnt
     public void Dispose()
     {
         if(closed)return;
+        if(created==null)native.CleanupIncompleteCreation();
         if(created is {} ticket){
             if(recorded){
                 if(!escrow.Release(ticket,native))throw new InvalidOperationException("Entity cleanup not confirmed");
