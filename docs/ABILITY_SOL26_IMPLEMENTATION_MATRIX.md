@@ -1,3 +1,5 @@
+> SUPERSEDED numeric/admission claims: see ABILITY_STRICT_NUMERIC_CORRECTION.md. All26 activation paths are held; prior CS2 tuning is withdrawn, not authorized.
+
 # Current SOL implementation matrix
 
 Supersedes earlier checkpoint counts. Twelve partial skill interpretations, five shared projectile-foundation-only entries, nine unimplemented skill instances. None claims full DF equivalence. Missing4008010 is additional. See ABILITY_REMAINING_EFFECT_ATTEMPTS.md for the former ten and their concrete attempts/blockers.

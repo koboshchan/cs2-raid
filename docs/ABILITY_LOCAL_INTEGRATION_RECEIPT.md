@@ -1,3 +1,5 @@
+> SUPERSEDED numeric/admission claims: see ABILITY_STRICT_NUMERIC_CORRECTION.md. All26 activation paths are held; prior CS2 tuning is withdrawn, not authorized.
+
 # Safe partial local integration receipt
 
 The intended /home/kit/extract-zone-flow worktree on raid-flow-v2 was fast-forwarded locally from bbff2eb3457cd502a0d84463242456df704875f1 to 8423ee5 after checking both worktrees clean, exact target branch/base, ancestor relationship and no matching active dotnet/project writer processes. Prior competing workers remain held under the exclusive owner handoff. No remote push, plugin load, server restart or deployment occurred. The separate /home/kit/raid-flow-v2 clone remains d700a860cca94b957b9cf5b92580f645616d3005 and was not modified.

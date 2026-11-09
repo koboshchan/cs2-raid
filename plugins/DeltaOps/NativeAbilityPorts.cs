@@ -132,15 +132,15 @@ public sealed partial class DeltaOpsPlugin
                 "weapon_hegrenade"=>"hegrenade_projectile",
                 "weapon_flashbang"=>"flashbang_projectile",_=>null};
             if(designer==null)return null;
-            var creation=new CssProjectileCreation(plugin,player,actor.Pawn,designer,25,grenade=>{
-                grenade.DetonateTime=Server.CurrentTime+1.5f;
+            var creation=new CssProjectileCreation(plugin,player,actor.Pawn,designer,float.NaN,grenade=>{
+                // DF detonation delay UNRESOLVED; no authored delay applied.
                 // Native blast damage cannot be enabled merely by having a loaded hook.
                 // If unload removal fails, the hook disappears while the entity remains.
                 // Keep inert damage until an independent resident authority can enforce
                 // custom-team policy through failed unload. Router retains the QA gate.
                 grenade.Damage=0;grenade.DmgRadius=0;
                 if(grenade is CSmokeGrenadeProjectile smoke){
-                    smoke.SmokeColor.X=180;smoke.SmokeColor.Y=180;smoke.SmokeColor.Z=180;
+                    // Color UNRESOLVED; no invented color applied.
                 }
             });
             var transaction=new NativeEntityTransaction(plugin._entityEscrow,creation);
@@ -151,7 +151,7 @@ public sealed partial class DeltaOpsPlugin
                 plugin._nativeTicks.Remove(tick!);
                 complete=true;
             }
-            var end=Environment.TickCount64+25000;
+            var end=long.MaxValue; // No invented 25s expiry; creation stays strictly blocked.
             tick=()=>{
                 try{if(!Valid()||Environment.TickCount64>=end)Cleanup();}
                 catch{actor.Session.Quarantine();actor.Session.Revoke();}

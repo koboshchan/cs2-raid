@@ -1,3 +1,5 @@
+> SUPERSEDED numeric/admission claims: see ABILITY_STRICT_NUMERIC_CORRECTION.md. All26 activation paths are held; prior CS2 tuning is withdrawn, not authorized.
+
 # Remaining SOL effects after scoped mobility implementation
 
 The former ten unimplemented instances were 4008007 for each operator1/2/3/4/5, operator1/20010201, operator3/1009003, operator3/1009005, operator3/10010301 and operator4/40010202. The last five are distinct skill IDs, not interchangeable operator aliases.

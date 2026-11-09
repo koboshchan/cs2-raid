@@ -1,3 +1,5 @@
+> SUPERSEDED numeric/admission claims: see ABILITY_STRICT_NUMERIC_CORRECTION.md. All26 activation paths are held; prior CS2 tuning is withdrawn, not authorized.
+
 # PC SOL effect coverage and concrete remaining work
 
 DF extracted behavior and values outrank all wiki hints. All native acceptance remains unperformed. Only private read-only recon telemetry (operator2/2002017 and operator4/1002016) has source-reviewed API admission; all mutating capabilities remain activation-held; source-reviewed boundaries and concrete unresolved safety contracts are distinguished in ABILITY_SOL26_COVERAGE.json. No live load has occurred. Call paths describe offline implementation, not deployed gameplay. This is NOT a full-effect completion report. Repeated remove-arrow entries are distinct operator-skill instances, giving exactly 26 entries. Missing 4008010 remains outside executable catalog.
