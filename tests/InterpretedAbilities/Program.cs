@@ -39,6 +39,32 @@ try{owned.Dispose();}catch{}owned.Dispose();owned.Dispose();Check(cleanupCalls==
 var cleanupFail=new InterpretedAbilitySession(1,0);var retry=0;
 Check(cleanupFail.Activate(2008002,0,()=>true,()=>new OwnedAbilityEffect(()=>{if(++retry==1)throw new Exception();})));
 Check(!cleanupFail.Revoke());Check(cleanupFail.Quarantined);Check(cleanupFail.Revoke());Check(retry==2);
+// Independent review regressions: nested enact/admission, revoke during enact,
+// stale return cleanup failure and retry, post-enact admission epoch invalidation.
+var reentrant=new InterpretedAbilitySession(1,0);int creates=0;bool inner=true;
+Check(reentrant.Activate(2008002,0,()=>true,()=>{
+ creates++;inner=reentrant.Activate(2008002,0,()=>true,()=>{creates++;return new Effect();});return new Effect();}));
+Check(!inner);Check(creates==1);Check(reentrant.Available(2008002,0)==0);
+var duringAdmission=new InterpretedAbilitySession(1,0);int admissions=0;
+Check(duringAdmission.Activate(2008002,0,()=>{
+ admissions++;Check(!duringAdmission.Activate(2008002,0,()=>true,()=>new Effect()));return true;
+},()=>new Effect()));Check(admissions==2);
+var stale=new InterpretedAbilitySession(1,0);var staleEffect=new Effect();
+Check(!stale.Activate(2008002,0,()=>true,()=>{Check(!stale.Revoke());stale.Resume();Check(!stale.Alive);return staleEffect;}));
+Check(staleEffect.Disposed);Check(!stale.Alive);Check(stale.Available(2008002,0)==1);Check(stale.Revoke());
+var staleFail=new InterpretedAbilitySession(1,0);int staleAttempts=0;
+Check(!staleFail.Activate(2008002,0,()=>true,()=>{staleFail.Revoke();return new OwnedAbilityEffect(()=>{if(++staleAttempts==1)throw new Exception();});}));
+Check(staleFail.Quarantined);Check(staleAttempts==1);Check(staleFail.Revoke());Check(staleAttempts==2);
+var post=new InterpretedAbilitySession(1,0);var postEffect=new Effect();int postAdmission=0;
+Check(!post.Activate(2008002,0,()=>{if(++postAdmission==2)post.Revoke();return true;},()=>postEffect));
+Check(postEffect.Disposed);Check(!post.Alive);Check(post.Available(2008002,0)==1);
+var nullEffect=new InterpretedAbilitySession(1,0);
+Check(!nullEffect.Activate(2008002,0,()=>true,()=>null));Check(nullEffect.Available(2008002,0)==1);
+var admissionThrow=new InterpretedAbilitySession(1,0);
+Check(!admissionThrow.Activate(2008002,0,()=>throw new Exception(),()=>new Effect()));Check(admissionThrow.Quarantined);
+var disposeReentry=new InterpretedAbilitySession(1,0);int disposals=0;
+Check(disposeReentry.Activate(2008002,0,()=>true,()=>new OwnedAbilityEffect(()=>{disposals++;Check(!disposeReentry.Revoke());})));
+Check(disposeReentry.Revoke());Check(disposals==1);
 Console.WriteLine($"{count} interpreted lifecycle checks PASS; router + lifecycle PASS; CSS calls compile, not native QA");
 sealed class Effect:IDisposable{public bool Disposed;public void Dispose()=>Disposed=true;}
 

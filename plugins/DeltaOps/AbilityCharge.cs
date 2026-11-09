@@ -16,6 +16,8 @@ public sealed class AbilityCharge
         var count=Math.Min(Capacity-Available,1+(now-Next)/Period);
         Available+=(int)count; Next=Available==Capacity?0:checked(Next+count*Period);
     }
+    internal (int Available,long Next) Snapshot()=> (Available,Next);
+    internal void Restore((int Available,long Next) state){Available=state.Available;Next=state.Next;}
     public bool Ready(long now){Advance(now);return Available>0;}
     public bool Spend(long now){if(!Ready(now))return false;Available--;if(Next==0)Next=checked(now+Period);return true;}
 }

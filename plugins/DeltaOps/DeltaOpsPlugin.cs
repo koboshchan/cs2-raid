@@ -167,8 +167,18 @@ public sealed partial class DeltaOpsPlugin : BasePlugin, IPluginConfig<DeltaOpsC
     public override string ModuleAuthor => "Local server";
     public override string ModuleDescription => "CS gameplay with selectable Delta Force inspired operator abilities.";
 
+    private bool _nativeLifecycleLoaded;
     public void OnConfigParsed(DeltaOpsConfig config)
     {
+        ArgumentNullException.ThrowIfNull(config.NativePorts);
+        // Runtime mode switches are rejected, not partially applied. Legacy timers and
+        // engine projectiles have no accepted cross-mode drain contract yet.
+        if(_nativeLifecycleLoaded && config.UseInterpretedAbilities!=Config.UseInterpretedAbilities)
+            throw new InvalidOperationException("Ability mode changes require offline teardown and reviewed reload; runtime switch rejected.");
+        if(_nativeLifecycleLoaded){
+            ResetNative();
+            if(_nativeActors.Count!=0)throw new InvalidOperationException("Config unchanged: native cleanup pending; polling retains ownership.");
+        }
         config.SelectionSeconds = Math.Clamp(config.SelectionSeconds, 10, 120);
         config.VCooldownSeconds = Math.Clamp(config.VCooldownSeconds, 1, 120);
         config.XCooldownSeconds = Math.Clamp(config.XCooldownSeconds, 1, 120);
@@ -212,6 +222,7 @@ public sealed partial class DeltaOpsPlugin : BasePlugin, IPluginConfig<DeltaOpsC
         // Unaccepted fixture provider exposes status/policy only; never register legacy
         // native lifecycle handlers (global reset, deferred passive grants, or cooldown resets).
         if (_fixtureMode) return;
+        _nativeLifecycleLoaded=true;
         RegisterListener<Listeners.OnEntityTakeDamagePre>(NativePassiveDamage);
         RegisterEventHandler<EventPlayerSpawn>(OnPlayerSpawn);
         RegisterEventHandler<EventPlayerTeam>(OnPlayerTeam);
@@ -463,7 +474,8 @@ public sealed partial class DeltaOpsPlugin : BasePlugin, IPluginConfig<DeltaOpsC
 
     private void OnTick()
     {
-        if(Config.UseInterpretedAbilities){TickNative();return;}
+        TickNative(); // Cleanup and expiry polling must survive config/cleanup failures.
+        if(Config.UseInterpretedAbilities)return;
         var now = Environment.TickCount64;
         if (now < _nextGrenadePollMs)
         {

@@ -39,7 +39,7 @@ public sealed partial class DeltaOpsPlugin
     private readonly List<Action> _nativeTicks=[];
     private readonly Dictionary<uint,int> _nativeSuppressed=[];
     private bool NativeAdmission(CCSPlayerController p,uint controller,uint pawn)=>
-        !_fixtureMode && !_nativeSuppressed.ContainsKey(pawn) && IsHumanController(p) && p.EntityHandle.Raw==controller && p.PawnIsAlive &&
+        Config.UseInterpretedAbilities && !_fixtureMode && !_nativeSuppressed.ContainsKey(pawn) && IsHumanController(p) && p.EntityHandle.Raw==controller && p.PawnIsAlive &&
         p.PlayerPawn.Value is {IsValid:true} body && body.EntityHandle.Raw==pawn && (!_raidMode||RaidActive(p.SteamID));
 
     private NativeActor? NativeActorFor(CCSPlayerController p,int op)
@@ -90,7 +90,7 @@ public sealed partial class DeltaOpsPlugin
     {
         foreach(var pair in _nativeActors.ToArray()) {
             var p=FindPlayerByKey(pair.Key);
-            if(p==null||!NativeAdmission(p,pair.Value.Controller,pair.Value.Pawn))pair.Value.Session.Revoke();
+            if(!pair.Value.Session.Alive||pair.Value.Session.Quarantined||p==null||!NativeAdmission(p,pair.Value.Controller,pair.Value.Pawn))pair.Value.Session.Revoke();
         }
         foreach(var action in _nativeTicks.ToArray())action();
     }
