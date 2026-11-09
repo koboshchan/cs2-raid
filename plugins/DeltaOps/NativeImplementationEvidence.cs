@@ -24,8 +24,7 @@ public static class NativeImplementationEvidence
             "Reversible shared scalar cannot distinguish identical-value competing writers; unload failure cannot guarantee restoration.",
         2008002 or 2008005 or 3008002 or 3008008 or 4009003=>
             "Native inert creation/type/spawn preservation and unload-independent projectile expiry not established.",
-        30010201 or 1009004=>
-            "Damage classification and other resident hook interactions require separate review; no damage construction is used.",
+        30010201 or 1009004=>null, // Borrowed pre-hook refs and enum constants source-reviewed; activation/native QA held.
         40010201=>null,
         _=>"No skill-specific native effect boundary implemented."
     };

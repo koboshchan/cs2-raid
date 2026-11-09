@@ -17,6 +17,6 @@ public static class NativeApiCapabilityEvidence
     public static bool HealingActivation => false; // Reviewed committed setter; activation approval pending.
     public static bool ScalarMutation => false; // Competing-owner restore/teardown not proved.
     public static bool MovementMutation => false; // Velocity-only API reviewed; activation approval/native QA pending.
-    public static bool DamageMutation => false; // Native classification/driver contracts incomplete.
+    public static bool DamageMutation => false; // Borrowed pre-hook reductions reviewed; activation approval held. No damage constructor.
     public static bool HitMark => false; // Private telemetry implementation reviewed; activation approval pending.
 }

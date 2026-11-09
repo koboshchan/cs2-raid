@@ -65,12 +65,14 @@
         "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Core/BasePlugin.cs#L280-L356",
         "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Core/BasePlugin.cs#L684-L720",
         "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/src/core/managers/entity_manager.cpp#L248-L325",
-        "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/src/core/detours.h#L14-L37"
+        "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/src/core/detours.h#L14-L37",
+        "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Generated/Schema/Classes/CTakeDamageInfo.g.cs#L49-L59",
+        "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Generated/Schema/Enums/DamageTypes_t.g.cs#L17-L18"
       ],
       "signatureReview": "closed for named symbols only",
       "managedContract": "Pre veto ordering and post-after-original are source verified. Post modifications cannot undo applied damage. Dispose unregisters listeners and kills plugin timers.",
       "safeImplementation": "Existing engine-owned info is borrowed only within callback; no new allocation, persistent info pointer, or unloaded-hook policy promise.",
-      "residual": "Damage mutation/hit marking disabled independently. Luna trigger/scope and damage classification remain unresolved; damage constructor remains unsupported and is not being guessed.",
+      "residual": "Borrowed pre-hook scalar reduction and enum constants source reviewed; activation approval and installed-engine interaction QA held. Damage object construction remains unsupported and disabled separately. Luna trigger/scope are labeled CS2 assumptions, not a prohibition on offline implementation.",
       "nativeQA": "NOT PERFORMED"
     },
     {

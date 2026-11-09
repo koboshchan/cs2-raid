@@ -700,6 +700,8 @@
     "Approximation": "Pure fall damage multiplier .5; buff-referenced speed boost not yet interpreted",
     "Implementation": "implemented partial borrowed damage-info modifier",
     "ExactApiReferences": [
+      "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Generated/Schema/Classes/CTakeDamageInfo.g.cs#L49-L59",
+      "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Generated/Schema/Enums/DamageTypes_t.g.cs#L17-L18",
       "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Core/Listeners.g.cs#L40-L78",
       "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/src/core/managers/entity_manager.cpp#L248-L325",
       "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/src/core/detours.h#L14-L37"
@@ -713,7 +715,7 @@
       }
     ],
     "Activation": "activation held pending reviewed deployment approval; offline implementation permitted",
-    "NativeSafetyBlocker": "Damage classification and other resident hook interactions require separate review; no damage construction is used.",
+    "NativeSafetyBlocker": null,
     "Fidelity": "Partial CS2 interpretation; remaining DF behavior is separately listed in ABILITY_SOL26_COVERAGE.md, not a blanket prohibition on offline implementation",
     "TypedSourceFields": {
       "CdId": {
@@ -1475,6 +1477,8 @@
     "Approximation": "DFPROVEN SkillID30010201 DamgeCoifficient explosion multiplier .7; native blast classification is CS2 mapping",
     "Implementation": "implemented partial borrowed damage-info modifier",
     "ExactApiReferences": [
+      "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Generated/Schema/Classes/CTakeDamageInfo.g.cs#L49-L59",
+      "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Generated/Schema/Enums/DamageTypes_t.g.cs#L17-L18",
       "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Core/Listeners.g.cs#L40-L78",
       "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/src/core/managers/entity_manager.cpp#L248-L325",
       "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/src/core/detours.h#L14-L37"
@@ -1488,7 +1492,7 @@
       }
     ],
     "Activation": "activation held pending reviewed deployment approval; offline implementation permitted",
-    "NativeSafetyBlocker": "Damage classification and other resident hook interactions require separate review; no damage construction is used.",
+    "NativeSafetyBlocker": null,
     "Fidelity": "Partial CS2 interpretation; remaining DF behavior is separately listed in ABILITY_SOL26_COVERAGE.md, not a blanket prohibition on offline implementation",
     "TypedSourceFields": {
       "CdId": {

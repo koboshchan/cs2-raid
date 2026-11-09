@@ -126,3 +126,9 @@ The boundary reviews do not require a live server merely to implement an interpr
 Reversible status restoration and owned projectile lifetime still have concrete native safety gaps. Those are distinct from missing DF behaviors. Borrowed damage callbacks do not require constructing damage objects; their classification/hook interactions remain separately under review. No new damage constructor is attempted.
 
 ABILITY_SOL26_COVERAGE.json now separates Implementation, Activation, NativeSafetyBlocker and Fidelity, and gives each implemented boundary exact pinned API references plus typed source fields and CS2 tuning units. A null NativeSafetyBlocker is not permission to deploy.
+
+## Borrowed damage pre-hook review closure
+
+Pinned generated CTakeDamageInfo.g.cs lines 49-59 exposes Damage and BitsDamageType as schema refs. DamageTypes_t.g.cs lines 17-18 proves DMG_FALL=0x20 and DMG_BLAST=0x40. The reviewed native dispatch calls pre-hooks with the engine's existing damage info before original application, so an in-callback scalar reduction needs no new damage constructor or retained pointer.
+
+Fall matching now resolves current connected controllers' typed pawn handles by full serial rather than using As<CCSPlayerPawn>, which is not type validation. Both reductions remain activation-held; installed schema/gamedata and interaction QA remain outstanding. Pure fall-only versus any blast-bit matching are explicit CS2 interpretation policies. Shepherd 0.7 is extracted; Vyron 0.5 is CS2 tuning. This does not provide projectile damage creation.
