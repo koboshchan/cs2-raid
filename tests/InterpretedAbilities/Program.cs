@@ -351,6 +351,35 @@ Check(NativePassiveRules.ReduceBlast(100,.9f,flags)==((flags&64)!=0?90:100));
 Check(ExtractedPassiveValues.ShepherdExplosionMultiplier==.7f);
 Check(NativePassiveRules.ReduceBlast(100,ExtractedPassiveValues.ShepherdExplosionMultiplier,64)==70);
 Check(NativePassiveRules.ReduceBlast(100,ExtractedPassiveValues.ShepherdExplosionMultiplier,2)==100);
+
+// Committed healing never rolls back intervening damage and never repeats its write.
+foreach(var failWrite in new[]{false,true})
+foreach(var failNotify in new[]{false,true}) {
+ int hp=60,healWrites=0,healNotifications=0;bool valid=true,throwNotification=failNotify;
+ var heal=new NativeCommittedHeal(()=>valid,()=>hp,()=>100,v=>{
+     hp=v;healWrites++;if(failWrite)throw new Exception("setter outcome unknown");
+ },()=>{healNotifications++;if(throwNotification)throw new Exception("network failure");},25);
+ try{heal.Apply();}catch{}
+ Check(hp==85&&healWrites==1);
+ hp=49;throwNotification=false;heal.Dispose();heal.Dispose();
+ Check(hp==49&&healWrites==1);
+ Check(healNotifications==(failWrite?1:failNotify?2:1));
+ try{heal.Apply();Check(false);}catch(InvalidOperationException){Check(true);}
+}
+{
+ int hp=90,healWrites=0,notifies=0;bool valid=true;
+ var heal=new NativeCommittedHeal(()=>valid,()=>hp,()=>100,v=>{hp=v;healWrites++;},
+     ()=>{notifies++;throw new Exception();},int.MaxValue);
+ try{heal.Apply();}catch{}
+ Check(hp==100&&healWrites==1&&notifies==1);
+ valid=false;heal.Dispose();Check(notifies==1);
+}
+foreach(var initial in new[]{0,100,101}) {
+ int hp=initial,healWrites=0;
+ var heal=new NativeCommittedHeal(()=>true,()=>hp,()=>100,v=>{hp=v;healWrites++;},()=>{},25);
+ try{heal.Apply();Check(false);}catch(InvalidOperationException){Check(true);}
+ heal.Dispose();Check(hp==initial&&healWrites==0);
+}
 Console.WriteLine($"{count} interpreted lifecycle checks PASS; router + lifecycle PASS; CSS calls compile, not native QA");
 sealed class Effect:IDisposable{public bool Disposed;public void Dispose()=>Disposed=true;}
 

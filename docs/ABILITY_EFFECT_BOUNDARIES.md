@@ -1,0 +1,119 @@
+# Effect boundary audit and safe alternatives
+
+Pinned official CounterStrikeSharp v1.0.379 source f58e383b0553be16c0f8c6dd68a8194de17691e9. Reference DLL matches this SHA; actual server/gamedata not checked. These named boundary reviews close source/signature questions, not engine acceptance or all semantic-inventory rows. No global gate is lifted by this document.
+
+## healing
+
+CBaseEntity.Health/MaxHealth; Schema.GetRef<int>; Utilities.SetStateChanged
+
+Ref fields are pointer+runtime-schema-offset writes; network notification separately guards entity and dispatches chain/nonchain update. Notification is not a heal event or transaction.
+
+NativeCommittedHeal now owns pending notification before setter, never replays a possibly committed heal, never restores old HP over subsequent damage, and abandons notification on pawn replacement.
+
+Disabled: no proof of DF heal targeting/over-time/smoke conversion; direct health mutation bypasses normal healing event semantics. Exact source-derived heal magnitude unresolved. This partial 25HP tuning is explicitly CS2-only.
+
+Sources
+
+https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Generated/Schema/Classes/CBaseEntity.g.cs#L65-L71
+
+https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Modules/Memory/Schema.cs#L109-L114
+
+https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Utilities.cs#L231-L254
+
+https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/src/scripting/natives/natives_schema.cpp#L216-L224
+
+## movement
+
+CBaseEntity.Teleport(Vector?,QAngle?,Vector?); Teleport(Vector3?,Vector3?,Vector3?)
+
+Nullable arguments become native stack value pointers or null; requires at least one argument and entity validity; invokes gamedata-resolved virtual Teleport.
+
+Velocity-only path supplies no position pointer; no raw movement schema writes are introduced.
+
+Disabled: native collision/displacement result and installed gamedata offset unverified. No line trace is represented as a pawn hull clearance test. No safe sourced knockdown/dash alternative established.
+
+Sources
+
+https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Core/Model/CBaseEntity.cs#L15-L59
+
+## status
+
+CCSPlayerPawn.VelocityModifier; Schema.GetRef<float>; Utilities.SetStateChanged
+
+VelocityModifier is direct ref float access, not an ownership-aware status handle or fire-rate/recon-interference API.
+
+NativeStatusLease compares full pawn serial and scalar before restore, retries only network notification after successful restoration.
+
+Disabled: same-value competing writer cannot be distinguished. These APIs cannot prove exclusive lease or cleanup after unload failure. Speed reduction must not be claimed as extracted fire-rate suppression.
+
+Sources
+
+https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Generated/Schema/Classes/CCSPlayerPawn.g.cs#L317-L319
+
+https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Modules/Memory/Schema.cs#L109-L114
+
+https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Utilities.cs#L231-L254
+
+## ownedEntities
+
+Utilities.CreateEntityByName<T>; CBaseEntity.DispatchSpawn; CEntityInstance.Remove/AddEntityIOEvent
+
+Creation wraps native pointer; generic type is not classname runtime validation. Spawn/remove delegate to engine. Queued input wrapper alone establishes no post-unload expiry guarantee.
+
+Offline transaction persists identity before activation and retains pre-ticket failure handles. World/process witness and random marker checks prevent stale serial-only recovery.
+
+Disabled: inert allocation/class compatibility, preservation across spawn, queued Kill lifetime and unload-independent cleanup not proven. Mock expiry/recovery tests are not engine acceptance.
+
+Sources
+
+https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Utilities.cs#L59-L62
+
+https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Core/Model/CBaseEntity.cs#L63-L75
+
+https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Core/Model/CEntityInstance.cs#L35-L40
+
+https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Core/Model/CEntityInstance.cs#L89-L118
+
+## hooks
+
+Listeners.OnEntityTakeDamagePre/Post; OnPlayerTakeDamagePre/Post; BasePlugin.RegisterListener/RemoveListener/Dispose
+
+Pre veto ordering and post-after-original are source verified. Post modifications cannot undo applied damage. Dispose unregisters listeners and kills plugin timers.
+
+Existing engine-owned info is borrowed only within callback; no new allocation, persistent info pointer, or unloaded-hook policy promise.
+
+Damage mutation/hit marking disabled independently. Luna trigger/scope and damage classification remain unresolved; damage constructor remains unsupported and is not being guessed.
+
+Sources
+
+https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Core/Listeners.g.cs#L40-L78
+
+https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Core/BasePlugin.cs#L280-L356
+
+https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Core/BasePlugin.cs#L684-L720
+
+https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/src/core/managers/entity_manager.cpp#L248-L325
+
+https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/src/core/detours.h#L14-L37
+
+## privateRecon
+
+Utilities.GetPlayers; CCSPlayerController.PlayerPawn/PawnIsAlive/PlayerName; CHandle.Raw/Value; CBaseEntity.AbsOrigin; CCSPlayerController.PrintToChat; PluginCapability.Get
+
+GetPlayers filters connected valid controllers; AbsOrigin follows body/scene chain; PrintToChat calls ClientPrint for owner slot, not broadcast. Raid policy query failures deny admission/targets.
+
+Only operator2/2002017 and operator4/1002016 admitted. Output is enemy names plus rounded distance in Source units, or no contacts. Positions are internal distance inputs, NOT printed XYZ coordinates. No LOS test; no world entity/scalar mutation.
+
+API source reviewed, runtime QA not performed. Not DF arrow/sensor mechanics: no projectile, periodic scan, directional sensor, marker replication, stealth interaction or DF-determined coverage. Radius is CS2 interpretation tuning.
+
+Sources
+
+https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Utilities.cs#L155-L170
+
+https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Core/Model/CBaseEntity.cs#L77-L80
+
+https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Core/Model/CCSPlayerController.cs#L49-L54
+
+https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Modules/Utils/CHandle.cs
+
+https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Core/Capabilities/PluginCapability.cs

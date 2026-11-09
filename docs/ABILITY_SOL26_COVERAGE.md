@@ -29,7 +29,7 @@ Admission blocker: No owned DF arrow projectile exists to remove.
 ## Operator 1 / Skill 20010101 / 激素枪
 
 Actual path: CssPorts.Heal -> EnactOwned -> Pawn.Health setter + SetStateChanged
-Current interpretation: 25 HP bounded by MaxHealth, instant; committed health not rolled back
+Current interpretation: DISABLED CS2-only 25 HP tuning bounded by MaxHealth, instant; committed health not rolled back; pending network notification retried without repeating HP write
 Evidence: Literal allSerializedFields retained in raw r2; full runtime behavior not recovered
 Remaining: Instant heal setter is only a partial CS2 port; target acquisition, sustained multiheal, ADS focus, selfheal and owned-smoke conversion require DF effect/buff decoding.
 Admission blocker: API contract audit gate disables this partial adapter; full DF mechanic also remains incomplete.
@@ -209,3 +209,5 @@ Current interpretation: DFPROVEN SkillID30010201 DamgeCoifficient explosion mult
 Evidence: allSerializedFields.DamgeCoifficient[0]={fModifyRateExplodeDamage:0.7,fModifyRateAbilitAssault:1.0,LimitPlayMode:[]}
 Remaining: DF coefficient implemented exactly for existing native blast events. CSS blast classification, assault classification and added child skills4010002/4010003 require native/source validation.
 Admission blocker: API contract audit gate disables this partial adapter; full DF mechanic also remains incomplete.
+
+Boundary-specific source review and residual engine/behavior blockers are in ABILITY_EFFECT_BOUNDARIES.md/.json. Private recon prints names and distances, not XYZ coordinates; coordinate reads are internal distance inputs only. NativeCommittedHeal improves failure ownership but does not enable healing or establish DF effect values.

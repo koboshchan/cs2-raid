@@ -112,10 +112,16 @@ public sealed partial class DeltaOpsPlugin
             if(!NativeApiCapabilityEvidence.ScalarMutation||!Valid()||plugin.Config.NativePorts.HealHp is <1 or >200||Pawn.Health>=Pawn.MaxHealth)return null;
             // Register the committed instant-effect boundary before a native setter can throw.
             // Health is never rolled back across a competing damage/heal event.
-            return actor.Session.EnactOwned(()=>{
-                Pawn.Health=(int)Math.Min(Pawn.MaxHealth,(long)Pawn.Health+plugin.Config.NativePorts.HealHp);
-                Utilities.SetStateChanged(Pawn,"CBaseEntity","m_iHealth");
-            },()=>{});
+            var body=Pawn;
+            var serial=actor.Pawn;
+            // Pinned source contracts and unresolved engine semantics:
+            // docs/ABILITY_EFFECT_BOUNDARIES.md (committed healing).
+            var heal=new NativeCommittedHeal(
+                ()=>body.IsValid&&body.EntityHandle.Raw==serial,
+                ()=>body.Health,()=>body.MaxHealth,v=>body.Health=v,
+                ()=>Utilities.SetStateChanged(body,"CBaseEntity","m_iHealth"),
+                plugin.Config.NativePorts.HealHp);
+            return actor.Session.EnactOwned(heal.Apply,heal.Dispose);
         }
         public IDisposable? Grant(string weapon)
         {
