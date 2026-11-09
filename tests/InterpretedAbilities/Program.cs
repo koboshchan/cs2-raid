@@ -227,6 +227,12 @@ var releaseNative=new EntityMock();releaseNative.Entities[a.Serial]=a;releaseNat
 Check(transactionEscrow.Release(a,releaseNative));Check(releaseNative.Exists(b.Serial));Check(disk.Single()==b);
 Check(!transactionEscrow.Release(b with{Marker=a.Marker},releaseNative));Check(releaseNative.Exists(b.Serial));
 Check(transactionEscrow.Release(b,releaseNative));
+Check(NativeWorldRecoveryPolicy.Decide(new[]{anchorTicket,worldEffect with{Serial=anchorTicket.Serial}},processId,true,_=>true)==NativeWorldRecoveryDecision.Block);
+Check(NativeWorldRecoveryPolicy.Decide(new[]{anchorTicket,worldEffect with{Marker=anchorTicket.Marker}},processId,true,_=>true)==NativeWorldRecoveryDecision.Block);
+Check(NativeWorldRecoveryPolicy.Decide(new[]{anchorTicket,worldEffect with{Marker=null!}},processId,true,_=>true)==NativeWorldRecoveryDecision.Block);
+Check(NativeWorldRecoveryPolicy.Decide(new[]{anchorTicket,worldEffect with{Serial=0}},processId,true,_=>true)==NativeWorldRecoveryDecision.Block);
+Check(NativeWorldRecoveryPolicy.Decide(new[]{anchorTicket with{World="bad:"+Guid.NewGuid().ToString("N")}},processId,true,_=>true)==NativeWorldRecoveryDecision.Block);
+Check(NativeWorldRecoveryPolicy.Decide(new[]{anchorTicket,null!},processId,true,_=>true)==NativeWorldRecoveryDecision.Block);
 Console.WriteLine($"{count} interpreted lifecycle checks PASS; router + lifecycle PASS; CSS calls compile, not native QA");
 sealed class Effect:IDisposable{public bool Disposed;public void Dispose()=>Disposed=true;}
 
