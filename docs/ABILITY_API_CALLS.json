@@ -2894,7 +2894,7 @@
   },
   {
     "file": "plugins/DeltaOps/NativeFallPassive.cs",
-    "line": 6,
+    "line": 7,
     "kind": "Property",
     "symbol": "CounterStrikeSharp.API.Core.CEntityInstance.DesignerName",
     "assembly": "CounterStrikeSharp.API, Version=1.0.379.0, Culture=neutral, PublicKeyToken=null",
@@ -2914,7 +2914,7 @@
   },
   {
     "file": "plugins/DeltaOps/NativeFallPassive.cs",
-    "line": 6,
+    "line": 7,
     "kind": "Field",
     "symbol": "CounterStrikeSharp.API.Core.HookResult.Continue",
     "assembly": "CounterStrikeSharp.API, Version=1.0.379.0, Culture=neutral, PublicKeyToken=null",
@@ -2934,19 +2934,31 @@
   },
   {
     "file": "plugins/DeltaOps/NativeFallPassive.cs",
-    "line": 7,
+    "line": 10,
     "kind": "Method",
-    "symbol": "CounterStrikeSharp.API.NativeObject.As<CounterStrikeSharp.API.Core.CCSPlayerPawn>()",
-    "assembly": "CounterStrikeSharp.API, Version=1.0.379.0, Culture=neutral, PublicKeyToken=null",
-    "syntax": "entity.As<CCSPlayerPawn>()",
+    "symbol": "System.Collections.Generic.IEnumerable<CounterStrikeSharp.API.Core.CCSPlayerController>.FirstOrDefault<CounterStrikeSharp.API.Core.CCSPlayerController>(System.Func<CounterStrikeSharp.API.Core.CCSPlayerController, bool>)",
+    "assembly": "System.Linq, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a",
+    "syntax": "Utilities.GetPlayers().FirstOrDefault(p=>IsHumanController(p)&&\n      p.PlayerPawn.Value is {IsValid:true} pawn&&pawn.EntityHandle.Raw==entity.EntityHandle.Raw)",
     "verification": "PENDING",
-    "original": "CounterStrikeSharp.API.NativeObject.As<T>()",
-    "owner": "CounterStrikeSharp.API.NativeObject",
-    "name": "As",
+    "original": "System.Collections.Generic.IEnumerable<TSource>.FirstOrDefault<TSource>(System.Func<TSource, bool>)",
+    "owner": "System.Linq.Enumerable",
+    "name": "FirstOrDefault"
+  },
+  {
+    "file": "plugins/DeltaOps/NativeFallPassive.cs",
+    "line": 10,
+    "kind": "Method",
+    "symbol": "CounterStrikeSharp.API.Utilities.GetPlayers()",
+    "assembly": "CounterStrikeSharp.API, Version=1.0.379.0, Culture=neutral, PublicKeyToken=null",
+    "syntax": "Utilities.GetPlayers()",
+    "verification": "PENDING",
+    "original": "CounterStrikeSharp.API.Utilities.GetPlayers()",
+    "owner": "CounterStrikeSharp.API.Utilities",
+    "name": "GetPlayers",
     "sourceCandidates": [
       {
-        "source": "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/BaseNative.cs#L69",
-        "declaration": "public T As<T>() where T : NativeObject",
+        "source": "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Utilities.cs#L155",
+        "declaration": "public static List<CCSPlayerController> GetPlayers()",
         "level": "source declaration located; semantic/lifecycle review pending"
       }
     ],
@@ -2954,11 +2966,11 @@
   },
   {
     "file": "plugins/DeltaOps/NativeFallPassive.cs",
-    "line": 7,
+    "line": 11,
     "kind": "Property",
-    "symbol": "CounterStrikeSharp.API.Modules.Utils.CHandle<CounterStrikeSharp.API.Core.CBasePlayerController>.Value",
+    "symbol": "CounterStrikeSharp.API.Modules.Utils.CHandle<CounterStrikeSharp.API.Core.CCSPlayerPawn>.Value",
     "assembly": "CounterStrikeSharp.API, Version=1.0.379.0, Culture=neutral, PublicKeyToken=null",
-    "syntax": "pawn.Controller.Value",
+    "syntax": "p.PlayerPawn.Value",
     "verification": "PENDING",
     "original": "CounterStrikeSharp.API.Modules.Utils.CHandle<T>.Value",
     "owner": "CounterStrikeSharp.API.Modules.Utils.CHandle<T>",
@@ -2989,19 +3001,19 @@
   },
   {
     "file": "plugins/DeltaOps/NativeFallPassive.cs",
-    "line": 7,
+    "line": 11,
     "kind": "Property",
-    "symbol": "CounterStrikeSharp.API.Core.CBasePlayerPawn.Controller",
+    "symbol": "CounterStrikeSharp.API.Core.CCSPlayerController.PlayerPawn",
     "assembly": "CounterStrikeSharp.API, Version=1.0.379.0, Culture=neutral, PublicKeyToken=null",
-    "syntax": "pawn.Controller",
+    "syntax": "p.PlayerPawn",
     "verification": "PENDING",
-    "original": "CounterStrikeSharp.API.Core.CBasePlayerPawn.Controller",
-    "owner": "CounterStrikeSharp.API.Core.CBasePlayerPawn",
-    "name": "Controller",
+    "original": "CounterStrikeSharp.API.Core.CCSPlayerController.PlayerPawn",
+    "owner": "CounterStrikeSharp.API.Core.CCSPlayerController",
+    "name": "PlayerPawn",
     "sourceCandidates": [
       {
-        "source": "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Generated/Schema/Classes/CBasePlayerPawn.g.cs#L99",
-        "declaration": "public CHandle<CBasePlayerController> Controller => Schema.GetDeclaredClass<CHandle<CBasePlayerController>>(this.Handle, \"CBasePlayerPawn\", \"m_hController\");",
+        "source": "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Generated/Schema/Classes/CCSPlayerController.g.cs#L239",
+        "declaration": "public CHandle<CCSPlayerPawn> PlayerPawn => Schema.GetDeclaredClass<CHandle<CCSPlayerPawn>>(this.Handle, \"CCSPlayerController\", \"m_hPlayerPawn\");",
         "level": "source declaration located; semantic/lifecycle review pending"
       }
     ],
@@ -3009,19 +3021,39 @@
   },
   {
     "file": "plugins/DeltaOps/NativeFallPassive.cs",
-    "line": 7,
-    "kind": "Method",
-    "symbol": "CounterStrikeSharp.API.NativeObject.As<CounterStrikeSharp.API.Core.CCSPlayerController>()",
+    "line": 11,
+    "kind": "Property",
+    "symbol": "CounterStrikeSharp.API.Modules.Utils.CHandle<CounterStrikeSharp.API.Core.CEntityInstance>.Raw",
     "assembly": "CounterStrikeSharp.API, Version=1.0.379.0, Culture=neutral, PublicKeyToken=null",
-    "syntax": ".As<CCSPlayerController>()",
+    "syntax": "pawn.EntityHandle.Raw",
     "verification": "PENDING",
-    "original": "CounterStrikeSharp.API.NativeObject.As<T>()",
-    "owner": "CounterStrikeSharp.API.NativeObject",
-    "name": "As",
+    "original": "CounterStrikeSharp.API.Modules.Utils.CHandle<T>.Raw",
+    "owner": "CounterStrikeSharp.API.Modules.Utils.CHandle<T>",
+    "name": "Raw",
     "sourceCandidates": [
       {
-        "source": "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/BaseNative.cs#L69",
-        "declaration": "public T As<T>() where T : NativeObject",
+        "source": "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Modules/Utils/CHandle.cs#L26",
+        "declaration": "public uint Raw",
+        "level": "source declaration located; semantic/lifecycle review pending"
+      },
+      {
+        "source": "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Modules/Utils/CHandle.cs#L51",
+        "declaration": "Raw = raw;",
+        "level": "source declaration located; semantic/lifecycle review pending"
+      },
+      {
+        "source": "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Modules/Utils/CHandle.cs#L85",
+        "declaration": "public uint Index => (uint)(Raw & (Utilities.MaxEntities - 1));",
+        "level": "source declaration located; semantic/lifecycle review pending"
+      },
+      {
+        "source": "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Modules/Utils/CHandle.cs#L86",
+        "declaration": "public uint SerialNum => Raw >> Utilities.MaxEntityBits;",
+        "level": "source declaration located; semantic/lifecycle review pending"
+      },
+      {
+        "source": "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Modules/Utils/CHandle.cs#L88",
+        "declaration": "public static implicit operator uint(CHandle<T> handle) => handle.Raw;",
         "level": "source declaration located; semantic/lifecycle review pending"
       }
     ],
@@ -3029,7 +3061,117 @@
   },
   {
     "file": "plugins/DeltaOps/NativeFallPassive.cs",
-    "line": 8,
+    "line": 11,
+    "kind": "Property",
+    "symbol": "CounterStrikeSharp.API.NativeEntity.EntityHandle",
+    "assembly": "CounterStrikeSharp.API, Version=1.0.379.0, Culture=neutral, PublicKeyToken=null",
+    "syntax": "pawn.EntityHandle",
+    "verification": "PENDING",
+    "original": "CounterStrikeSharp.API.NativeEntity.EntityHandle",
+    "owner": "CounterStrikeSharp.API.NativeEntity",
+    "name": "EntityHandle",
+    "sourceCandidates": [
+      {
+        "source": "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/NativeEntity.cs#L9",
+        "declaration": "public new IntPtr Handle => EntitySystem.GetEntityByHandle(EntityHandle) ?? IntPtr.Zero;",
+        "level": "source declaration located; semantic/lifecycle review pending"
+      },
+      {
+        "source": "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/NativeEntity.cs#L10",
+        "declaration": "public CEntityHandle EntityHandle { get; }",
+        "level": "source declaration located; semantic/lifecycle review pending"
+      },
+      {
+        "source": "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/NativeEntity.cs#L14",
+        "declaration": "EntityHandle = new(EntitySystem.GetRawHandleFromEntityPointer(pointer));",
+        "level": "source declaration located; semantic/lifecycle review pending"
+      },
+      {
+        "source": "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/NativeEntity.cs#L19",
+        "declaration": "EntityHandle = new(rawHandle);",
+        "level": "source declaration located; semantic/lifecycle review pending"
+      }
+    ],
+    "signatureEvidence": "Bound by Roslyn to reference assembly self-reporting this source SHA; declaration candidates pinned. Overload/source contracts not automatically accepted."
+  },
+  {
+    "file": "plugins/DeltaOps/NativeFallPassive.cs",
+    "line": 11,
+    "kind": "Property",
+    "symbol": "CounterStrikeSharp.API.Modules.Utils.CHandle<CounterStrikeSharp.API.Core.CEntityInstance>.Raw",
+    "assembly": "CounterStrikeSharp.API, Version=1.0.379.0, Culture=neutral, PublicKeyToken=null",
+    "syntax": "entity.EntityHandle.Raw",
+    "verification": "PENDING",
+    "original": "CounterStrikeSharp.API.Modules.Utils.CHandle<T>.Raw",
+    "owner": "CounterStrikeSharp.API.Modules.Utils.CHandle<T>",
+    "name": "Raw",
+    "sourceCandidates": [
+      {
+        "source": "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Modules/Utils/CHandle.cs#L26",
+        "declaration": "public uint Raw",
+        "level": "source declaration located; semantic/lifecycle review pending"
+      },
+      {
+        "source": "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Modules/Utils/CHandle.cs#L51",
+        "declaration": "Raw = raw;",
+        "level": "source declaration located; semantic/lifecycle review pending"
+      },
+      {
+        "source": "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Modules/Utils/CHandle.cs#L85",
+        "declaration": "public uint Index => (uint)(Raw & (Utilities.MaxEntities - 1));",
+        "level": "source declaration located; semantic/lifecycle review pending"
+      },
+      {
+        "source": "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Modules/Utils/CHandle.cs#L86",
+        "declaration": "public uint SerialNum => Raw >> Utilities.MaxEntityBits;",
+        "level": "source declaration located; semantic/lifecycle review pending"
+      },
+      {
+        "source": "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Modules/Utils/CHandle.cs#L88",
+        "declaration": "public static implicit operator uint(CHandle<T> handle) => handle.Raw;",
+        "level": "source declaration located; semantic/lifecycle review pending"
+      }
+    ],
+    "signatureEvidence": "Bound by Roslyn to reference assembly self-reporting this source SHA; declaration candidates pinned. Overload/source contracts not automatically accepted."
+  },
+  {
+    "file": "plugins/DeltaOps/NativeFallPassive.cs",
+    "line": 11,
+    "kind": "Property",
+    "symbol": "CounterStrikeSharp.API.NativeEntity.EntityHandle",
+    "assembly": "CounterStrikeSharp.API, Version=1.0.379.0, Culture=neutral, PublicKeyToken=null",
+    "syntax": "entity.EntityHandle",
+    "verification": "PENDING",
+    "original": "CounterStrikeSharp.API.NativeEntity.EntityHandle",
+    "owner": "CounterStrikeSharp.API.NativeEntity",
+    "name": "EntityHandle",
+    "sourceCandidates": [
+      {
+        "source": "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/NativeEntity.cs#L9",
+        "declaration": "public new IntPtr Handle => EntitySystem.GetEntityByHandle(EntityHandle) ?? IntPtr.Zero;",
+        "level": "source declaration located; semantic/lifecycle review pending"
+      },
+      {
+        "source": "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/NativeEntity.cs#L10",
+        "declaration": "public CEntityHandle EntityHandle { get; }",
+        "level": "source declaration located; semantic/lifecycle review pending"
+      },
+      {
+        "source": "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/NativeEntity.cs#L14",
+        "declaration": "EntityHandle = new(EntitySystem.GetRawHandleFromEntityPointer(pointer));",
+        "level": "source declaration located; semantic/lifecycle review pending"
+      },
+      {
+        "source": "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/NativeEntity.cs#L19",
+        "declaration": "EntityHandle = new(rawHandle);",
+        "level": "source declaration located; semantic/lifecycle review pending"
+      }
+    ],
+    "signatureEvidence": "Bound by Roslyn to reference assembly self-reporting this source SHA; declaration candidates pinned. Overload/source contracts not automatically accepted."
+  },
+  {
+    "file": "plugins/DeltaOps/NativeFallPassive.cs",
+    "line": 12,
     "kind": "Method",
     "symbol": "CounterStrikeSharp.API.Core.CEntityInstance.operator ==(CounterStrikeSharp.API.Core.CEntityInstance?, CounterStrikeSharp.API.Core.CEntityInstance?)",
     "assembly": "CounterStrikeSharp.API, Version=1.0.379.0, Culture=neutral, PublicKeyToken=null",
@@ -3048,7 +3190,7 @@
   },
   {
     "file": "plugins/DeltaOps/NativeFallPassive.cs",
-    "line": 9,
+    "line": 12,
     "kind": "Method",
     "symbol": "System.Collections.Generic.Dictionary<string, DeltaOps.DeltaOpsPlugin.NativeActor>.TryGetValue(string, out DeltaOps.DeltaOpsPlugin.NativeActor)",
     "assembly": "System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e",
@@ -3060,7 +3202,7 @@
   },
   {
     "file": "plugins/DeltaOps/NativeFallPassive.cs",
-    "line": 9,
+    "line": 12,
     "kind": "Field",
     "symbol": "CounterStrikeSharp.API.Core.HookResult.Continue",
     "assembly": "CounterStrikeSharp.API, Version=1.0.379.0, Culture=neutral, PublicKeyToken=null",
@@ -3080,7 +3222,7 @@
   },
   {
     "file": "plugins/DeltaOps/NativeFallPassive.cs",
-    "line": 10,
+    "line": 13,
     "kind": "Property",
     "symbol": "CounterStrikeSharp.API.Core.CTakeDamageInfo.Damage",
     "assembly": "CounterStrikeSharp.API, Version=1.0.379.0, Culture=neutral, PublicKeyToken=null",
@@ -3100,7 +3242,7 @@
   },
   {
     "file": "plugins/DeltaOps/NativeFallPassive.cs",
-    "line": 10,
+    "line": 13,
     "kind": "Property",
     "symbol": "CounterStrikeSharp.API.Core.CTakeDamageInfo.Damage",
     "assembly": "CounterStrikeSharp.API, Version=1.0.379.0, Culture=neutral, PublicKeyToken=null",
@@ -3120,7 +3262,7 @@
   },
   {
     "file": "plugins/DeltaOps/NativeFallPassive.cs",
-    "line": 10,
+    "line": 13,
     "kind": "Property",
     "symbol": "CounterStrikeSharp.API.Core.CTakeDamageInfo.BitsDamageType",
     "assembly": "CounterStrikeSharp.API, Version=1.0.379.0, Culture=neutral, PublicKeyToken=null",
@@ -3140,7 +3282,7 @@
   },
   {
     "file": "plugins/DeltaOps/NativeFallPassive.cs",
-    "line": 13,
+    "line": 16,
     "kind": "Field",
     "symbol": "CounterStrikeSharp.API.Core.HookResult.Continue",
     "assembly": "CounterStrikeSharp.API, Version=1.0.379.0, Culture=neutral, PublicKeyToken=null",
@@ -5839,11 +5981,11 @@
   },
   {
     "file": "plugins/DeltaOps/NativeAbilityPorts.cs",
-    "line": 177,
+    "line": 178,
     "kind": "Property",
     "symbol": "CounterStrikeSharp.API.Modules.Utils.QAngle.Y",
     "assembly": "CounterStrikeSharp.API, Version=1.0.379.0, Culture=neutral, PublicKeyToken=null",
-    "syntax": "Pawn.EyeAngles.Y",
+    "syntax": "body.EyeAngles.Y",
     "verification": "PENDING",
     "original": "CounterStrikeSharp.API.Modules.Utils.QAngle.Y",
     "owner": "CounterStrikeSharp.API.Modules.Utils.QAngle",
@@ -5859,11 +6001,11 @@
   },
   {
     "file": "plugins/DeltaOps/NativeAbilityPorts.cs",
-    "line": 177,
+    "line": 178,
     "kind": "Property",
     "symbol": "CounterStrikeSharp.API.Core.CCSPlayerPawn.EyeAngles",
     "assembly": "CounterStrikeSharp.API, Version=1.0.379.0, Culture=neutral, PublicKeyToken=null",
-    "syntax": "Pawn.EyeAngles",
+    "syntax": "body.EyeAngles",
     "verification": "PENDING",
     "original": "CounterStrikeSharp.API.Core.CCSPlayerPawn.EyeAngles",
     "owner": "CounterStrikeSharp.API.Core.CCSPlayerPawn",
@@ -5879,23 +6021,61 @@
   },
   {
     "file": "plugins/DeltaOps/NativeAbilityPorts.cs",
-    "line": 177,
-    "kind": "Field",
-    "symbol": "System.Math.PI",
-    "assembly": "System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e",
-    "syntax": "Math.PI",
+    "line": 178,
+    "kind": "Property",
+    "symbol": "CounterStrikeSharp.API.Modules.Utils.Vector.Z",
+    "assembly": "CounterStrikeSharp.API, Version=1.0.379.0, Culture=neutral, PublicKeyToken=null",
+    "syntax": "body.AbsVelocity.Z",
     "verification": "PENDING",
-    "original": "System.Math.PI",
-    "owner": "System.Math",
-    "name": "PI"
+    "original": "CounterStrikeSharp.API.Modules.Utils.Vector.Z",
+    "owner": "CounterStrikeSharp.API.Modules.Utils.Vector",
+    "name": "Z",
+    "sourceCandidates": [
+      {
+        "source": "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Modules/Utils/Vector.cs#L90",
+        "declaration": "public unsafe ref float Z => ref GetElementRef(2);",
+        "level": "source declaration located; semantic/lifecycle review pending"
+      },
+      {
+        "source": "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Modules/Utils/Vector.cs#L298",
+        "declaration": "public bool IsZero() => X == 0 && Y == 0 && Z == 0;",
+        "level": "source declaration located; semantic/lifecycle review pending"
+      },
+      {
+        "source": "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Modules/Utils/Vector.cs#L316",
+        "declaration": "public float LengthSqr() => (X * X) + (Y * Y) + (Z * Z);",
+        "level": "source declaration located; semantic/lifecycle review pending"
+      }
+    ],
+    "signatureEvidence": "Bound by Roslyn to reference assembly self-reporting this source SHA; declaration candidates pinned. Overload/source contracts not automatically accepted."
   },
   {
     "file": "plugins/DeltaOps/NativeAbilityPorts.cs",
-    "line": 180,
+    "line": 178,
+    "kind": "Property",
+    "symbol": "CounterStrikeSharp.API.Core.CBaseEntity.AbsVelocity",
+    "assembly": "CounterStrikeSharp.API, Version=1.0.379.0, Culture=neutral, PublicKeyToken=null",
+    "syntax": "body.AbsVelocity",
+    "verification": "PENDING",
+    "original": "CounterStrikeSharp.API.Core.CBaseEntity.AbsVelocity",
+    "owner": "CounterStrikeSharp.API.Core.CBaseEntity",
+    "name": "AbsVelocity",
+    "sourceCandidates": [
+      {
+        "source": "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Generated/Schema/Classes/CBaseEntity.g.cs#L219",
+        "declaration": "public Vector AbsVelocity => Schema.GetDeclaredClass<Vector>(this.Handle, \"CBaseEntity\", \"m_vecAbsVelocity\");",
+        "level": "source declaration located; semantic/lifecycle review pending"
+      }
+    ],
+    "signatureEvidence": "Bound by Roslyn to reference assembly self-reporting this source SHA; declaration candidates pinned. Overload/source contracts not automatically accepted."
+  },
+  {
+    "file": "plugins/DeltaOps/NativeAbilityPorts.cs",
+    "line": 183,
     "kind": "Method",
     "symbol": "CounterStrikeSharp.API.Core.CBaseEntity.Teleport(CounterStrikeSharp.API.Modules.Utils.Vector?, CounterStrikeSharp.API.Modules.Utils.QAngle?, CounterStrikeSharp.API.Modules.Utils.Vector?)",
     "assembly": "CounterStrikeSharp.API, Version=1.0.379.0, Culture=neutral, PublicKeyToken=null",
-    "syntax": "Pawn.Teleport(null,null,new Vector((float)Math.Cos(yaw)*speed,(float)Math.Sin(yaw)*speed,Pawn.AbsVelocity.Z))",
+    "syntax": "body.Teleport(null,null,new Vector(impulse.X,impulse.Y,impulse.Z))",
     "verification": "PENDING",
     "original": "CounterStrikeSharp.API.Core.CBaseEntity.Teleport(CounterStrikeSharp.API.Modules.Utils.Vector?, CounterStrikeSharp.API.Modules.Utils.QAngle?, CounterStrikeSharp.API.Modules.Utils.Vector?)",
     "owner": "CounterStrikeSharp.API.Core.CBaseEntity",
@@ -5916,11 +6096,11 @@
   },
   {
     "file": "plugins/DeltaOps/NativeAbilityPorts.cs",
-    "line": 180,
+    "line": 183,
     "kind": "Method",
     "symbol": "CounterStrikeSharp.API.Modules.Utils.Vector.Vector(float?, float?, float?)",
     "assembly": "CounterStrikeSharp.API, Version=1.0.379.0, Culture=neutral, PublicKeyToken=null",
-    "syntax": "new Vector((float)Math.Cos(yaw)*speed,(float)Math.Sin(yaw)*speed,Pawn.AbsVelocity.Z)",
+    "syntax": "new Vector(impulse.X,impulse.Y,impulse.Z)",
     "verification": "PENDING",
     "original": "CounterStrikeSharp.API.Modules.Utils.Vector.Vector(float?, float?, float?)",
     "owner": "CounterStrikeSharp.API.Modules.Utils.Vector",
@@ -6041,81 +6221,7 @@
   },
   {
     "file": "plugins/DeltaOps/NativeAbilityPorts.cs",
-    "line": 180,
-    "kind": "Method",
-    "symbol": "System.Math.Cos(double)",
-    "assembly": "System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e",
-    "syntax": "Math.Cos(yaw)",
-    "verification": "PENDING",
-    "original": "System.Math.Cos(double)",
-    "owner": "System.Math",
-    "name": "Cos"
-  },
-  {
-    "file": "plugins/DeltaOps/NativeAbilityPorts.cs",
-    "line": 180,
-    "kind": "Method",
-    "symbol": "System.Math.Sin(double)",
-    "assembly": "System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e",
-    "syntax": "Math.Sin(yaw)",
-    "verification": "PENDING",
-    "original": "System.Math.Sin(double)",
-    "owner": "System.Math",
-    "name": "Sin"
-  },
-  {
-    "file": "plugins/DeltaOps/NativeAbilityPorts.cs",
-    "line": 180,
-    "kind": "Property",
-    "symbol": "CounterStrikeSharp.API.Modules.Utils.Vector.Z",
-    "assembly": "CounterStrikeSharp.API, Version=1.0.379.0, Culture=neutral, PublicKeyToken=null",
-    "syntax": "Pawn.AbsVelocity.Z",
-    "verification": "PENDING",
-    "original": "CounterStrikeSharp.API.Modules.Utils.Vector.Z",
-    "owner": "CounterStrikeSharp.API.Modules.Utils.Vector",
-    "name": "Z",
-    "sourceCandidates": [
-      {
-        "source": "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Modules/Utils/Vector.cs#L90",
-        "declaration": "public unsafe ref float Z => ref GetElementRef(2);",
-        "level": "source declaration located; semantic/lifecycle review pending"
-      },
-      {
-        "source": "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Modules/Utils/Vector.cs#L298",
-        "declaration": "public bool IsZero() => X == 0 && Y == 0 && Z == 0;",
-        "level": "source declaration located; semantic/lifecycle review pending"
-      },
-      {
-        "source": "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Modules/Utils/Vector.cs#L316",
-        "declaration": "public float LengthSqr() => (X * X) + (Y * Y) + (Z * Z);",
-        "level": "source declaration located; semantic/lifecycle review pending"
-      }
-    ],
-    "signatureEvidence": "Bound by Roslyn to reference assembly self-reporting this source SHA; declaration candidates pinned. Overload/source contracts not automatically accepted."
-  },
-  {
-    "file": "plugins/DeltaOps/NativeAbilityPorts.cs",
-    "line": 180,
-    "kind": "Property",
-    "symbol": "CounterStrikeSharp.API.Core.CBaseEntity.AbsVelocity",
-    "assembly": "CounterStrikeSharp.API, Version=1.0.379.0, Culture=neutral, PublicKeyToken=null",
-    "syntax": "Pawn.AbsVelocity",
-    "verification": "PENDING",
-    "original": "CounterStrikeSharp.API.Core.CBaseEntity.AbsVelocity",
-    "owner": "CounterStrikeSharp.API.Core.CBaseEntity",
-    "name": "AbsVelocity",
-    "sourceCandidates": [
-      {
-        "source": "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Generated/Schema/Classes/CBaseEntity.g.cs#L219",
-        "declaration": "public Vector AbsVelocity => Schema.GetDeclaredClass<Vector>(this.Handle, \"CBaseEntity\", \"m_vecAbsVelocity\");",
-        "level": "source declaration located; semantic/lifecycle review pending"
-      }
-    ],
-    "signatureEvidence": "Bound by Roslyn to reference assembly self-reporting this source SHA; declaration candidates pinned. Overload/source contracts not automatically accepted."
-  },
-  {
-    "file": "plugins/DeltaOps/NativeAbilityPorts.cs",
-    "line": 187,
+    "line": 190,
     "kind": "Method",
     "symbol": "float.IsFinite(float)",
     "assembly": "System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e",
@@ -6127,7 +6233,7 @@
   },
   {
     "file": "plugins/DeltaOps/NativeAbilityPorts.cs",
-    "line": 188,
+    "line": 191,
     "kind": "Method",
     "symbol": "float.IsFinite(float)",
     "assembly": "System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e",
@@ -6139,7 +6245,7 @@
   },
   {
     "file": "plugins/DeltaOps/NativeAbilityPorts.cs",
-    "line": 189,
+    "line": 192,
     "kind": "Method",
     "symbol": "float.IsFinite(float)",
     "assembly": "System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e",
@@ -6151,7 +6257,7 @@
   },
   {
     "file": "plugins/DeltaOps/NativeAbilityPorts.cs",
-    "line": 190,
+    "line": 193,
     "kind": "Method",
     "symbol": "System.Collections.Generic.IEnumerable<CounterStrikeSharp.API.Core.CCSPlayerPawn>.ToArray<CounterStrikeSharp.API.Core.CCSPlayerPawn>()",
     "assembly": "System.Linq, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a",
@@ -6163,7 +6269,7 @@
   },
   {
     "file": "plugins/DeltaOps/NativeAbilityPorts.cs",
-    "line": 190,
+    "line": 193,
     "kind": "Method",
     "symbol": "System.Collections.Generic.IEnumerable<CounterStrikeSharp.API.Core.CCSPlayerPawn>.Where<CounterStrikeSharp.API.Core.CCSPlayerPawn>(System.Func<CounterStrikeSharp.API.Core.CCSPlayerPawn, bool>)",
     "assembly": "System.Linq, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a",
@@ -6175,7 +6281,7 @@
   },
   {
     "file": "plugins/DeltaOps/NativeAbilityPorts.cs",
-    "line": 190,
+    "line": 193,
     "kind": "Method",
     "symbol": "System.Collections.Generic.IEnumerable<CounterStrikeSharp.API.Core.CCSPlayerController>.Select<CounterStrikeSharp.API.Core.CCSPlayerController, CounterStrikeSharp.API.Core.CCSPlayerPawn>(System.Func<CounterStrikeSharp.API.Core.CCSPlayerController, CounterStrikeSharp.API.Core.CCSPlayerPawn>)",
     "assembly": "System.Linq, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a",
@@ -6187,7 +6293,7 @@
   },
   {
     "file": "plugins/DeltaOps/NativeAbilityPorts.cs",
-    "line": 190,
+    "line": 193,
     "kind": "Method",
     "symbol": "System.Collections.Generic.IEnumerable<CounterStrikeSharp.API.Core.CCSPlayerController>.Where<CounterStrikeSharp.API.Core.CCSPlayerController>(System.Func<CounterStrikeSharp.API.Core.CCSPlayerController, bool>)",
     "assembly": "System.Linq, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a",
@@ -6199,7 +6305,7 @@
   },
   {
     "file": "plugins/DeltaOps/NativeAbilityPorts.cs",
-    "line": 191,
+    "line": 194,
     "kind": "Property",
     "symbol": "CounterStrikeSharp.API.Modules.Utils.CHandle<CounterStrikeSharp.API.Core.CCSPlayerPawn>.Value",
     "assembly": "CounterStrikeSharp.API, Version=1.0.379.0, Culture=neutral, PublicKeyToken=null",
@@ -6234,7 +6340,7 @@
   },
   {
     "file": "plugins/DeltaOps/NativeAbilityPorts.cs",
-    "line": 191,
+    "line": 194,
     "kind": "Property",
     "symbol": "CounterStrikeSharp.API.Core.CCSPlayerController.PlayerPawn",
     "assembly": "CounterStrikeSharp.API, Version=1.0.379.0, Culture=neutral, PublicKeyToken=null",
@@ -6254,7 +6360,7 @@
   },
   {
     "file": "plugins/DeltaOps/NativeAbilityPorts.cs",
-    "line": 191,
+    "line": 194,
     "kind": "Property",
     "symbol": "CounterStrikeSharp.API.Core.CCSPlayerPawn.VelocityModifier",
     "assembly": "CounterStrikeSharp.API, Version=1.0.379.0, Culture=neutral, PublicKeyToken=null",
@@ -6274,7 +6380,7 @@
   },
   {
     "file": "plugins/DeltaOps/NativeAbilityPorts.cs",
-    "line": 192,
+    "line": 195,
     "kind": "Property",
     "symbol": "System.Array.Length",
     "assembly": "System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e",
@@ -6286,7 +6392,7 @@
   },
   {
     "file": "plugins/DeltaOps/NativeAbilityPorts.cs",
-    "line": 193,
+    "line": 196,
     "kind": "Method",
     "symbol": "System.Collections.Generic.List<(DeltaOps.NativeStatusLease Lease, DeltaOps.NativeSuppressionLease? Suppression)>.List()",
     "assembly": "System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e",
@@ -6298,7 +6404,7 @@
   },
   {
     "file": "plugins/DeltaOps/NativeAbilityPorts.cs",
-    "line": 194,
+    "line": 197,
     "kind": "Property",
     "symbol": "System.Environment.TickCount64",
     "assembly": "System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e",
@@ -6310,7 +6416,7 @@
   },
   {
     "file": "plugins/DeltaOps/NativeAbilityPorts.cs",
-    "line": 197,
+    "line": 200,
     "kind": "Property",
     "symbol": "System.Collections.Generic.List<(DeltaOps.NativeStatusLease Lease, DeltaOps.NativeSuppressionLease? Suppression)>.Count",
     "assembly": "System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e",
@@ -6322,7 +6428,7 @@
   },
   {
     "file": "plugins/DeltaOps/NativeAbilityPorts.cs",
-    "line": 198,
+    "line": 201,
     "kind": "Property",
     "symbol": "System.Collections.Generic.List<(DeltaOps.NativeStatusLease Lease, DeltaOps.NativeSuppressionLease? Suppression)>.this[int]",
     "assembly": "System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e",
@@ -6334,7 +6440,7 @@
   },
   {
     "file": "plugins/DeltaOps/NativeAbilityPorts.cs",
-    "line": 199,
+    "line": 202,
     "kind": "Field",
     "symbol": "(DeltaOps.NativeStatusLease Lease, DeltaOps.NativeSuppressionLease? Suppression).Lease",
     "assembly": "System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e",
@@ -6346,7 +6452,7 @@
   },
   {
     "file": "plugins/DeltaOps/NativeAbilityPorts.cs",
-    "line": 200,
+    "line": 203,
     "kind": "Field",
     "symbol": "(DeltaOps.NativeStatusLease Lease, DeltaOps.NativeSuppressionLease? Suppression).Suppression",
     "assembly": "System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e",
@@ -6358,7 +6464,7 @@
   },
   {
     "file": "plugins/DeltaOps/NativeAbilityPorts.cs",
-    "line": 201,
+    "line": 204,
     "kind": "Method",
     "symbol": "System.Collections.Generic.List<(DeltaOps.NativeStatusLease Lease, DeltaOps.NativeSuppressionLease? Suppression)>.RemoveAt(int)",
     "assembly": "System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e",
@@ -6370,7 +6476,7 @@
   },
   {
     "file": "plugins/DeltaOps/NativeAbilityPorts.cs",
-    "line": 203,
+    "line": 206,
     "kind": "Method",
     "symbol": "System.Collections.Generic.List<System.Action>.Remove(System.Action)",
     "assembly": "System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e",
@@ -6382,7 +6488,7 @@
   },
   {
     "file": "plugins/DeltaOps/NativeAbilityPorts.cs",
-    "line": 207,
+    "line": 210,
     "kind": "Property",
     "symbol": "System.Environment.TickCount64",
     "assembly": "System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e",
@@ -6394,7 +6500,7 @@
   },
   {
     "file": "plugins/DeltaOps/NativeAbilityPorts.cs",
-    "line": 211,
+    "line": 214,
     "kind": "Method",
     "symbol": "System.Collections.Generic.List<System.Action>.Add(System.Action)",
     "assembly": "System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e",
@@ -6406,7 +6512,7 @@
   },
   {
     "file": "plugins/DeltaOps/NativeAbilityPorts.cs",
-    "line": 213,
+    "line": 216,
     "kind": "Property",
     "symbol": "CounterStrikeSharp.API.Modules.Utils.CHandle<CounterStrikeSharp.API.Core.CEntityInstance>.Raw",
     "assembly": "CounterStrikeSharp.API, Version=1.0.379.0, Culture=neutral, PublicKeyToken=null",
@@ -6446,7 +6552,7 @@
   },
   {
     "file": "plugins/DeltaOps/NativeAbilityPorts.cs",
-    "line": 213,
+    "line": 216,
     "kind": "Property",
     "symbol": "CounterStrikeSharp.API.NativeEntity.EntityHandle",
     "assembly": "CounterStrikeSharp.API, Version=1.0.379.0, Culture=neutral, PublicKeyToken=null",
@@ -6481,7 +6587,7 @@
   },
   {
     "file": "plugins/DeltaOps/NativeAbilityPorts.cs",
-    "line": 215,
+    "line": 218,
     "kind": "Property",
     "symbol": "CounterStrikeSharp.API.Core.CEntityInstance.IsValid",
     "assembly": "CounterStrikeSharp.API, Version=1.0.379.0, Culture=neutral, PublicKeyToken=null",
@@ -6506,7 +6612,7 @@
   },
   {
     "file": "plugins/DeltaOps/NativeAbilityPorts.cs",
-    "line": 215,
+    "line": 218,
     "kind": "Property",
     "symbol": "CounterStrikeSharp.API.Modules.Utils.CHandle<CounterStrikeSharp.API.Core.CEntityInstance>.Raw",
     "assembly": "CounterStrikeSharp.API, Version=1.0.379.0, Culture=neutral, PublicKeyToken=null",
@@ -6546,7 +6652,7 @@
   },
   {
     "file": "plugins/DeltaOps/NativeAbilityPorts.cs",
-    "line": 215,
+    "line": 218,
     "kind": "Property",
     "symbol": "CounterStrikeSharp.API.NativeEntity.EntityHandle",
     "assembly": "CounterStrikeSharp.API, Version=1.0.379.0, Culture=neutral, PublicKeyToken=null",
@@ -6581,7 +6687,7 @@
   },
   {
     "file": "plugins/DeltaOps/NativeAbilityPorts.cs",
-    "line": 216,
+    "line": 219,
     "kind": "Property",
     "symbol": "CounterStrikeSharp.API.Core.CCSPlayerPawn.VelocityModifier",
     "assembly": "CounterStrikeSharp.API, Version=1.0.379.0, Culture=neutral, PublicKeyToken=null",
@@ -6601,47 +6707,7 @@
   },
   {
     "file": "plugins/DeltaOps/NativeAbilityPorts.cs",
-    "line": 216,
-    "kind": "Property",
-    "symbol": "CounterStrikeSharp.API.Core.CCSPlayerPawn.VelocityModifier",
-    "assembly": "CounterStrikeSharp.API, Version=1.0.379.0, Culture=neutral, PublicKeyToken=null",
-    "syntax": "body.VelocityModifier",
-    "verification": "PENDING",
-    "original": "CounterStrikeSharp.API.Core.CCSPlayerPawn.VelocityModifier",
-    "owner": "CounterStrikeSharp.API.Core.CCSPlayerPawn",
-    "name": "VelocityModifier",
-    "sourceCandidates": [
-      {
-        "source": "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Generated/Schema/Classes/CCSPlayerPawn.g.cs#L319",
-        "declaration": "public ref float VelocityModifier => ref Schema.GetRef<float>(this.Handle, \"CCSPlayerPawn\", \"m_flVelocityModifier\");",
-        "level": "source declaration located; semantic/lifecycle review pending"
-      }
-    ],
-    "signatureEvidence": "Bound by Roslyn to reference assembly self-reporting this source SHA; declaration candidates pinned. Overload/source contracts not automatically accepted."
-  },
-  {
-    "file": "plugins/DeltaOps/NativeAbilityPorts.cs",
-    "line": 217,
-    "kind": "Method",
-    "symbol": "CounterStrikeSharp.API.Utilities.SetStateChanged(CounterStrikeSharp.API.Core.CBaseEntity, string, string, int)",
-    "assembly": "CounterStrikeSharp.API, Version=1.0.379.0, Culture=neutral, PublicKeyToken=null",
-    "syntax": "Utilities.SetStateChanged(body,\"CCSPlayerPawn\",\"m_flVelocityModifier\")",
-    "verification": "PENDING",
-    "original": "CounterStrikeSharp.API.Utilities.SetStateChanged(CounterStrikeSharp.API.Core.CBaseEntity, string, string, int)",
-    "owner": "CounterStrikeSharp.API.Utilities",
-    "name": "SetStateChanged",
-    "sourceCandidates": [
-      {
-        "source": "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Utilities.cs#L231",
-        "declaration": "public static void SetStateChanged(CBaseEntity entity, string className, string fieldName, int extraOffset = 0)",
-        "level": "source declaration located; semantic/lifecycle review pending"
-      }
-    ],
-    "signatureEvidence": "Bound by Roslyn to reference assembly self-reporting this source SHA; declaration candidates pinned. Overload/source contracts not automatically accepted."
-  },
-  {
-    "file": "plugins/DeltaOps/NativeAbilityPorts.cs",
-    "line": 218,
+    "line": 219,
     "kind": "Property",
     "symbol": "CounterStrikeSharp.API.Core.CCSPlayerPawn.VelocityModifier",
     "assembly": "CounterStrikeSharp.API, Version=1.0.379.0, Culture=neutral, PublicKeyToken=null",
@@ -6663,6 +6729,46 @@
     "file": "plugins/DeltaOps/NativeAbilityPorts.cs",
     "line": 220,
     "kind": "Method",
+    "symbol": "CounterStrikeSharp.API.Utilities.SetStateChanged(CounterStrikeSharp.API.Core.CBaseEntity, string, string, int)",
+    "assembly": "CounterStrikeSharp.API, Version=1.0.379.0, Culture=neutral, PublicKeyToken=null",
+    "syntax": "Utilities.SetStateChanged(body,\"CCSPlayerPawn\",\"m_flVelocityModifier\")",
+    "verification": "PENDING",
+    "original": "CounterStrikeSharp.API.Utilities.SetStateChanged(CounterStrikeSharp.API.Core.CBaseEntity, string, string, int)",
+    "owner": "CounterStrikeSharp.API.Utilities",
+    "name": "SetStateChanged",
+    "sourceCandidates": [
+      {
+        "source": "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Utilities.cs#L231",
+        "declaration": "public static void SetStateChanged(CBaseEntity entity, string className, string fieldName, int extraOffset = 0)",
+        "level": "source declaration located; semantic/lifecycle review pending"
+      }
+    ],
+    "signatureEvidence": "Bound by Roslyn to reference assembly self-reporting this source SHA; declaration candidates pinned. Overload/source contracts not automatically accepted."
+  },
+  {
+    "file": "plugins/DeltaOps/NativeAbilityPorts.cs",
+    "line": 221,
+    "kind": "Property",
+    "symbol": "CounterStrikeSharp.API.Core.CCSPlayerPawn.VelocityModifier",
+    "assembly": "CounterStrikeSharp.API, Version=1.0.379.0, Culture=neutral, PublicKeyToken=null",
+    "syntax": "body.VelocityModifier",
+    "verification": "PENDING",
+    "original": "CounterStrikeSharp.API.Core.CCSPlayerPawn.VelocityModifier",
+    "owner": "CounterStrikeSharp.API.Core.CCSPlayerPawn",
+    "name": "VelocityModifier",
+    "sourceCandidates": [
+      {
+        "source": "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Generated/Schema/Classes/CCSPlayerPawn.g.cs#L319",
+        "declaration": "public ref float VelocityModifier => ref Schema.GetRef<float>(this.Handle, \"CCSPlayerPawn\", \"m_flVelocityModifier\");",
+        "level": "source declaration located; semantic/lifecycle review pending"
+      }
+    ],
+    "signatureEvidence": "Bound by Roslyn to reference assembly self-reporting this source SHA; declaration candidates pinned. Overload/source contracts not automatically accepted."
+  },
+  {
+    "file": "plugins/DeltaOps/NativeAbilityPorts.cs",
+    "line": 223,
+    "kind": "Method",
     "symbol": "System.Collections.Generic.List<(DeltaOps.NativeStatusLease Lease, DeltaOps.NativeSuppressionLease? Suppression)>.Add((DeltaOps.NativeStatusLease Lease, DeltaOps.NativeSuppressionLease? Suppression))",
     "assembly": "System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e",
     "syntax": "owned.Add((lease,suppression))",
@@ -6673,7 +6779,7 @@
   },
   {
     "file": "plugins/DeltaOps/NativeAbilityPorts.cs",
-    "line": 230,
+    "line": 233,
     "kind": "Property",
     "symbol": "CounterStrikeSharp.API.Core.CBaseEntity.AbsOrigin",
     "assembly": "CounterStrikeSharp.API, Version=1.0.379.0, Culture=neutral, PublicKeyToken=null",
@@ -6693,7 +6799,7 @@
   },
   {
     "file": "plugins/DeltaOps/NativeAbilityPorts.cs",
-    "line": 230,
+    "line": 233,
     "kind": "Method",
     "symbol": "float.IsFinite(float)",
     "assembly": "System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e",
@@ -6705,7 +6811,7 @@
   },
   {
     "file": "plugins/DeltaOps/NativeAbilityPorts.cs",
-    "line": 231,
+    "line": 234,
     "kind": "Method",
     "symbol": "float.IsFinite(float)",
     "assembly": "System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e",
@@ -6717,7 +6823,7 @@
   },
   {
     "file": "plugins/DeltaOps/NativeAbilityPorts.cs",
-    "line": 232,
+    "line": 235,
     "kind": "Method",
     "symbol": "float.IsFinite(float)",
     "assembly": "System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e",
@@ -6729,7 +6835,7 @@
   },
   {
     "file": "plugins/DeltaOps/NativeAbilityPorts.cs",
-    "line": 233,
+    "line": 236,
     "kind": "Method",
     "symbol": "float.IsFinite(float)",
     "assembly": "System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e",
@@ -6741,7 +6847,7 @@
   },
   {
     "file": "plugins/DeltaOps/NativeAbilityPorts.cs",
-    "line": 234,
+    "line": 237,
     "kind": "Property",
     "symbol": "CounterStrikeSharp.API.Core.CBaseEntity.AbsOrigin",
     "assembly": "CounterStrikeSharp.API, Version=1.0.379.0, Culture=neutral, PublicKeyToken=null",
@@ -6761,7 +6867,7 @@
   },
   {
     "file": "plugins/DeltaOps/NativeAbilityPorts.cs",
-    "line": 234,
+    "line": 237,
     "kind": "Method",
     "symbol": "CounterStrikeSharp.API.Modules.Utils.Vector.Vector(float?, float?, float?)",
     "assembly": "CounterStrikeSharp.API, Version=1.0.379.0, Culture=neutral, PublicKeyToken=null",
@@ -6886,7 +6992,7 @@
   },
   {
     "file": "plugins/DeltaOps/NativeAbilityPorts.cs",
-    "line": 234,
+    "line": 237,
     "kind": "Property",
     "symbol": "CounterStrikeSharp.API.Modules.Utils.Vector.X",
     "assembly": "CounterStrikeSharp.API, Version=1.0.379.0, Culture=neutral, PublicKeyToken=null",
@@ -6921,7 +7027,7 @@
   },
   {
     "file": "plugins/DeltaOps/NativeAbilityPorts.cs",
-    "line": 234,
+    "line": 237,
     "kind": "Property",
     "symbol": "CounterStrikeSharp.API.Modules.Utils.Vector.Y",
     "assembly": "CounterStrikeSharp.API, Version=1.0.379.0, Culture=neutral, PublicKeyToken=null",
@@ -6956,7 +7062,7 @@
   },
   {
     "file": "plugins/DeltaOps/NativeAbilityPorts.cs",
-    "line": 234,
+    "line": 237,
     "kind": "Property",
     "symbol": "CounterStrikeSharp.API.Modules.Utils.Vector.Z",
     "assembly": "CounterStrikeSharp.API, Version=1.0.379.0, Culture=neutral, PublicKeyToken=null",
@@ -6986,7 +7092,7 @@
   },
   {
     "file": "plugins/DeltaOps/NativeAbilityPorts.cs",
-    "line": 235,
+    "line": 238,
     "kind": "Property",
     "symbol": "System.Environment.TickCount64",
     "assembly": "System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e",
@@ -6998,7 +7104,7 @@
   },
   {
     "file": "plugins/DeltaOps/NativeAbilityPorts.cs",
-    "line": 241,
+    "line": 244,
     "kind": "Method",
     "symbol": "System.Collections.Generic.List<System.Action>.Remove(System.Action)",
     "assembly": "System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e",
@@ -7010,7 +7116,7 @@
   },
   {
     "file": "plugins/DeltaOps/NativeAbilityPorts.cs",
-    "line": 246,
+    "line": 249,
     "kind": "Property",
     "symbol": "System.Environment.TickCount64",
     "assembly": "System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e",
@@ -7022,7 +7128,7 @@
   },
   {
     "file": "plugins/DeltaOps/NativeAbilityPorts.cs",
-    "line": 246,
+    "line": 249,
     "kind": "Property",
     "symbol": "System.Environment.TickCount64",
     "assembly": "System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e",
@@ -7034,7 +7140,7 @@
   },
   {
     "file": "plugins/DeltaOps/NativeAbilityPorts.cs",
-    "line": 248,
+    "line": 251,
     "kind": "Method",
     "symbol": "System.Collections.Generic.IEnumerable<CounterStrikeSharp.API.Core.CCSPlayerController>.FirstOrDefault<CounterStrikeSharp.API.Core.CCSPlayerController>(System.Func<CounterStrikeSharp.API.Core.CCSPlayerController, bool>)",
     "assembly": "System.Linq, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a",
@@ -7046,7 +7152,7 @@
   },
   {
     "file": "plugins/DeltaOps/NativeAbilityPorts.cs",
-    "line": 249,
+    "line": 252,
     "kind": "Property",
     "symbol": "CounterStrikeSharp.API.Modules.Utils.CHandle<CounterStrikeSharp.API.Core.CCSPlayerPawn>.Value",
     "assembly": "CounterStrikeSharp.API, Version=1.0.379.0, Culture=neutral, PublicKeyToken=null",
@@ -7081,7 +7187,7 @@
   },
   {
     "file": "plugins/DeltaOps/NativeAbilityPorts.cs",
-    "line": 249,
+    "line": 252,
     "kind": "Method",
     "symbol": "CounterStrikeSharp.API.Core.CEntityInstance.operator ==(CounterStrikeSharp.API.Core.CEntityInstance?, CounterStrikeSharp.API.Core.CEntityInstance?)",
     "assembly": "CounterStrikeSharp.API, Version=1.0.379.0, Culture=neutral, PublicKeyToken=null",
@@ -7100,7 +7206,7 @@
   },
   {
     "file": "plugins/DeltaOps/NativeAbilityPorts.cs",
-    "line": 249,
+    "line": 252,
     "kind": "Property",
     "symbol": "CounterStrikeSharp.API.Core.CEntityInstance.IsValid",
     "assembly": "CounterStrikeSharp.API, Version=1.0.379.0, Culture=neutral, PublicKeyToken=null",
@@ -7118,221 +7224,6 @@
       {
         "source": "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Core/Model/CEntityInstance.cs#L33",
         "declaration": "public string DesignerName => IsValid ? Entity?.DesignerName : null;",
-        "level": "source declaration located; semantic/lifecycle review pending"
-      }
-    ],
-    "signatureEvidence": "Bound by Roslyn to reference assembly self-reporting this source SHA; declaration candidates pinned. Overload/source contracts not automatically accepted."
-  },
-  {
-    "file": "plugins/DeltaOps/NativeAbilityPorts.cs",
-    "line": 251,
-    "kind": "Property",
-    "symbol": "CounterStrikeSharp.API.Core.CCSPlayerPawn.VelocityModifier",
-    "assembly": "CounterStrikeSharp.API, Version=1.0.379.0, Culture=neutral, PublicKeyToken=null",
-    "syntax": "body.VelocityModifier",
-    "verification": "PENDING",
-    "original": "CounterStrikeSharp.API.Core.CCSPlayerPawn.VelocityModifier",
-    "owner": "CounterStrikeSharp.API.Core.CCSPlayerPawn",
-    "name": "VelocityModifier",
-    "sourceCandidates": [
-      {
-        "source": "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Generated/Schema/Classes/CCSPlayerPawn.g.cs#L319",
-        "declaration": "public ref float VelocityModifier => ref Schema.GetRef<float>(this.Handle, \"CCSPlayerPawn\", \"m_flVelocityModifier\");",
-        "level": "source declaration located; semantic/lifecycle review pending"
-      }
-    ],
-    "signatureEvidence": "Bound by Roslyn to reference assembly self-reporting this source SHA; declaration candidates pinned. Overload/source contracts not automatically accepted."
-  },
-  {
-    "file": "plugins/DeltaOps/NativeAbilityPorts.cs",
-    "line": 252,
-    "kind": "Property",
-    "symbol": "CounterStrikeSharp.API.Modules.Utils.CHandle<CounterStrikeSharp.API.Core.CEntityInstance>.Raw",
-    "assembly": "CounterStrikeSharp.API, Version=1.0.379.0, Culture=neutral, PublicKeyToken=null",
-    "syntax": "body.EntityHandle.Raw",
-    "verification": "PENDING",
-    "original": "CounterStrikeSharp.API.Modules.Utils.CHandle<T>.Raw",
-    "owner": "CounterStrikeSharp.API.Modules.Utils.CHandle<T>",
-    "name": "Raw",
-    "sourceCandidates": [
-      {
-        "source": "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Modules/Utils/CHandle.cs#L26",
-        "declaration": "public uint Raw",
-        "level": "source declaration located; semantic/lifecycle review pending"
-      },
-      {
-        "source": "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Modules/Utils/CHandle.cs#L51",
-        "declaration": "Raw = raw;",
-        "level": "source declaration located; semantic/lifecycle review pending"
-      },
-      {
-        "source": "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Modules/Utils/CHandle.cs#L85",
-        "declaration": "public uint Index => (uint)(Raw & (Utilities.MaxEntities - 1));",
-        "level": "source declaration located; semantic/lifecycle review pending"
-      },
-      {
-        "source": "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Modules/Utils/CHandle.cs#L86",
-        "declaration": "public uint SerialNum => Raw >> Utilities.MaxEntityBits;",
-        "level": "source declaration located; semantic/lifecycle review pending"
-      },
-      {
-        "source": "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Modules/Utils/CHandle.cs#L88",
-        "declaration": "public static implicit operator uint(CHandle<T> handle) => handle.Raw;",
-        "level": "source declaration located; semantic/lifecycle review pending"
-      }
-    ],
-    "signatureEvidence": "Bound by Roslyn to reference assembly self-reporting this source SHA; declaration candidates pinned. Overload/source contracts not automatically accepted."
-  },
-  {
-    "file": "plugins/DeltaOps/NativeAbilityPorts.cs",
-    "line": 252,
-    "kind": "Property",
-    "symbol": "CounterStrikeSharp.API.NativeEntity.EntityHandle",
-    "assembly": "CounterStrikeSharp.API, Version=1.0.379.0, Culture=neutral, PublicKeyToken=null",
-    "syntax": "body.EntityHandle",
-    "verification": "PENDING",
-    "original": "CounterStrikeSharp.API.NativeEntity.EntityHandle",
-    "owner": "CounterStrikeSharp.API.NativeEntity",
-    "name": "EntityHandle",
-    "sourceCandidates": [
-      {
-        "source": "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/NativeEntity.cs#L9",
-        "declaration": "public new IntPtr Handle => EntitySystem.GetEntityByHandle(EntityHandle) ?? IntPtr.Zero;",
-        "level": "source declaration located; semantic/lifecycle review pending"
-      },
-      {
-        "source": "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/NativeEntity.cs#L10",
-        "declaration": "public CEntityHandle EntityHandle { get; }",
-        "level": "source declaration located; semantic/lifecycle review pending"
-      },
-      {
-        "source": "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/NativeEntity.cs#L14",
-        "declaration": "EntityHandle = new(EntitySystem.GetRawHandleFromEntityPointer(pointer));",
-        "level": "source declaration located; semantic/lifecycle review pending"
-      },
-      {
-        "source": "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/NativeEntity.cs#L19",
-        "declaration": "EntityHandle = new(rawHandle);",
-        "level": "source declaration located; semantic/lifecycle review pending"
-      }
-    ],
-    "signatureEvidence": "Bound by Roslyn to reference assembly self-reporting this source SHA; declaration candidates pinned. Overload/source contracts not automatically accepted."
-  },
-  {
-    "file": "plugins/DeltaOps/NativeAbilityPorts.cs",
-    "line": 253,
-    "kind": "Property",
-    "symbol": "CounterStrikeSharp.API.Core.CEntityInstance.IsValid",
-    "assembly": "CounterStrikeSharp.API, Version=1.0.379.0, Culture=neutral, PublicKeyToken=null",
-    "syntax": "body.IsValid",
-    "verification": "PENDING",
-    "original": "CounterStrikeSharp.API.Core.CEntityInstance.IsValid",
-    "owner": "CounterStrikeSharp.API.Core.CEntityInstance",
-    "name": "IsValid",
-    "sourceCandidates": [
-      {
-        "source": "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Core/Model/CEntityInstance.cs#L26",
-        "declaration": "public new bool IsValid => EntityHandle.IsValid && Handle != IntPtr.Zero;",
-        "level": "source declaration located; semantic/lifecycle review pending"
-      },
-      {
-        "source": "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Core/Model/CEntityInstance.cs#L33",
-        "declaration": "public string DesignerName => IsValid ? Entity?.DesignerName : null;",
-        "level": "source declaration located; semantic/lifecycle review pending"
-      }
-    ],
-    "signatureEvidence": "Bound by Roslyn to reference assembly self-reporting this source SHA; declaration candidates pinned. Overload/source contracts not automatically accepted."
-  },
-  {
-    "file": "plugins/DeltaOps/NativeAbilityPorts.cs",
-    "line": 253,
-    "kind": "Property",
-    "symbol": "CounterStrikeSharp.API.Modules.Utils.CHandle<CounterStrikeSharp.API.Core.CEntityInstance>.Raw",
-    "assembly": "CounterStrikeSharp.API, Version=1.0.379.0, Culture=neutral, PublicKeyToken=null",
-    "syntax": "body.EntityHandle.Raw",
-    "verification": "PENDING",
-    "original": "CounterStrikeSharp.API.Modules.Utils.CHandle<T>.Raw",
-    "owner": "CounterStrikeSharp.API.Modules.Utils.CHandle<T>",
-    "name": "Raw",
-    "sourceCandidates": [
-      {
-        "source": "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Modules/Utils/CHandle.cs#L26",
-        "declaration": "public uint Raw",
-        "level": "source declaration located; semantic/lifecycle review pending"
-      },
-      {
-        "source": "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Modules/Utils/CHandle.cs#L51",
-        "declaration": "Raw = raw;",
-        "level": "source declaration located; semantic/lifecycle review pending"
-      },
-      {
-        "source": "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Modules/Utils/CHandle.cs#L85",
-        "declaration": "public uint Index => (uint)(Raw & (Utilities.MaxEntities - 1));",
-        "level": "source declaration located; semantic/lifecycle review pending"
-      },
-      {
-        "source": "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Modules/Utils/CHandle.cs#L86",
-        "declaration": "public uint SerialNum => Raw >> Utilities.MaxEntityBits;",
-        "level": "source declaration located; semantic/lifecycle review pending"
-      },
-      {
-        "source": "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Modules/Utils/CHandle.cs#L88",
-        "declaration": "public static implicit operator uint(CHandle<T> handle) => handle.Raw;",
-        "level": "source declaration located; semantic/lifecycle review pending"
-      }
-    ],
-    "signatureEvidence": "Bound by Roslyn to reference assembly self-reporting this source SHA; declaration candidates pinned. Overload/source contracts not automatically accepted."
-  },
-  {
-    "file": "plugins/DeltaOps/NativeAbilityPorts.cs",
-    "line": 253,
-    "kind": "Property",
-    "symbol": "CounterStrikeSharp.API.NativeEntity.EntityHandle",
-    "assembly": "CounterStrikeSharp.API, Version=1.0.379.0, Culture=neutral, PublicKeyToken=null",
-    "syntax": "body.EntityHandle",
-    "verification": "PENDING",
-    "original": "CounterStrikeSharp.API.NativeEntity.EntityHandle",
-    "owner": "CounterStrikeSharp.API.NativeEntity",
-    "name": "EntityHandle",
-    "sourceCandidates": [
-      {
-        "source": "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/NativeEntity.cs#L9",
-        "declaration": "public new IntPtr Handle => EntitySystem.GetEntityByHandle(EntityHandle) ?? IntPtr.Zero;",
-        "level": "source declaration located; semantic/lifecycle review pending"
-      },
-      {
-        "source": "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/NativeEntity.cs#L10",
-        "declaration": "public CEntityHandle EntityHandle { get; }",
-        "level": "source declaration located; semantic/lifecycle review pending"
-      },
-      {
-        "source": "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/NativeEntity.cs#L14",
-        "declaration": "EntityHandle = new(EntitySystem.GetRawHandleFromEntityPointer(pointer));",
-        "level": "source declaration located; semantic/lifecycle review pending"
-      },
-      {
-        "source": "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/NativeEntity.cs#L19",
-        "declaration": "EntityHandle = new(rawHandle);",
-        "level": "source declaration located; semantic/lifecycle review pending"
-      }
-    ],
-    "signatureEvidence": "Bound by Roslyn to reference assembly self-reporting this source SHA; declaration candidates pinned. Overload/source contracts not automatically accepted."
-  },
-  {
-    "file": "plugins/DeltaOps/NativeAbilityPorts.cs",
-    "line": 254,
-    "kind": "Property",
-    "symbol": "CounterStrikeSharp.API.Core.CCSPlayerPawn.VelocityModifier",
-    "assembly": "CounterStrikeSharp.API, Version=1.0.379.0, Culture=neutral, PublicKeyToken=null",
-    "syntax": "body.VelocityModifier",
-    "verification": "PENDING",
-    "original": "CounterStrikeSharp.API.Core.CCSPlayerPawn.VelocityModifier",
-    "owner": "CounterStrikeSharp.API.Core.CCSPlayerPawn",
-    "name": "VelocityModifier",
-    "sourceCandidates": [
-      {
-        "source": "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Generated/Schema/Classes/CCSPlayerPawn.g.cs#L319",
-        "declaration": "public ref float VelocityModifier => ref Schema.GetRef<float>(this.Handle, \"CCSPlayerPawn\", \"m_flVelocityModifier\");",
         "level": "source declaration located; semantic/lifecycle review pending"
       }
     ],
@@ -7361,18 +7252,73 @@
   {
     "file": "plugins/DeltaOps/NativeAbilityPorts.cs",
     "line": 255,
-    "kind": "Method",
-    "symbol": "CounterStrikeSharp.API.Utilities.SetStateChanged(CounterStrikeSharp.API.Core.CBaseEntity, string, string, int)",
+    "kind": "Property",
+    "symbol": "CounterStrikeSharp.API.Modules.Utils.CHandle<CounterStrikeSharp.API.Core.CEntityInstance>.Raw",
     "assembly": "CounterStrikeSharp.API, Version=1.0.379.0, Culture=neutral, PublicKeyToken=null",
-    "syntax": "Utilities.SetStateChanged(body,\"CCSPlayerPawn\",\"m_flVelocityModifier\")",
+    "syntax": "body.EntityHandle.Raw",
     "verification": "PENDING",
-    "original": "CounterStrikeSharp.API.Utilities.SetStateChanged(CounterStrikeSharp.API.Core.CBaseEntity, string, string, int)",
-    "owner": "CounterStrikeSharp.API.Utilities",
-    "name": "SetStateChanged",
+    "original": "CounterStrikeSharp.API.Modules.Utils.CHandle<T>.Raw",
+    "owner": "CounterStrikeSharp.API.Modules.Utils.CHandle<T>",
+    "name": "Raw",
     "sourceCandidates": [
       {
-        "source": "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Utilities.cs#L231",
-        "declaration": "public static void SetStateChanged(CBaseEntity entity, string className, string fieldName, int extraOffset = 0)",
+        "source": "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Modules/Utils/CHandle.cs#L26",
+        "declaration": "public uint Raw",
+        "level": "source declaration located; semantic/lifecycle review pending"
+      },
+      {
+        "source": "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Modules/Utils/CHandle.cs#L51",
+        "declaration": "Raw = raw;",
+        "level": "source declaration located; semantic/lifecycle review pending"
+      },
+      {
+        "source": "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Modules/Utils/CHandle.cs#L85",
+        "declaration": "public uint Index => (uint)(Raw & (Utilities.MaxEntities - 1));",
+        "level": "source declaration located; semantic/lifecycle review pending"
+      },
+      {
+        "source": "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Modules/Utils/CHandle.cs#L86",
+        "declaration": "public uint SerialNum => Raw >> Utilities.MaxEntityBits;",
+        "level": "source declaration located; semantic/lifecycle review pending"
+      },
+      {
+        "source": "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Modules/Utils/CHandle.cs#L88",
+        "declaration": "public static implicit operator uint(CHandle<T> handle) => handle.Raw;",
+        "level": "source declaration located; semantic/lifecycle review pending"
+      }
+    ],
+    "signatureEvidence": "Bound by Roslyn to reference assembly self-reporting this source SHA; declaration candidates pinned. Overload/source contracts not automatically accepted."
+  },
+  {
+    "file": "plugins/DeltaOps/NativeAbilityPorts.cs",
+    "line": 255,
+    "kind": "Property",
+    "symbol": "CounterStrikeSharp.API.NativeEntity.EntityHandle",
+    "assembly": "CounterStrikeSharp.API, Version=1.0.379.0, Culture=neutral, PublicKeyToken=null",
+    "syntax": "body.EntityHandle",
+    "verification": "PENDING",
+    "original": "CounterStrikeSharp.API.NativeEntity.EntityHandle",
+    "owner": "CounterStrikeSharp.API.NativeEntity",
+    "name": "EntityHandle",
+    "sourceCandidates": [
+      {
+        "source": "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/NativeEntity.cs#L9",
+        "declaration": "public new IntPtr Handle => EntitySystem.GetEntityByHandle(EntityHandle) ?? IntPtr.Zero;",
+        "level": "source declaration located; semantic/lifecycle review pending"
+      },
+      {
+        "source": "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/NativeEntity.cs#L10",
+        "declaration": "public CEntityHandle EntityHandle { get; }",
+        "level": "source declaration located; semantic/lifecycle review pending"
+      },
+      {
+        "source": "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/NativeEntity.cs#L14",
+        "declaration": "EntityHandle = new(EntitySystem.GetRawHandleFromEntityPointer(pointer));",
+        "level": "source declaration located; semantic/lifecycle review pending"
+      },
+      {
+        "source": "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/NativeEntity.cs#L19",
+        "declaration": "EntityHandle = new(rawHandle);",
         "level": "source declaration located; semantic/lifecycle review pending"
       }
     ],
@@ -7381,6 +7327,106 @@
   {
     "file": "plugins/DeltaOps/NativeAbilityPorts.cs",
     "line": 256,
+    "kind": "Property",
+    "symbol": "CounterStrikeSharp.API.Core.CEntityInstance.IsValid",
+    "assembly": "CounterStrikeSharp.API, Version=1.0.379.0, Culture=neutral, PublicKeyToken=null",
+    "syntax": "body.IsValid",
+    "verification": "PENDING",
+    "original": "CounterStrikeSharp.API.Core.CEntityInstance.IsValid",
+    "owner": "CounterStrikeSharp.API.Core.CEntityInstance",
+    "name": "IsValid",
+    "sourceCandidates": [
+      {
+        "source": "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Core/Model/CEntityInstance.cs#L26",
+        "declaration": "public new bool IsValid => EntityHandle.IsValid && Handle != IntPtr.Zero;",
+        "level": "source declaration located; semantic/lifecycle review pending"
+      },
+      {
+        "source": "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Core/Model/CEntityInstance.cs#L33",
+        "declaration": "public string DesignerName => IsValid ? Entity?.DesignerName : null;",
+        "level": "source declaration located; semantic/lifecycle review pending"
+      }
+    ],
+    "signatureEvidence": "Bound by Roslyn to reference assembly self-reporting this source SHA; declaration candidates pinned. Overload/source contracts not automatically accepted."
+  },
+  {
+    "file": "plugins/DeltaOps/NativeAbilityPorts.cs",
+    "line": 256,
+    "kind": "Property",
+    "symbol": "CounterStrikeSharp.API.Modules.Utils.CHandle<CounterStrikeSharp.API.Core.CEntityInstance>.Raw",
+    "assembly": "CounterStrikeSharp.API, Version=1.0.379.0, Culture=neutral, PublicKeyToken=null",
+    "syntax": "body.EntityHandle.Raw",
+    "verification": "PENDING",
+    "original": "CounterStrikeSharp.API.Modules.Utils.CHandle<T>.Raw",
+    "owner": "CounterStrikeSharp.API.Modules.Utils.CHandle<T>",
+    "name": "Raw",
+    "sourceCandidates": [
+      {
+        "source": "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Modules/Utils/CHandle.cs#L26",
+        "declaration": "public uint Raw",
+        "level": "source declaration located; semantic/lifecycle review pending"
+      },
+      {
+        "source": "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Modules/Utils/CHandle.cs#L51",
+        "declaration": "Raw = raw;",
+        "level": "source declaration located; semantic/lifecycle review pending"
+      },
+      {
+        "source": "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Modules/Utils/CHandle.cs#L85",
+        "declaration": "public uint Index => (uint)(Raw & (Utilities.MaxEntities - 1));",
+        "level": "source declaration located; semantic/lifecycle review pending"
+      },
+      {
+        "source": "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Modules/Utils/CHandle.cs#L86",
+        "declaration": "public uint SerialNum => Raw >> Utilities.MaxEntityBits;",
+        "level": "source declaration located; semantic/lifecycle review pending"
+      },
+      {
+        "source": "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Modules/Utils/CHandle.cs#L88",
+        "declaration": "public static implicit operator uint(CHandle<T> handle) => handle.Raw;",
+        "level": "source declaration located; semantic/lifecycle review pending"
+      }
+    ],
+    "signatureEvidence": "Bound by Roslyn to reference assembly self-reporting this source SHA; declaration candidates pinned. Overload/source contracts not automatically accepted."
+  },
+  {
+    "file": "plugins/DeltaOps/NativeAbilityPorts.cs",
+    "line": 256,
+    "kind": "Property",
+    "symbol": "CounterStrikeSharp.API.NativeEntity.EntityHandle",
+    "assembly": "CounterStrikeSharp.API, Version=1.0.379.0, Culture=neutral, PublicKeyToken=null",
+    "syntax": "body.EntityHandle",
+    "verification": "PENDING",
+    "original": "CounterStrikeSharp.API.NativeEntity.EntityHandle",
+    "owner": "CounterStrikeSharp.API.NativeEntity",
+    "name": "EntityHandle",
+    "sourceCandidates": [
+      {
+        "source": "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/NativeEntity.cs#L9",
+        "declaration": "public new IntPtr Handle => EntitySystem.GetEntityByHandle(EntityHandle) ?? IntPtr.Zero;",
+        "level": "source declaration located; semantic/lifecycle review pending"
+      },
+      {
+        "source": "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/NativeEntity.cs#L10",
+        "declaration": "public CEntityHandle EntityHandle { get; }",
+        "level": "source declaration located; semantic/lifecycle review pending"
+      },
+      {
+        "source": "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/NativeEntity.cs#L14",
+        "declaration": "EntityHandle = new(EntitySystem.GetRawHandleFromEntityPointer(pointer));",
+        "level": "source declaration located; semantic/lifecycle review pending"
+      },
+      {
+        "source": "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/NativeEntity.cs#L19",
+        "declaration": "EntityHandle = new(rawHandle);",
+        "level": "source declaration located; semantic/lifecycle review pending"
+      }
+    ],
+    "signatureEvidence": "Bound by Roslyn to reference assembly self-reporting this source SHA; declaration candidates pinned. Overload/source contracts not automatically accepted."
+  },
+  {
+    "file": "plugins/DeltaOps/NativeAbilityPorts.cs",
+    "line": 257,
     "kind": "Property",
     "symbol": "CounterStrikeSharp.API.Core.CCSPlayerPawn.VelocityModifier",
     "assembly": "CounterStrikeSharp.API, Version=1.0.379.0, Culture=neutral, PublicKeyToken=null",
@@ -7402,6 +7448,66 @@
     "file": "plugins/DeltaOps/NativeAbilityPorts.cs",
     "line": 257,
     "kind": "Property",
+    "symbol": "CounterStrikeSharp.API.Core.CCSPlayerPawn.VelocityModifier",
+    "assembly": "CounterStrikeSharp.API, Version=1.0.379.0, Culture=neutral, PublicKeyToken=null",
+    "syntax": "body.VelocityModifier",
+    "verification": "PENDING",
+    "original": "CounterStrikeSharp.API.Core.CCSPlayerPawn.VelocityModifier",
+    "owner": "CounterStrikeSharp.API.Core.CCSPlayerPawn",
+    "name": "VelocityModifier",
+    "sourceCandidates": [
+      {
+        "source": "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Generated/Schema/Classes/CCSPlayerPawn.g.cs#L319",
+        "declaration": "public ref float VelocityModifier => ref Schema.GetRef<float>(this.Handle, \"CCSPlayerPawn\", \"m_flVelocityModifier\");",
+        "level": "source declaration located; semantic/lifecycle review pending"
+      }
+    ],
+    "signatureEvidence": "Bound by Roslyn to reference assembly self-reporting this source SHA; declaration candidates pinned. Overload/source contracts not automatically accepted."
+  },
+  {
+    "file": "plugins/DeltaOps/NativeAbilityPorts.cs",
+    "line": 258,
+    "kind": "Method",
+    "symbol": "CounterStrikeSharp.API.Utilities.SetStateChanged(CounterStrikeSharp.API.Core.CBaseEntity, string, string, int)",
+    "assembly": "CounterStrikeSharp.API, Version=1.0.379.0, Culture=neutral, PublicKeyToken=null",
+    "syntax": "Utilities.SetStateChanged(body,\"CCSPlayerPawn\",\"m_flVelocityModifier\")",
+    "verification": "PENDING",
+    "original": "CounterStrikeSharp.API.Utilities.SetStateChanged(CounterStrikeSharp.API.Core.CBaseEntity, string, string, int)",
+    "owner": "CounterStrikeSharp.API.Utilities",
+    "name": "SetStateChanged",
+    "sourceCandidates": [
+      {
+        "source": "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Utilities.cs#L231",
+        "declaration": "public static void SetStateChanged(CBaseEntity entity, string className, string fieldName, int extraOffset = 0)",
+        "level": "source declaration located; semantic/lifecycle review pending"
+      }
+    ],
+    "signatureEvidence": "Bound by Roslyn to reference assembly self-reporting this source SHA; declaration candidates pinned. Overload/source contracts not automatically accepted."
+  },
+  {
+    "file": "plugins/DeltaOps/NativeAbilityPorts.cs",
+    "line": 259,
+    "kind": "Property",
+    "symbol": "CounterStrikeSharp.API.Core.CCSPlayerPawn.VelocityModifier",
+    "assembly": "CounterStrikeSharp.API, Version=1.0.379.0, Culture=neutral, PublicKeyToken=null",
+    "syntax": "body.VelocityModifier",
+    "verification": "PENDING",
+    "original": "CounterStrikeSharp.API.Core.CCSPlayerPawn.VelocityModifier",
+    "owner": "CounterStrikeSharp.API.Core.CCSPlayerPawn",
+    "name": "VelocityModifier",
+    "sourceCandidates": [
+      {
+        "source": "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Generated/Schema/Classes/CCSPlayerPawn.g.cs#L319",
+        "declaration": "public ref float VelocityModifier => ref Schema.GetRef<float>(this.Handle, \"CCSPlayerPawn\", \"m_flVelocityModifier\");",
+        "level": "source declaration located; semantic/lifecycle review pending"
+      }
+    ],
+    "signatureEvidence": "Bound by Roslyn to reference assembly self-reporting this source SHA; declaration candidates pinned. Overload/source contracts not automatically accepted."
+  },
+  {
+    "file": "plugins/DeltaOps/NativeAbilityPorts.cs",
+    "line": 260,
+    "kind": "Property",
     "symbol": "System.Environment.TickCount64",
     "assembly": "System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e",
     "syntax": "Environment.TickCount64",
@@ -7412,7 +7518,7 @@
   },
   {
     "file": "plugins/DeltaOps/NativeAbilityPorts.cs",
-    "line": 261,
+    "line": 264,
     "kind": "Method",
     "symbol": "System.Collections.Generic.List<System.Action>.Add(System.Action)",
     "assembly": "System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e",
@@ -10784,6 +10890,78 @@
     "name": "Remove"
   },
   {
+    "file": "plugins/DeltaOps/NativeRushImpulse.cs",
+    "line": 12,
+    "kind": "Method",
+    "symbol": "float.IsFinite(float)",
+    "assembly": "System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e",
+    "syntax": "float.IsFinite(yawDegrees)",
+    "verification": "PENDING",
+    "original": "float.IsFinite(float)",
+    "owner": "float",
+    "name": "IsFinite"
+  },
+  {
+    "file": "plugins/DeltaOps/NativeRushImpulse.cs",
+    "line": 12,
+    "kind": "Method",
+    "symbol": "float.IsFinite(float)",
+    "assembly": "System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e",
+    "syntax": "float.IsFinite(horizontalSpeed)",
+    "verification": "PENDING",
+    "original": "float.IsFinite(float)",
+    "owner": "float",
+    "name": "IsFinite"
+  },
+  {
+    "file": "plugins/DeltaOps/NativeRushImpulse.cs",
+    "line": 13,
+    "kind": "Method",
+    "symbol": "float.IsFinite(float)",
+    "assembly": "System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e",
+    "syntax": "float.IsFinite(verticalSpeed)",
+    "verification": "PENDING",
+    "original": "float.IsFinite(float)",
+    "owner": "float",
+    "name": "IsFinite"
+  },
+  {
+    "file": "plugins/DeltaOps/NativeRushImpulse.cs",
+    "line": 14,
+    "kind": "Field",
+    "symbol": "System.Math.PI",
+    "assembly": "System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e",
+    "syntax": "Math.PI",
+    "verification": "PENDING",
+    "original": "System.Math.PI",
+    "owner": "System.Math",
+    "name": "PI"
+  },
+  {
+    "file": "plugins/DeltaOps/NativeRushImpulse.cs",
+    "line": 15,
+    "kind": "Method",
+    "symbol": "System.Math.Cos(double)",
+    "assembly": "System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e",
+    "syntax": "Math.Cos(radians)",
+    "verification": "PENDING",
+    "original": "System.Math.Cos(double)",
+    "owner": "System.Math",
+    "name": "Cos"
+  },
+  {
+    "file": "plugins/DeltaOps/NativeRushImpulse.cs",
+    "line": 16,
+    "kind": "Method",
+    "symbol": "System.Math.Sin(double)",
+    "assembly": "System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e",
+    "syntax": "Math.Sin(radians)",
+    "verification": "PENDING",
+    "original": "System.Math.Sin(double)",
+    "owner": "System.Math",
+    "name": "Sin"
+  },
+  {
     "file": "plugins/DeltaOps/NativeHitTracking.cs",
     "line": 8,
     "kind": "Field",
@@ -11182,7 +11360,7 @@
   },
   {
     "file": "plugins/DeltaOps/NativeHitTracking.cs",
-    "line": 23,
+    "line": 24,
     "kind": "Method",
     "symbol": "System.Collections.Generic.List<CounterStrikeSharp.API.Core.CCSPlayerController>.ToArray()",
     "assembly": "System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e",
@@ -11194,7 +11372,7 @@
   },
   {
     "file": "plugins/DeltaOps/NativeHitTracking.cs",
-    "line": 23,
+    "line": 24,
     "kind": "Method",
     "symbol": "CounterStrikeSharp.API.Utilities.GetPlayers()",
     "assembly": "CounterStrikeSharp.API, Version=1.0.379.0, Culture=neutral, PublicKeyToken=null",
@@ -11214,7 +11392,7 @@
   },
   {
     "file": "plugins/DeltaOps/NativeHitTracking.cs",
-    "line": 24,
+    "line": 25,
     "kind": "Property",
     "symbol": "CounterStrikeSharp.API.Core.CCSPlayerController.PawnIsAlive",
     "assembly": "CounterStrikeSharp.API, Version=1.0.379.0, Culture=neutral, PublicKeyToken=null",
@@ -11234,7 +11412,7 @@
   },
   {
     "file": "plugins/DeltaOps/NativeHitTracking.cs",
-    "line": 25,
+    "line": 26,
     "kind": "Property",
     "symbol": "CounterStrikeSharp.API.Modules.Utils.CHandle<CounterStrikeSharp.API.Core.CCSPlayerPawn>.Value",
     "assembly": "CounterStrikeSharp.API, Version=1.0.379.0, Culture=neutral, PublicKeyToken=null",
@@ -11269,7 +11447,7 @@
   },
   {
     "file": "plugins/DeltaOps/NativeHitTracking.cs",
-    "line": 25,
+    "line": 26,
     "kind": "Property",
     "symbol": "CounterStrikeSharp.API.Core.CCSPlayerController.PlayerPawn",
     "assembly": "CounterStrikeSharp.API, Version=1.0.379.0, Culture=neutral, PublicKeyToken=null",
@@ -11289,7 +11467,7 @@
   },
   {
     "file": "plugins/DeltaOps/NativeHitTracking.cs",
-    "line": 25,
+    "line": 26,
     "kind": "Method",
     "symbol": "CounterStrikeSharp.API.Core.CEntityInstance.operator ==(CounterStrikeSharp.API.Core.CEntityInstance?, CounterStrikeSharp.API.Core.CEntityInstance?)",
     "assembly": "CounterStrikeSharp.API, Version=1.0.379.0, Culture=neutral, PublicKeyToken=null",
@@ -11308,7 +11486,7 @@
   },
   {
     "file": "plugins/DeltaOps/NativeHitTracking.cs",
-    "line": 25,
+    "line": 26,
     "kind": "Property",
     "symbol": "CounterStrikeSharp.API.Core.CEntityInstance.IsValid",
     "assembly": "CounterStrikeSharp.API, Version=1.0.379.0, Culture=neutral, PublicKeyToken=null",
@@ -11333,7 +11511,7 @@
   },
   {
     "file": "plugins/DeltaOps/NativeHitTracking.cs",
-    "line": 26,
+    "line": 27,
     "kind": "Property",
     "symbol": "CounterStrikeSharp.API.Modules.Utils.CHandle<CounterStrikeSharp.API.Core.CEntityInstance>.Raw",
     "assembly": "CounterStrikeSharp.API, Version=1.0.379.0, Culture=neutral, PublicKeyToken=null",
@@ -11373,7 +11551,7 @@
   },
   {
     "file": "plugins/DeltaOps/NativeHitTracking.cs",
-    "line": 26,
+    "line": 27,
     "kind": "Property",
     "symbol": "CounterStrikeSharp.API.NativeEntity.EntityHandle",
     "assembly": "CounterStrikeSharp.API, Version=1.0.379.0, Culture=neutral, PublicKeyToken=null",
@@ -11408,7 +11586,7 @@
   },
   {
     "file": "plugins/DeltaOps/NativeHitTracking.cs",
-    "line": 26,
+    "line": 27,
     "kind": "Property",
     "symbol": "CounterStrikeSharp.API.Modules.Utils.CHandle<CounterStrikeSharp.API.Core.CEntityInstance>.Raw",
     "assembly": "CounterStrikeSharp.API, Version=1.0.379.0, Culture=neutral, PublicKeyToken=null",
@@ -11448,7 +11626,7 @@
   },
   {
     "file": "plugins/DeltaOps/NativeHitTracking.cs",
-    "line": 26,
+    "line": 27,
     "kind": "Property",
     "symbol": "CounterStrikeSharp.API.NativeEntity.EntityHandle",
     "assembly": "CounterStrikeSharp.API, Version=1.0.379.0, Culture=neutral, PublicKeyToken=null",
@@ -11483,7 +11661,7 @@
   },
   {
     "file": "plugins/DeltaOps/NativeHitTracking.cs",
-    "line": 27,
+    "line": 28,
     "kind": "Method",
     "symbol": "CounterStrikeSharp.API.Core.CCSPlayerController.PrintToChat(string)",
     "assembly": "CounterStrikeSharp.API, Version=1.0.379.0, Culture=neutral, PublicKeyToken=null",
@@ -11503,7 +11681,7 @@
   },
   {
     "file": "plugins/DeltaOps/NativeHitTracking.cs",
-    "line": 29,
+    "line": 30,
     "kind": "Field",
     "symbol": "CounterStrikeSharp.API.Core.HookResult.Continue",
     "assembly": "CounterStrikeSharp.API, Version=1.0.379.0, Culture=neutral, PublicKeyToken=null",
