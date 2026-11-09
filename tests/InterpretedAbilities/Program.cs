@@ -199,6 +199,34 @@ Check(NativeWorldRecoveryPolicy.Decide(new[]{anchorTicket,worldEffect with{World
 Check(NativeWorldRecoveryPolicy.Decide(new[]{anchorTicket with{World="corrupt"}},processId,true,_=>true)==NativeWorldRecoveryDecision.Block);
 Check(NativeWorldRecoveryPolicy.Decide(new[]{anchorTicket with{Marker="foreign"}},processId,true,_=>true)==NativeWorldRecoveryDecision.Block);
 Check(NativeWorldRecoveryPolicy.Decide(worldSaved,"",false,_=>true)==NativeWorldRecoveryDecision.Block);
+// Shared actual creation/activation/rollback transaction used by the CSS adapter.
+disk=[];var transactionEscrow=new NativeEntityEscrow("map-A",[],Save);
+var creation=new CreationMock(Ticket(800));var transaction=new NativeEntityTransaction(transactionEscrow,creation);
+failSave=true;
+try{transaction.Activate();Check(false);}catch(IOException){}
+Check(creation.Activations==0);Check(creation.Exists(800));Check(transactionEscrow.Pending==0);
+creation.FailRemove=true;
+try{transaction.Dispose();Check(false);}catch(Exception){}
+Check(creation.Exists(800));creation.FailRemove=false;transaction.Dispose();Check(!creation.Exists(800));
+failSave=false;creation=new CreationMock(Ticket(801)){FailActivate=true};
+transaction=new NativeEntityTransaction(transactionEscrow,creation);
+try{transaction.Activate();Check(false);}catch(InvalidOperationException){}
+Check(transactionEscrow.Pending==1);Check(disk.Count==1);
+creation.FailRemove=true;try{transaction.Dispose();Check(false);}catch(Exception){}
+Check(transactionEscrow.Pending==1);creation.FailRemove=false;transaction.Dispose();Check(transactionEscrow.Pending==0);
+creation=new CreationMock(Ticket(802));transaction=new NativeEntityTransaction(transactionEscrow,creation);
+transaction.Activate();Check(creation.Activations==1);Check(disk.Count==1);
+failSave=true;try{transaction.Dispose();Check(false);}catch(IOException){}
+Check(!creation.Exists(802));Check(transactionEscrow.Pending==1);
+failSave=false;transaction.Dispose();Check(disk.Count==0);Check(transactionEscrow.Pending==0);
+var deletes=creation.Removes;transaction.Dispose();Check(creation.Removes==deletes);
+try{transaction.Activate();Check(false);}catch(InvalidOperationException){}
+// Releasing one effect cannot remove another effect's ticket or entity.
+var a=Ticket(810);var b=Ticket(811);transactionEscrow.Record(a);transactionEscrow.Record(b);
+var releaseNative=new EntityMock();releaseNative.Entities[a.Serial]=a;releaseNative.Entities[b.Serial]=b;
+Check(transactionEscrow.Release(a,releaseNative));Check(releaseNative.Exists(b.Serial));Check(disk.Single()==b);
+Check(!transactionEscrow.Release(b with{Marker=a.Marker},releaseNative));Check(releaseNative.Exists(b.Serial));
+Check(transactionEscrow.Release(b,releaseNative));
 Console.WriteLine($"{count} interpreted lifecycle checks PASS; router + lifecycle PASS; CSS calls compile, not native QA");
 sealed class Effect:IDisposable{public bool Disposed;public void Dispose()=>Disposed=true;}
 
@@ -219,5 +247,22 @@ sealed class EntityMock:INativeEntityBoundary{
   if(!Matches(ticket))throw new InvalidOperationException("foreign removal");
   Removes++;if(FailRemove)throw new Exception("native removal failed");
   if(!KeepAfterRemove)Entities.Remove(ticket.Serial);
+ }
+}
+
+
+sealed class CreationMock(NativeEntityTicket ticket):INativeEntityCreation{
+ private bool exists;
+ public bool FailActivate,FailRemove;public int Activations,Removes;
+ public NativeEntityTicket CreateInert(){exists=true;return ticket;}
+ public void Activate(NativeEntityTicket t){
+  if(t!=ticket||!exists)throw new Exception("invalid activation");
+  Activations++;if(FailActivate)throw new InvalidOperationException("post-spawn failure");
+ }
+ public bool Exists(uint serial)=>exists&&serial==ticket.Serial;
+ public bool Matches(NativeEntityTicket t)=>exists&&t==ticket;
+ public void Remove(NativeEntityTicket t){
+  if(!Matches(t))throw new Exception("foreign delete");
+  Removes++;if(FailRemove)throw new Exception("remove failed");exists=false;
  }
 }

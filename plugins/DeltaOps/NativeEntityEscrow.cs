@@ -52,6 +52,24 @@ public sealed class NativeEntityEscrow
             tickets.Add(ticket.Serial,ticket);
         }finally{busy=false;}
     }
+    public bool Release(NativeEntityTicket ticket,INativeEntityBoundary native)
+    {
+        if(busy||ticket.World!=world)return false;
+        if(!tickets.TryGetValue(ticket.Serial,out var actual))return true;
+        if(actual!=ticket)return false;
+        busy=true;
+        try{
+            if(native.Exists(ticket.Serial)){
+                if(!native.Matches(ticket))return false;
+                native.Remove(ticket);
+                if(native.Exists(ticket.Serial))return false;
+            }
+            var remaining=tickets.Values.Where(t=>t!=ticket).ToArray();
+            persist(Array.AsReadOnly(remaining));
+            tickets.Remove(ticket.Serial);
+            return true;
+        }finally{busy=false;}
+    }
     // False means admission must remain closed. Cleanup never weakens identity to
     // an index/classname/owner lookup, including after disconnect and plugin reload.
     public bool Drain(INativeEntityBoundary native)
