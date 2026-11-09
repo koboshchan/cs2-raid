@@ -58,5 +58,7 @@ public sealed class OwnedAbilityEffect(Action cleanup):IDisposable
 
 public static class NativePassiveRules
 {
+    public static float ReduceBlast(float damage,float multiplier,uint flags)=>
+        (flags&64u)!=0?Reduce(damage,multiplier):damage;
     public static float Reduce(float damage,float multiplier)=>float.IsFinite(damage)&&damage>0&&float.IsFinite(multiplier)&&multiplier is >0 and <=1 ?damage*multiplier:damage;
 }

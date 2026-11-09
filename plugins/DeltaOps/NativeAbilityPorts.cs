@@ -34,7 +34,7 @@ public sealed partial class DeltaOpsPlugin
         var pawn=victim.PlayerPawn.Value!;
         if(!NativeAdmission(victim,victim.EntityHandle.Raw,pawn.EntityHandle.Raw))return HookResult.Continue;
         // Reduction only. Never create damage, revive an attack or overrule Raid's blocking hook.
-        info.Damage=NativePassiveRules.Reduce(info.Damage,Config.NativePorts.ShepherdDamageMultiplier);
+        info.Damage=NativePassiveRules.ReduceBlast(info.Damage,Config.NativePorts.ShepherdDamageMultiplier,(uint)info.BitsDamageType);
         return HookResult.Continue;
     }
     private sealed record NativeActor(uint Controller,uint Pawn,InterpretedAbilitySession Session);

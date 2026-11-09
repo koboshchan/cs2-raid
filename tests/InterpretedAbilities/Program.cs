@@ -329,6 +329,8 @@ foreach(var damageType in new uint[]{0,2,32,34,64}){
 }
 foreach(var multiplier in new[]{-1f,2f,float.NaN,float.PositiveInfinity})
 Check(NativeFallPassivePolicy.Apply(100,32,4,true,true,false,multiplier)==100);
+foreach(var flags in new uint[]{0,1,2,32,64,66,96,128})
+Check(NativePassiveRules.ReduceBlast(100,.9f,flags)==((flags&64)!=0?90:100));
 Console.WriteLine($"{count} interpreted lifecycle checks PASS; router + lifecycle PASS; CSS calls compile, not native QA");
 sealed class Effect:IDisposable{public bool Disposed;public void Dispose()=>Disposed=true;}
 
