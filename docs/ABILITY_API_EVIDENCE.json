@@ -1,7 +1,7 @@
 {
   "status": "INCOMPLETE FAIL CLOSED",
   "sourceCheckout": "f58e383b0553be16c0f8c6dd68a8194de17691e9",
-  "installedVersionMatch": "NOT PROVEN",
+  "installedVersionMatch": "Referenced build assembly self-reports exact pinned source SHA; actual server assembly/gamedata not checked.",
   "boundaries": [
     {
       "symbol": "Utilities.CreateEntityByName<T>(string)",
@@ -247,7 +247,8 @@
   "referenceAssembly": {
     "path": "/home/kit/flow-api-inspect/bin/Debug/net10.0/CounterStrikeSharp.API.dll",
     "sha256": "652ac51d86a963d3cf795bad9271f821579a3bb65bc871313b900ba834f9d1ec",
-    "sourceMatch": "UNPROVEN"
+    "sourceMatch": "Assembly informational version matches checkout exactly; not reproducible binary proof or actual server match.",
+    "informationalVersion": "1.0.379+Branch.main.Sha.f58e383b0553be16c0f8c6dd68a8194de17691e9.f58e383"
   },
   "nativeSourceFollowup": [
     {

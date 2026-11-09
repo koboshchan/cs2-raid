@@ -2,7 +2,7 @@
 
 INCOMPLETE. New interpreted native admission and pre-admission anchor creation are disabled by NativeApiEvidenceComplete=false. Offline only. No target integration or push/live action.
 
-Official upstream checkout v1.0.379 at f58e383b0553be16c0f8c6dd68a8194de17691e9 was read locally and is clean. Matching this checkout to the referenced installed API assembly and server gamedata is NOT established. Source signature evidence is not native acceptance. No build or mock test fills that gap.
+Official upstream checkout v1.0.379 at f58e383b0553be16c0f8c6dd68a8194de17691e9 was read locally and is clean. The referenced build assembly informational version matches this source commit exactly (reflection); actual server binary and gamedata equivalence is NOT established. Source signature evidence is not native acceptance. No build or mock test fills that gap.
 
 This ledger inventories audited boundary groups, not an exhaustive completed per-call audit. Unlisted calls and dependencies remain unverified. Registering inherited legacy listeners is not asserted fully audited. C#/BCL and all generated event payload accessors remain pending detailed call-site verification.
 
@@ -187,4 +187,8 @@ https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68
 
 CreateTimer then NativeAPI.KillTimer. Flags repeat bit0/mapchange bit1. Engine scheduling and callback disposal not fully audited.
 
-Reference API assembly SHA256 652ac51d86a963d3cf795bad9271f821579a3bb65bc871313b900ba834f9d1ec. Hash recorded, source/version equivalence still unproved.
+Reference API assembly SHA256 652ac51d86a963d3cf795bad9271f821579a3bb65bc871313b900ba834f9d1ec. Hash recorded; reflection confirms referenced assembly self-reports the exact source commit. This is not reproducible binary proof or actual server/gamedata verification.
+
+## Semantic call-site inventory
+
+ABILITY_API_CALLS.json records 1,629 external invocation/constructor/member-access occurrences, including 1,060 CSS occurrences across 195 distinct constructed symbols. All have explicit pending review state. Roslyn binding compiled with zero errors against the hashed reference API. This includes legacy paths and is not proof every boundary is new; implicit operators/indexers still need inventory. Reproduction code is tools/api-audit/Inventory.cs.txt.

@@ -1,0 +1,29 @@
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
+using System.Text.Json;
+var repo="/home/kit/raid-abilities-offline";
+var dir=repo+"/plugins/DeltaOps";
+var paths=Directory.GetFiles(dir,"*.cs",SearchOption.AllDirectories).Where(p=>!p.Contains("/bin/")&&!p.Contains("/obj/")).ToList();
+paths.Add(dir+"/obj/Release/net10.0/DeltaOps.GlobalUsings.g.cs");
+var trees=paths.Select(p=>CSharpSyntaxTree.ParseText(File.ReadAllText(p),path:p)).ToArray();
+var refs=((string)AppContext.GetData("TRUSTED_PLATFORM_ASSEMBLIES")!).Split(Path.PathSeparator).Select(p=>MetadataReference.CreateFromFile(p)).ToList();
+foreach(var p in Directory.GetFiles("/home/kit/flow-api-inspect/bin/Debug/net10.0","*.dll"))
+ if(!refs.Any(r=>r.Display==p))refs.Add(MetadataReference.CreateFromFile(p));
+var c=CSharpCompilation.Create("DeltaOpsAudit",trees,refs,new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
+var errors=c.GetDiagnostics().Where(d=>d.Severity==DiagnosticSeverity.Error).ToArray();
+if(errors.Length>0){foreach(var e in errors.Take(30))Console.Error.WriteLine(e);Environment.Exit(1);}
+var rows=new List<object>();
+foreach(var tree in trees){
+ var m=c.GetSemanticModel(tree);
+ foreach(var n in tree.GetRoot().DescendantNodes()){
+  if(n is not InvocationExpressionSyntax && n is not ObjectCreationExpressionSyntax && n is not ImplicitObjectCreationExpressionSyntax && n is not MemberAccessExpressionSyntax)continue;
+  if(n is MemberAccessExpressionSyntax && n.Parent is InvocationExpressionSyntax)continue;
+  var si=m.GetSymbolInfo(n);var s=si.Symbol;
+  if(s==null)continue;
+  if(s.ContainingAssembly?.Name=="DeltaOpsAudit")continue;
+  rows.Add(new {file=Path.GetRelativePath(repo,tree.FilePath),line=n.GetLocation().GetLineSpan().StartLinePosition.Line+1,kind=s.Kind.ToString(),symbol=s.ToDisplayString(),assembly=s.ContainingAssembly?.Identity.ToString(),syntax=n.ToString(),verification="PENDING", original=s.OriginalDefinition.ToDisplayString(), owner=s.ContainingType?.OriginalDefinition.ToDisplayString(), name=s.MetadataName});
+ }
+}
+File.WriteAllText(repo+"/docs/ABILITY_API_CALLS.json",JsonSerializer.Serialize(rows,new JsonSerializerOptions{WriteIndented=true})+"\n");
+Console.WriteLine($"semantic calls/properties={rows.Count}, distinct={rows.Select(x=>JsonSerializer.Serialize(x)).Count()}, compiler errors={errors.Length}");
