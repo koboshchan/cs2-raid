@@ -304,6 +304,15 @@ reusedForeign.Entities[841]=Ticket(841) with {Marker="deltaops-owned-"+Guid.NewG
 var foreignReload=new NativeEntityEscrow("map-A",disk,Save);
 Check(!foreignReload.Drain(reusedForeign));Check(reusedForeign.Entities.Count==1);
 Check(disk.Single().Serial==841);
+for(var mask=0;mask<64;mask++){
+ bool TrackBit(int index)=>(mask&(1<<index))!=0;
+ foreach(var selected in Enumerable.Range(1,5))
+ foreach(var healthDamage in new[]{-1,0,1,100}){
+  var expected=selected==2&&mask==59&&healthDamage>0;
+  Check(NativeHitTrackingPolicy.Allow(selected,TrackBit(0),TrackBit(1),TrackBit(2),
+      TrackBit(3),TrackBit(4),TrackBit(5)?healthDamage:0)==(expected&&TrackBit(5)));
+ }
+}
 Console.WriteLine($"{count} interpreted lifecycle checks PASS; router + lifecycle PASS; CSS calls compile, not native QA");
 sealed class Effect:IDisposable{public bool Disposed;public void Dispose()=>Disposed=true;}
 

@@ -22,7 +22,7 @@ public static class NativeAbilityRouter
         if(!InterpretedR2.Skills.TryGetValue((op,id),out var s))return "Skill not in this operator's source rows (4008010 is missing).";
         if(s.Passive)return id switch {
             20010201=>"Revive passive requires a downed/revive state; Raid death currently creates death outcomes, not a revivable pawn.",
-            40010201=>"Tracking passive needs per-owner hit reveal ownership; global Glow leaks to every squad and is not safe.",
+            40010201=>null, // Post-hurt, private coordinate telemetry; no global Glow.
             1009004 or 10010301=>"Kinetic fall/recovery and ADS movement triggers need fall-damage classification and weapon-state semantics; no movement baseline ownership contract.",
             40010202=>"Footstep attenuation is client/audio-path behavior; player speed alone is not silent footsteps.",
             30010201=>null,

@@ -224,6 +224,7 @@ public sealed partial class DeltaOpsPlugin : BasePlugin, IPluginConfig<DeltaOpsC
         if (_fixtureMode) return;
         InitializeEntityRecovery();
         _nativeLifecycleLoaded=true;
+        RegisterEventHandler<EventPlayerHurt>(NativeTrackedHit);
         RegisterListener<Listeners.OnEntityTakeDamagePre>(OwnedProjectileDamage);
         RegisterListener<Listeners.OnEntityTakeDamagePre>(NativePassiveDamage);
         RegisterEventHandler<EventPlayerSpawn>(OnPlayerSpawn);
