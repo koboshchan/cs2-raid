@@ -183,6 +183,22 @@ try{
  try{store.Read();Check(false);}catch(InvalidDataException){}
  Check(File.ReadAllText(file).Contains("2"));
 }finally{Directory.Delete(tempDirectory,recursive:true);}
+// Production uses this exact identity decision before touching saved native serials.
+var processId="123-456:";var worldId=processId+Guid.NewGuid().ToString("N");
+var anchorTicket=Ticket(12,worldId) with {Kind="info_target"};
+var worldEffect=Ticket(13,worldId);var worldSaved=new[]{anchorTicket,worldEffect};
+Check(NativeWorldRecoveryPolicy.Decide([],processId,false,_=>false)==NativeWorldRecoveryDecision.CreateNew);
+Check(NativeWorldRecoveryPolicy.Decide(worldSaved,processId,false,_=>true)==NativeWorldRecoveryDecision.RecoverExisting);
+Check(NativeWorldRecoveryPolicy.Decide(worldSaved,processId,false,_=>false)==NativeWorldRecoveryDecision.Block);
+Check(NativeWorldRecoveryPolicy.Decide(worldSaved,processId,true,_=>throw new Exception())==NativeWorldRecoveryDecision.CreateNew);
+Check(NativeWorldRecoveryPolicy.Decide(worldSaved,"123-457:",false,_=>throw new Exception())==NativeWorldRecoveryDecision.CreateNew);
+Check(NativeWorldRecoveryPolicy.Decide(worldSaved,"124-456:",false,_=>throw new Exception())==NativeWorldRecoveryDecision.CreateNew);
+Check(NativeWorldRecoveryPolicy.Decide(new[]{worldEffect},processId,false,_=>true)==NativeWorldRecoveryDecision.Block);
+Check(NativeWorldRecoveryPolicy.Decide(new[]{anchorTicket,anchorTicket},processId,false,_=>true)==NativeWorldRecoveryDecision.Block);
+Check(NativeWorldRecoveryPolicy.Decide(new[]{anchorTicket,worldEffect with{World="other"}},processId,false,_=>true)==NativeWorldRecoveryDecision.Block);
+Check(NativeWorldRecoveryPolicy.Decide(new[]{anchorTicket with{World="corrupt"}},processId,true,_=>true)==NativeWorldRecoveryDecision.Block);
+Check(NativeWorldRecoveryPolicy.Decide(new[]{anchorTicket with{Marker="foreign"}},processId,true,_=>true)==NativeWorldRecoveryDecision.Block);
+Check(NativeWorldRecoveryPolicy.Decide(worldSaved,"",false,_=>true)==NativeWorldRecoveryDecision.Block);
 Console.WriteLine($"{count} interpreted lifecycle checks PASS; router + lifecycle PASS; CSS calls compile, not native QA");
 sealed class Effect:IDisposable{public bool Disposed;public void Dispose()=>Disposed=true;}
 

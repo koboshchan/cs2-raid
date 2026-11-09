@@ -222,6 +222,7 @@ public sealed partial class DeltaOpsPlugin : BasePlugin, IPluginConfig<DeltaOpsC
         // Unaccepted fixture provider exposes status/policy only; never register legacy
         // native lifecycle handlers (global reset, deferred passive grants, or cooldown resets).
         if (_fixtureMode) return;
+        InitializeEntityRecovery();
         _nativeLifecycleLoaded=true;
         RegisterListener<Listeners.OnEntityTakeDamagePre>(NativePassiveDamage);
         RegisterEventHandler<EventPlayerSpawn>(OnPlayerSpawn);
@@ -254,6 +255,8 @@ public sealed partial class DeltaOpsPlugin : BasePlugin, IPluginConfig<DeltaOpsC
         _bridgeLoaded = false;
         if (_fixtureMode) return;
         ResetAllPlayersAndState("插件卸载", broadcast: false);
+        if(!DrainEntityRecovery())
+            Logger.LogError("Native entity cleanup incomplete; durable tickets retained for next owner. No retries run while unloaded.");
         if(_nativeActors.Count!=0)
             Logger.LogError("UNLOAD CLEANUP INCOMPLETE: {Count} actors retain failed native rollback. Reload acceptance BLOCKED; plugin unload cannot guarantee retries.",_nativeActors.Count);
     }
@@ -653,11 +656,14 @@ public sealed partial class DeltaOpsPlugin : BasePlugin, IPluginConfig<DeltaOpsC
     private void OnMapStart(string mapName)
     {
         ResetAllPlayersAndState("地图开始", broadcast: false);
+        InitializeEntityRecovery(witnessedNewMap:true);
     }
 
     private void OnMapEnd()
     {
         ResetAllPlayersAndState("地图结束", broadcast: false);
+        DrainEntityRecovery();
+        _entityRecoveryReady=false;
     }
 
     private void OnClientPutInServer(int slot)
