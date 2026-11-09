@@ -119,6 +119,50 @@ foreach(var end in new[]{"disconnect","pawn replacement","unload"}){
     ()=>{scalar.Dispose();suppression.Dispose();})));
  Check(suppressionCounts[42]==1);Check(life.Revoke());Check(nativeValue==1);Check(suppressionCounts.Count==0);
 }
+// Durable entity ownership boundary, independent from router/ability labels.
+NativeEntityTicket Ticket(uint serial,string world="map-A") =>
+ new(world,serial,"deltaops-owned-"+Guid.NewGuid().ToString("N"),"smokegrenade_projectile");
+IReadOnlyList<NativeEntityTicket> disk=Array.Empty<NativeEntityTicket>();
+bool failSave=false;int escrowWrites=0;
+void Save(IReadOnlyList<NativeEntityTicket> snapshot){
+ escrowWrites++;if(failSave)throw new IOException("disk full");disk=snapshot.ToArray();
+}
+var escrow=new NativeEntityEscrow("map-A",disk,Save);
+var native=new EntityMock();var first=Ticket(123);var second=Ticket(456);
+failSave=true;try{escrow.Record(first);Check(false);}catch(IOException){}
+Check(escrow.Pending==0);Check(disk.Count==0);Check(native.Removes==0);
+failSave=false;escrow.Record(first);native.Entities[first.Serial]=first;
+Check(escrow.Pending==1);Check(disk.Single()==first);
+int beforeWrites=escrowWrites;escrow.Record(first);Check(escrowWrites==beforeWrites);
+try{escrow.Record(first with {Marker=Ticket(123).Marker});Check(false);}catch(InvalidOperationException){}
+Check(disk.Single()==first);
+// Simulated unload destroys the runtime object; a fresh instance owns persisted records.
+escrow=new NativeEntityEscrow("map-A",disk,Save);native.FailRemove=true;
+Check(!escrow.Drain(native));Check(escrow.Pending==1);Check(disk.Count==1);
+native.FailRemove=false;native.KeepAfterRemove=true;
+Check(!escrow.Drain(native));Check(disk.Count==1);
+native.KeepAfterRemove=false;failSave=true;
+Check(!escrow.Drain(native));Check(!native.Entities.ContainsKey(first.Serial));Check(disk.Count==1);
+failSave=false;int beforeRemove=native.Removes;
+Check(escrow.Drain(native));Check(native.Removes==beforeRemove);Check(disk.Count==0);
+// A different owner's marker, even with the same serial/class, is never removed.
+escrow.Record(first);native.Entities[first.Serial]=first with {Marker=Ticket(123).Marker};
+Check(!escrow.Drain(native));Check(escrow.Pending==1);Check(native.Removes==beforeRemove);
+escrow.Record(second);native.Entities[second.Serial]=second;
+Check(!escrow.Drain(native));Check(escrow.Pending==1);Check(!native.Entities.ContainsKey(second.Serial));
+// Different map/process records provide no authority, even if native handles collide.
+var otherMap=new NativeEntityEscrow("map-B",disk,Save);
+beforeRemove=native.Removes;Check(otherMap.Drain(native));Check(native.Removes==beforeRemove);
+try{escrow.Record(Ticket(789,"map-B"));Check(false);}catch(InvalidOperationException){}
+try{escrow.Record(Ticket(0));Check(false);}catch(ArgumentException){}
+try{escrow.Record(Ticket(789) with {Marker="foreign"});Check(false);}catch(ArgumentException){}
+// Save and engine callbacks cannot reenter Drain or publish another ticket.
+var nestedTicket=Ticket(999);NativeEntityEscrow? reentryEscrow=null;bool nestedBlocked=false;
+reentryEscrow=new NativeEntityEscrow("map-A",[],snapshot=>{
+ Check(!reentryEscrow!.Drain(native));
+ try{reentryEscrow.Record(nestedTicket);}catch(InvalidOperationException){nestedBlocked=true;}
+});
+reentryEscrow.Record(Ticket(888));Check(nestedBlocked);Check(reentryEscrow.Pending==1);
 Console.WriteLine($"{count} interpreted lifecycle checks PASS; router + lifecycle PASS; CSS calls compile, not native QA");
 sealed class Effect:IDisposable{public bool Disposed;public void Dispose()=>Disposed=true;}
 
@@ -127,4 +171,17 @@ sealed class FakePort:INativeAbilityPort{
  IDisposable New(){Calls++;return new OwnedAbilityEffect(()=>{});}
  public IDisposable? Pulse(bool suppress)=>New();
  public IDisposable? Heal()=>New();public IDisposable? Grant(string weapon)=>New();public IDisposable? Recon()=>New();public IDisposable? Rush()=>New();public IDisposable? Trap()=>New();
+}
+
+
+sealed class EntityMock:INativeEntityBoundary{
+ public readonly Dictionary<uint,NativeEntityTicket> Entities=[];
+ public int Removes;public bool FailRemove,KeepAfterRemove;
+ public bool Exists(uint serial)=>Entities.ContainsKey(serial);
+ public bool Matches(NativeEntityTicket ticket)=>Entities.TryGetValue(ticket.Serial,out var actual)&&actual==ticket;
+ public void Remove(NativeEntityTicket ticket){
+  if(!Matches(ticket))throw new InvalidOperationException("foreign removal");
+  Removes++;if(FailRemove)throw new Exception("native removal failed");
+  if(!KeepAfterRemove)Entities.Remove(ticket.Serial);
+ }
 }
