@@ -2,8 +2,8 @@ using DeltaOps;
 static class CoverageReceipt
 {
  static string Calls(int id)=>id switch{
-  20010101=>"CssPorts.Heal -> EnactOwned -> Pawn.Health setter + SetStateChanged",
-  2002017 or 1002016=>"CssPorts.Recon -> enemy policy -> private PrintToChat coordinates",
+  20010101=>"CssPorts.Heal -> EnactOwned -> NativeCommittedHeal -> Pawn.Health setter + retry-only SetStateChanged",
+  2002017 or 1002016=>"CssPorts.Recon -> enemy policy -> private PrintToChat names and distances (not XYZ)",
   1009001=>"CssPorts.Rush -> EnactOwned -> Pawn.Teleport velocity",
   4008002 or 30010101 or 4009002=>"CssPorts.Pulse -> session-owned velocity modifier leases; optional suppression refcount",
   20010201=>"No native revive adapter; shared heal action exists but passive is incomplete",
@@ -20,8 +20,8 @@ static class CoverageReceipt
   _=>"Router rejects before native mutation; direct projectile escrow foundation exists but is not enabled"
  };
  static string Approximation(int id)=>id switch{
-  20010101=>"25 HP bounded by MaxHealth, instant; committed health not rolled back",
-  2002017 or 1002016=>"1200 Source-unit radius; one-shot coordinate telemetry, no DF-duration reveal",
+  20010101=>"DISABLED CS2-only 25 HP tuning bounded by MaxHealth; pending network notification owned, HP never replayed or rolled back",
+  2002017 or 1002016=>"CS2-only configured radius (default 1200 Source units); one-shot names and distances, no LOS, no printed XYZ, no DF sensor/projectile mechanics",
   1009001=>"400 Source-units/s horizontal velocity; current vertical velocity retained",
   4008002 or 30010101 or 4009002=>"240 Source-unit radius; 2 seconds; velocity modifier .65; Hackclaw also suppresses interpreted activations",
   30010201=>"DFPROVEN SkillID30010201 DamgeCoifficient explosion multiplier .7; native blast classification is CS2 mapping",
@@ -45,7 +45,7 @@ static class CoverageReceipt
    Adapter=NativeAbilityRouter.Blocker(s.Operator,s.Id)==null?"partial experimental implementation only; consult per-capability NativeAdmission; NOT full DF effect completion":"blocked/incomplete",
    Blocker=NativeAbilityRouter.Blocker(s.Operator,s.Id),
    NativeAdmission=NativeApiCapabilityEvidence.ReadOnlyRecon(s.Operator,s.Id)?"source-reviewed private telemetry implementation only; requires configured interpreted mode and normal Raid/pawn admission; NOT DF recon/nativeQA":"disabled pending per-capability API contract audit; NativeApiEvidenceGate.cs",
-   ApiLedger="docs/ABILITY_API_EVIDENCE.json; call-site inventory docs/ABILITY_API_CALLS.json",
+   ApiLedger="docs/ABILITY_EFFECT_BOUNDARIES.json; docs/ABILITY_API_EVIDENCE.json; call-site inventory docs/ABILITY_API_CALLS.json",
    SignatureEvidence="reference API self-reports pinned source SHA; bound symbols inventoried; contract review incomplete",
    EngineContractEvidence="per-boundary partial; unsupported damage construction/expiry/competing scalar ownership fail closed",
    NativeAcceptance=false

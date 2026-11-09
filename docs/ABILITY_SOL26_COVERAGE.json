@@ -17,7 +17,7 @@
     "Adapter": "blocked/incomplete",
     "Blocker": "Direct owned projectile adapter implemented offline; installed-engine spawn, delayed Kill and custom-team detonation acceptance remain unverified.",
     "NativeAdmission": "disabled pending per-capability API contract audit; NativeApiEvidenceGate.cs",
-    "ApiLedger": "docs/ABILITY_API_EVIDENCE.json; call-site inventory docs/ABILITY_API_CALLS.json",
+    "ApiLedger": "docs/ABILITY_EFFECT_BOUNDARIES.json; docs/ABILITY_API_EVIDENCE.json; call-site inventory docs/ABILITY_API_CALLS.json",
     "SignatureEvidence": "reference API self-reports pinned source SHA; bound symbols inventoried; contract review incomplete",
     "EngineContractEvidence": "per-boundary partial; unsupported damage construction/expiry/competing scalar ownership fail closed",
     "NativeAcceptance": false
@@ -40,7 +40,7 @@
     "Adapter": "blocked/incomplete",
     "Blocker": "Direct owned projectile adapter implemented offline; installed-engine spawn, delayed Kill and custom-team detonation acceptance remain unverified.",
     "NativeAdmission": "disabled pending per-capability API contract audit; NativeApiEvidenceGate.cs",
-    "ApiLedger": "docs/ABILITY_API_EVIDENCE.json; call-site inventory docs/ABILITY_API_CALLS.json",
+    "ApiLedger": "docs/ABILITY_EFFECT_BOUNDARIES.json; docs/ABILITY_API_EVIDENCE.json; call-site inventory docs/ABILITY_API_CALLS.json",
     "SignatureEvidence": "reference API self-reports pinned source SHA; bound symbols inventoried; contract review incomplete",
     "EngineContractEvidence": "per-boundary partial; unsupported damage construction/expiry/competing scalar ownership fail closed",
     "NativeAcceptance": false
@@ -63,7 +63,7 @@
     "Adapter": "blocked/incomplete",
     "Blocker": "No owned DF arrow projectile exists to remove.",
     "NativeAdmission": "disabled pending per-capability API contract audit; NativeApiEvidenceGate.cs",
-    "ApiLedger": "docs/ABILITY_API_EVIDENCE.json; call-site inventory docs/ABILITY_API_CALLS.json",
+    "ApiLedger": "docs/ABILITY_EFFECT_BOUNDARIES.json; docs/ABILITY_API_EVIDENCE.json; call-site inventory docs/ABILITY_API_CALLS.json",
     "SignatureEvidence": "reference API self-reports pinned source SHA; bound symbols inventoried; contract review incomplete",
     "EngineContractEvidence": "per-boundary partial; unsupported damage construction/expiry/competing scalar ownership fail closed",
     "NativeAcceptance": false
@@ -77,8 +77,8 @@
     "Capacity": 3,
     "RechargeSeconds": 30,
     "Passive": false,
-    "Calls": "CssPorts.Heal -\u003E EnactOwned -\u003E Pawn.Health setter \u002B SetStateChanged",
-    "Approximation": "25 HP bounded by MaxHealth, instant; committed health not rolled back",
+    "Calls": "CssPorts.Heal -\u003E EnactOwned -\u003E NativeCommittedHeal -\u003E Pawn.Health setter \u002B retry-only SetStateChanged",
+    "Approximation": "DISABLED CS2-only 25 HP tuning bounded by MaxHealth; pending network notification owned, HP never replayed or rolled back",
     "DfBehaviorEvidence": "Literal allSerializedFields retained in raw r2; full runtime behavior not recovered",
     "Evidence": "DFPROVEN PC SOL mapping and literal imported fields; all other adapter mechanics CS2ASSUMPTION unless individually cited; wiki only LOWCONFIDENCE hint",
     "Binding": "PC SOL; sol-binding-v1/receipt.json; raw r2 immutable",
@@ -86,7 +86,7 @@
     "Adapter": "partial experimental implementation only; consult per-capability NativeAdmission; NOT full DF effect completion",
     "Blocker": null,
     "NativeAdmission": "disabled pending per-capability API contract audit; NativeApiEvidenceGate.cs",
-    "ApiLedger": "docs/ABILITY_API_EVIDENCE.json; call-site inventory docs/ABILITY_API_CALLS.json",
+    "ApiLedger": "docs/ABILITY_EFFECT_BOUNDARIES.json; docs/ABILITY_API_EVIDENCE.json; call-site inventory docs/ABILITY_API_CALLS.json",
     "SignatureEvidence": "reference API self-reports pinned source SHA; bound symbols inventoried; contract review incomplete",
     "EngineContractEvidence": "per-boundary partial; unsupported damage construction/expiry/competing scalar ownership fail closed",
     "NativeAcceptance": false
@@ -109,7 +109,7 @@
     "Adapter": "blocked/incomplete",
     "Blocker": "Revive passive requires a downed/revive state; Raid death currently creates death outcomes, not a revivable pawn.",
     "NativeAdmission": "disabled pending per-capability API contract audit; NativeApiEvidenceGate.cs",
-    "ApiLedger": "docs/ABILITY_API_EVIDENCE.json; call-site inventory docs/ABILITY_API_CALLS.json",
+    "ApiLedger": "docs/ABILITY_EFFECT_BOUNDARIES.json; docs/ABILITY_API_EVIDENCE.json; call-site inventory docs/ABILITY_API_CALLS.json",
     "SignatureEvidence": "reference API self-reports pinned source SHA; bound symbols inventoried; contract review incomplete",
     "EngineContractEvidence": "per-boundary partial; unsupported damage construction/expiry/competing scalar ownership fail closed",
     "NativeAcceptance": false
@@ -123,8 +123,8 @@
     "Capacity": 1,
     "RechargeSeconds": 75,
     "Passive": false,
-    "Calls": "CssPorts.Recon -\u003E enemy policy -\u003E private PrintToChat coordinates",
-    "Approximation": "1200 Source-unit radius; one-shot coordinate telemetry, no DF-duration reveal",
+    "Calls": "CssPorts.Recon -\u003E enemy policy -\u003E private PrintToChat names and distances (not XYZ)",
+    "Approximation": "CS2-only configured radius (default 1200 Source units); one-shot names and distances, no LOS, no printed XYZ, no DF sensor/projectile mechanics",
     "DfBehaviorEvidence": "Literal allSerializedFields retained in raw r2; full runtime behavior not recovered",
     "Evidence": "DFPROVEN PC SOL mapping and literal imported fields; all other adapter mechanics CS2ASSUMPTION unless individually cited; wiki only LOWCONFIDENCE hint",
     "Binding": "PC SOL; sol-binding-v1/receipt.json; raw r2 immutable",
@@ -132,7 +132,7 @@
     "Adapter": "partial experimental implementation only; consult per-capability NativeAdmission; NOT full DF effect completion",
     "Blocker": null,
     "NativeAdmission": "source-reviewed private telemetry implementation only; requires configured interpreted mode and normal Raid/pawn admission; NOT DF recon/nativeQA",
-    "ApiLedger": "docs/ABILITY_API_EVIDENCE.json; call-site inventory docs/ABILITY_API_CALLS.json",
+    "ApiLedger": "docs/ABILITY_EFFECT_BOUNDARIES.json; docs/ABILITY_API_EVIDENCE.json; call-site inventory docs/ABILITY_API_CALLS.json",
     "SignatureEvidence": "reference API self-reports pinned source SHA; bound symbols inventoried; contract review incomplete",
     "EngineContractEvidence": "per-boundary partial; unsupported damage construction/expiry/competing scalar ownership fail closed",
     "NativeAcceptance": false
@@ -155,7 +155,7 @@
     "Adapter": "blocked/incomplete",
     "Blocker": "Direct owned projectile adapter implemented offline; installed-engine spawn, delayed Kill and custom-team detonation acceptance remain unverified.",
     "NativeAdmission": "disabled pending per-capability API contract audit; NativeApiEvidenceGate.cs",
-    "ApiLedger": "docs/ABILITY_API_EVIDENCE.json; call-site inventory docs/ABILITY_API_CALLS.json",
+    "ApiLedger": "docs/ABILITY_EFFECT_BOUNDARIES.json; docs/ABILITY_API_EVIDENCE.json; call-site inventory docs/ABILITY_API_CALLS.json",
     "SignatureEvidence": "reference API self-reports pinned source SHA; bound symbols inventoried; contract review incomplete",
     "EngineContractEvidence": "per-boundary partial; unsupported damage construction/expiry/competing scalar ownership fail closed",
     "NativeAcceptance": false
@@ -178,7 +178,7 @@
     "Adapter": "partial experimental implementation only; consult per-capability NativeAdmission; NOT full DF effect completion",
     "Blocker": null,
     "NativeAdmission": "disabled pending per-capability API contract audit; NativeApiEvidenceGate.cs",
-    "ApiLedger": "docs/ABILITY_API_EVIDENCE.json; call-site inventory docs/ABILITY_API_CALLS.json",
+    "ApiLedger": "docs/ABILITY_EFFECT_BOUNDARIES.json; docs/ABILITY_API_EVIDENCE.json; call-site inventory docs/ABILITY_API_CALLS.json",
     "SignatureEvidence": "reference API self-reports pinned source SHA; bound symbols inventoried; contract review incomplete",
     "EngineContractEvidence": "per-boundary partial; unsupported damage construction/expiry/competing scalar ownership fail closed",
     "NativeAcceptance": false
@@ -201,7 +201,7 @@
     "Adapter": "blocked/incomplete",
     "Blocker": "No owned DF arrow projectile exists to remove.",
     "NativeAdmission": "disabled pending per-capability API contract audit; NativeApiEvidenceGate.cs",
-    "ApiLedger": "docs/ABILITY_API_EVIDENCE.json; call-site inventory docs/ABILITY_API_CALLS.json",
+    "ApiLedger": "docs/ABILITY_EFFECT_BOUNDARIES.json; docs/ABILITY_API_EVIDENCE.json; call-site inventory docs/ABILITY_API_CALLS.json",
     "SignatureEvidence": "reference API self-reports pinned source SHA; bound symbols inventoried; contract review incomplete",
     "EngineContractEvidence": "per-boundary partial; unsupported damage construction/expiry/competing scalar ownership fail closed",
     "NativeAcceptance": false
@@ -224,7 +224,7 @@
     "Adapter": "partial experimental implementation only; consult per-capability NativeAdmission; NOT full DF effect completion",
     "Blocker": null,
     "NativeAdmission": "disabled pending per-capability API contract audit; NativeApiEvidenceGate.cs",
-    "ApiLedger": "docs/ABILITY_API_EVIDENCE.json; call-site inventory docs/ABILITY_API_CALLS.json",
+    "ApiLedger": "docs/ABILITY_EFFECT_BOUNDARIES.json; docs/ABILITY_API_EVIDENCE.json; call-site inventory docs/ABILITY_API_CALLS.json",
     "SignatureEvidence": "reference API self-reports pinned source SHA; bound symbols inventoried; contract review incomplete",
     "EngineContractEvidence": "per-boundary partial; unsupported damage construction/expiry/competing scalar ownership fail closed",
     "NativeAcceptance": false
@@ -247,7 +247,7 @@
     "Adapter": "partial experimental implementation only; consult per-capability NativeAdmission; NOT full DF effect completion",
     "Blocker": null,
     "NativeAdmission": "disabled pending per-capability API contract audit; NativeApiEvidenceGate.cs",
-    "ApiLedger": "docs/ABILITY_API_EVIDENCE.json; call-site inventory docs/ABILITY_API_CALLS.json",
+    "ApiLedger": "docs/ABILITY_EFFECT_BOUNDARIES.json; docs/ABILITY_API_EVIDENCE.json; call-site inventory docs/ABILITY_API_CALLS.json",
     "SignatureEvidence": "reference API self-reports pinned source SHA; bound symbols inventoried; contract review incomplete",
     "EngineContractEvidence": "per-boundary partial; unsupported damage construction/expiry/competing scalar ownership fail closed",
     "NativeAcceptance": false
@@ -270,7 +270,7 @@
     "Adapter": "blocked/incomplete",
     "Blocker": "Tiger cannon projectile/damage rows unresolved; no native cannon entity.",
     "NativeAdmission": "disabled pending per-capability API contract audit; NativeApiEvidenceGate.cs",
-    "ApiLedger": "docs/ABILITY_API_EVIDENCE.json; call-site inventory docs/ABILITY_API_CALLS.json",
+    "ApiLedger": "docs/ABILITY_EFFECT_BOUNDARIES.json; docs/ABILITY_API_EVIDENCE.json; call-site inventory docs/ABILITY_API_CALLS.json",
     "SignatureEvidence": "reference API self-reports pinned source SHA; bound symbols inventoried; contract review incomplete",
     "EngineContractEvidence": "per-boundary partial; unsupported damage construction/expiry/competing scalar ownership fail closed",
     "NativeAcceptance": false
@@ -293,7 +293,7 @@
     "Adapter": "blocked/incomplete",
     "Blocker": "CS2-assumed fall mitigation implemented; DF buff magnitude and kinetic speed triggers unresolved.",
     "NativeAdmission": "disabled pending per-capability API contract audit; NativeApiEvidenceGate.cs",
-    "ApiLedger": "docs/ABILITY_API_EVIDENCE.json; call-site inventory docs/ABILITY_API_CALLS.json",
+    "ApiLedger": "docs/ABILITY_EFFECT_BOUNDARIES.json; docs/ABILITY_API_EVIDENCE.json; call-site inventory docs/ABILITY_API_CALLS.json",
     "SignatureEvidence": "reference API self-reports pinned source SHA; bound symbols inventoried; contract review incomplete",
     "EngineContractEvidence": "per-boundary partial; unsupported damage construction/expiry/competing scalar ownership fail closed",
     "NativeAcceptance": false
@@ -316,7 +316,7 @@
     "Adapter": "blocked/incomplete",
     "Blocker": "Magnetic attachment, explosion and custom-team damage hooks unresolved; HE is not an equivalent substitute.",
     "NativeAdmission": "disabled pending per-capability API contract audit; NativeApiEvidenceGate.cs",
-    "ApiLedger": "docs/ABILITY_API_EVIDENCE.json; call-site inventory docs/ABILITY_API_CALLS.json",
+    "ApiLedger": "docs/ABILITY_EFFECT_BOUNDARIES.json; docs/ABILITY_API_EVIDENCE.json; call-site inventory docs/ABILITY_API_CALLS.json",
     "SignatureEvidence": "reference API self-reports pinned source SHA; bound symbols inventoried; contract review incomplete",
     "EngineContractEvidence": "per-boundary partial; unsupported damage construction/expiry/competing scalar ownership fail closed",
     "NativeAcceptance": false
@@ -339,7 +339,7 @@
     "Adapter": "blocked/incomplete",
     "Blocker": "No owned DF arrow projectile exists to remove.",
     "NativeAdmission": "disabled pending per-capability API contract audit; NativeApiEvidenceGate.cs",
-    "ApiLedger": "docs/ABILITY_API_EVIDENCE.json; call-site inventory docs/ABILITY_API_CALLS.json",
+    "ApiLedger": "docs/ABILITY_EFFECT_BOUNDARIES.json; docs/ABILITY_API_EVIDENCE.json; call-site inventory docs/ABILITY_API_CALLS.json",
     "SignatureEvidence": "reference API self-reports pinned source SHA; bound symbols inventoried; contract review incomplete",
     "EngineContractEvidence": "per-boundary partial; unsupported damage construction/expiry/competing scalar ownership fail closed",
     "NativeAcceptance": false
@@ -362,7 +362,7 @@
     "Adapter": "blocked/incomplete",
     "Blocker": "ADS movement trigger and baseline ownership unresolved.",
     "NativeAdmission": "disabled pending per-capability API contract audit; NativeApiEvidenceGate.cs",
-    "ApiLedger": "docs/ABILITY_API_EVIDENCE.json; call-site inventory docs/ABILITY_API_CALLS.json",
+    "ApiLedger": "docs/ABILITY_EFFECT_BOUNDARIES.json; docs/ABILITY_API_EVIDENCE.json; call-site inventory docs/ABILITY_API_CALLS.json",
     "SignatureEvidence": "reference API self-reports pinned source SHA; bound symbols inventoried; contract review incomplete",
     "EngineContractEvidence": "per-boundary partial; unsupported damage construction/expiry/competing scalar ownership fail closed",
     "NativeAcceptance": false
@@ -376,8 +376,8 @@
     "Capacity": 1,
     "RechargeSeconds": 90,
     "Passive": false,
-    "Calls": "CssPorts.Recon -\u003E enemy policy -\u003E private PrintToChat coordinates",
-    "Approximation": "1200 Source-unit radius; one-shot coordinate telemetry, no DF-duration reveal",
+    "Calls": "CssPorts.Recon -\u003E enemy policy -\u003E private PrintToChat names and distances (not XYZ)",
+    "Approximation": "CS2-only configured radius (default 1200 Source units); one-shot names and distances, no LOS, no printed XYZ, no DF sensor/projectile mechanics",
     "DfBehaviorEvidence": "Literal allSerializedFields retained in raw r2; full runtime behavior not recovered",
     "Evidence": "DFPROVEN PC SOL mapping and literal imported fields; all other adapter mechanics CS2ASSUMPTION unless individually cited; wiki only LOWCONFIDENCE hint",
     "Binding": "PC SOL; sol-binding-v1/receipt.json; raw r2 immutable",
@@ -385,7 +385,7 @@
     "Adapter": "partial experimental implementation only; consult per-capability NativeAdmission; NOT full DF effect completion",
     "Blocker": null,
     "NativeAdmission": "source-reviewed private telemetry implementation only; requires configured interpreted mode and normal Raid/pawn admission; NOT DF recon/nativeQA",
-    "ApiLedger": "docs/ABILITY_API_EVIDENCE.json; call-site inventory docs/ABILITY_API_CALLS.json",
+    "ApiLedger": "docs/ABILITY_EFFECT_BOUNDARIES.json; docs/ABILITY_API_EVIDENCE.json; call-site inventory docs/ABILITY_API_CALLS.json",
     "SignatureEvidence": "reference API self-reports pinned source SHA; bound symbols inventoried; contract review incomplete",
     "EngineContractEvidence": "per-boundary partial; unsupported damage construction/expiry/competing scalar ownership fail closed",
     "NativeAcceptance": false
@@ -408,7 +408,7 @@
     "Adapter": "blocked/incomplete",
     "Blocker": "No owned DF arrow projectile exists to remove.",
     "NativeAdmission": "disabled pending per-capability API contract audit; NativeApiEvidenceGate.cs",
-    "ApiLedger": "docs/ABILITY_API_EVIDENCE.json; call-site inventory docs/ABILITY_API_CALLS.json",
+    "ApiLedger": "docs/ABILITY_EFFECT_BOUNDARIES.json; docs/ABILITY_API_EVIDENCE.json; call-site inventory docs/ABILITY_API_CALLS.json",
     "SignatureEvidence": "reference API self-reports pinned source SHA; bound symbols inventoried; contract review incomplete",
     "EngineContractEvidence": "per-boundary partial; unsupported damage construction/expiry/competing scalar ownership fail closed",
     "NativeAcceptance": false
@@ -431,7 +431,7 @@
     "Adapter": "partial experimental implementation only; consult per-capability NativeAdmission; NOT full DF effect completion",
     "Blocker": null,
     "NativeAdmission": "disabled pending per-capability API contract audit; NativeApiEvidenceGate.cs",
-    "ApiLedger": "docs/ABILITY_API_EVIDENCE.json; call-site inventory docs/ABILITY_API_CALLS.json",
+    "ApiLedger": "docs/ABILITY_EFFECT_BOUNDARIES.json; docs/ABILITY_API_EVIDENCE.json; call-site inventory docs/ABILITY_API_CALLS.json",
     "SignatureEvidence": "reference API self-reports pinned source SHA; bound symbols inventoried; contract review incomplete",
     "EngineContractEvidence": "per-boundary partial; unsupported damage construction/expiry/competing scalar ownership fail closed",
     "NativeAcceptance": false
@@ -454,7 +454,7 @@
     "Adapter": "blocked/incomplete",
     "Blocker": "Direct owned projectile adapter implemented offline; installed-engine spawn, delayed Kill and custom-team detonation acceptance remain unverified.",
     "NativeAdmission": "disabled pending per-capability API contract audit; NativeApiEvidenceGate.cs",
-    "ApiLedger": "docs/ABILITY_API_EVIDENCE.json; call-site inventory docs/ABILITY_API_CALLS.json",
+    "ApiLedger": "docs/ABILITY_EFFECT_BOUNDARIES.json; docs/ABILITY_API_EVIDENCE.json; call-site inventory docs/ABILITY_API_CALLS.json",
     "SignatureEvidence": "reference API self-reports pinned source SHA; bound symbols inventoried; contract review incomplete",
     "EngineContractEvidence": "per-boundary partial; unsupported damage construction/expiry/competing scalar ownership fail closed",
     "NativeAcceptance": false
@@ -477,7 +477,7 @@
     "Adapter": "blocked/incomplete",
     "Blocker": "Footstep attenuation is client/audio-path behavior; player speed alone is not silent footsteps.",
     "NativeAdmission": "disabled pending per-capability API contract audit; NativeApiEvidenceGate.cs",
-    "ApiLedger": "docs/ABILITY_API_EVIDENCE.json; call-site inventory docs/ABILITY_API_CALLS.json",
+    "ApiLedger": "docs/ABILITY_EFFECT_BOUNDARIES.json; docs/ABILITY_API_EVIDENCE.json; call-site inventory docs/ABILITY_API_CALLS.json",
     "SignatureEvidence": "reference API self-reports pinned source SHA; bound symbols inventoried; contract review incomplete",
     "EngineContractEvidence": "per-boundary partial; unsupported damage construction/expiry/competing scalar ownership fail closed",
     "NativeAcceptance": false
@@ -500,7 +500,7 @@
     "Adapter": "partial experimental implementation only; consult per-capability NativeAdmission; NOT full DF effect completion",
     "Blocker": null,
     "NativeAdmission": "disabled pending per-capability API contract audit; NativeApiEvidenceGate.cs",
-    "ApiLedger": "docs/ABILITY_API_EVIDENCE.json; call-site inventory docs/ABILITY_API_CALLS.json",
+    "ApiLedger": "docs/ABILITY_EFFECT_BOUNDARIES.json; docs/ABILITY_API_EVIDENCE.json; call-site inventory docs/ABILITY_API_CALLS.json",
     "SignatureEvidence": "reference API self-reports pinned source SHA; bound symbols inventoried; contract review incomplete",
     "EngineContractEvidence": "per-boundary partial; unsupported damage construction/expiry/competing scalar ownership fail closed",
     "NativeAcceptance": false
@@ -523,7 +523,7 @@
     "Adapter": "blocked/incomplete",
     "Blocker": "Direct owned projectile adapter implemented offline; installed-engine spawn, delayed Kill and custom-team detonation acceptance remain unverified.",
     "NativeAdmission": "disabled pending per-capability API contract audit; NativeApiEvidenceGate.cs",
-    "ApiLedger": "docs/ABILITY_API_EVIDENCE.json; call-site inventory docs/ABILITY_API_CALLS.json",
+    "ApiLedger": "docs/ABILITY_EFFECT_BOUNDARIES.json; docs/ABILITY_API_EVIDENCE.json; call-site inventory docs/ABILITY_API_CALLS.json",
     "SignatureEvidence": "reference API self-reports pinned source SHA; bound symbols inventoried; contract review incomplete",
     "EngineContractEvidence": "per-boundary partial; unsupported damage construction/expiry/competing scalar ownership fail closed",
     "NativeAcceptance": false
@@ -546,7 +546,7 @@
     "Adapter": "blocked/incomplete",
     "Blocker": "No owned DF arrow projectile exists to remove.",
     "NativeAdmission": "disabled pending per-capability API contract audit; NativeApiEvidenceGate.cs",
-    "ApiLedger": "docs/ABILITY_API_EVIDENCE.json; call-site inventory docs/ABILITY_API_CALLS.json",
+    "ApiLedger": "docs/ABILITY_EFFECT_BOUNDARIES.json; docs/ABILITY_API_EVIDENCE.json; call-site inventory docs/ABILITY_API_CALLS.json",
     "SignatureEvidence": "reference API self-reports pinned source SHA; bound symbols inventoried; contract review incomplete",
     "EngineContractEvidence": "per-boundary partial; unsupported damage construction/expiry/competing scalar ownership fail closed",
     "NativeAcceptance": false
@@ -569,7 +569,7 @@
     "Adapter": "partial experimental implementation only; consult per-capability NativeAdmission; NOT full DF effect completion",
     "Blocker": null,
     "NativeAdmission": "disabled pending per-capability API contract audit; NativeApiEvidenceGate.cs",
-    "ApiLedger": "docs/ABILITY_API_EVIDENCE.json; call-site inventory docs/ABILITY_API_CALLS.json",
+    "ApiLedger": "docs/ABILITY_EFFECT_BOUNDARIES.json; docs/ABILITY_API_EVIDENCE.json; call-site inventory docs/ABILITY_API_CALLS.json",
     "SignatureEvidence": "reference API self-reports pinned source SHA; bound symbols inventoried; contract review incomplete",
     "EngineContractEvidence": "per-boundary partial; unsupported damage construction/expiry/competing scalar ownership fail closed",
     "NativeAcceptance": false
@@ -592,7 +592,7 @@
     "Adapter": "partial experimental implementation only; consult per-capability NativeAdmission; NOT full DF effect completion",
     "Blocker": null,
     "NativeAdmission": "disabled pending per-capability API contract audit; NativeApiEvidenceGate.cs",
-    "ApiLedger": "docs/ABILITY_API_EVIDENCE.json; call-site inventory docs/ABILITY_API_CALLS.json",
+    "ApiLedger": "docs/ABILITY_EFFECT_BOUNDARIES.json; docs/ABILITY_API_EVIDENCE.json; call-site inventory docs/ABILITY_API_CALLS.json",
     "SignatureEvidence": "reference API self-reports pinned source SHA; bound symbols inventoried; contract review incomplete",
     "EngineContractEvidence": "per-boundary partial; unsupported damage construction/expiry/competing scalar ownership fail closed",
     "NativeAcceptance": false
