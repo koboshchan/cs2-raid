@@ -28,3 +28,12 @@ Remaining viable approaches require independently sourced engine contract eviden
 ## Integration decision
 
 No target integration yet: full remaining scope is materially incomplete. The implementation worktree remains the only writer. Target /home/kit/extract-zone-flow was last checked clean at bbff2eb3457cd502a0d84463242456df704875f1; separate /home/kit/raid-flow-v2 is not the target. Fresh ownership, cleanliness and ancestry checks are still required immediately before any eventual local integration.
+
+
+## Cooperative alternative implemented
+
+CooperativeStatusOwnership.Reserve keys a reservation by world identity, full pawn serial and field name. Only the unique owner token can release it. Enact installs reservation cleanup in the existing session before mutation; failed rollback retains the reservation and session quarantine until retry succeeds. Independent scopes do not collide, and all cleanup operations are idempotent. Apply also exposes PendingCleanup on rollback failure for non-session callers.
+
+This is a feasible offline cooperative boundary, not global protection. Native Pulse/Trap are not silently enabled or switched to it. No audited agreement currently makes the engine, Raid and all other plugins participating writers. Integrators must route every cooperating writer through one shared instance and preserve it until pending cleanup drains. Nonparticipants remain outside the guarantee. An instantaneous velocity-only impulse already offers a nonpersistent alternative for rush; it is not advertised as sustained suppression, snare or fire-rate modification.
+
+At the local integration checkpoint, safe committed source and tests may be integrated while unsupported activations stay disabled. This does not declare the full effect scope complete.
