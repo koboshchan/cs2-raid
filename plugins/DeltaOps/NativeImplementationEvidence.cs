@@ -17,7 +17,7 @@ public static class NativeImplementationEvidence
             "shared owned-projectile foundation implemented; skill-specific behavior unimplemented",
         _=>"skill-specific effect unimplemented"
     };
-    public static string? SafetyBlocker(int id)=>id switch {
+    public static string? SafetyBlocker(int id)=>!NativeNumericEvidence.Allowed(id)?NativeNumericEvidence.Unresolved:id switch {
         10010301=>"Cooperative-only scalar lease; nonparticipant writers and unload restoration remain outside guarantee.",
         20010101=>null, // Committed write semantics reviewed; NOT a DF healing equivalence claim.
         2002017 or 1002016=>null,

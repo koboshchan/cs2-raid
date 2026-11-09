@@ -5,7 +5,7 @@ public sealed partial class DeltaOpsPlugin
     private readonly CooperativeStatusOwnership _cooperativeStatus=new();
     private void AttachScopedMobility(CounterStrikeSharp.API.Core.CCSPlayerController player,NativeActor actor)
     {
-        if(!NativeApiCapabilityEvidence.ScopedMobilityActivation||actor.Session.Operator!=3)return;
+        if(!NativeNumericEvidence.Allowed(10010301)||!NativeApiCapabilityEvidence.ScopedMobilityActivation||actor.Session.Operator!=3)return;
         var body=player.PlayerPawn.Value;
         if(body==null||!body.IsValid)return;
         // CSS f58e383b generated CCSPlayerPawn.g.cs L265-267: ref bool IsScoped.
@@ -15,7 +15,7 @@ public sealed partial class DeltaOpsPlugin
             ()=>body.IsValid&&body.EntityHandle.Raw==actor.Pawn&&body.IsScoped,
             ()=>{
                 var modifier=Config.NativePorts.ScopedMobilityModifier;
-                if(!float.IsFinite(modifier)||modifier<=0||modifier>2)return null;
+                if(!float.IsFinite(modifier)||modifier<=0||!float.IsFinite(modifier))return null;
                 var lease=new NativeStatusLease(
                     ()=>body.IsValid&&body.EntityHandle.Raw==actor.Pawn,
                     ()=>body.VelocityModifier,v=>body.VelocityModifier=v,

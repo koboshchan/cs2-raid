@@ -8,22 +8,21 @@ namespace DeltaOps;
 
 public sealed class NativePortTuning
 {
-    // Explicit CS2 port choices, NONE are decoded DF effect magnitudes.
-    // CS2 interpretation only; no decoded DF buff magnitude.
-    public float ScopedMobilityModifier {get;set;}=1.1f; // CS2-only dimensionless assumption, not decoded DF buff.
-    public float VyronFallDamageMultiplier {get;set;}=0.5f;
-    // Retained config compatibility only. Native Shepherd uses extracted .7, never this field.
-    public float ShepherdDamageMultiplier {get;set;}=0.9f;
-    public float PulseRadiusSourceUnits {get;set;}=240;
-    public float PulseSeconds {get;set;}=2;
-    public float PulseSlowModifier {get;set;}=0.65f;
-    public int HealHp {get;set;}=25;
-    public float ReconRadiusSourceUnits {get;set;}=1200;
-    public float RushSpeedSourceUnits {get;set;}=400;
-    public float TrapRadiusSourceUnits {get;set;}=160;
-    public float TrapLifetimeSeconds {get;set;}=30;
-    public float TrapSlowSeconds {get;set;}=2;
-    public float TrapVelocityModifier {get;set;}=0.5f;
+    // Compatibility property names only. No unsupported behavior defaults.
+    // User config values cannot bypass NativeNumericEvidence.
+    public float ScopedMobilityModifier {get;set;}=float.NaN;
+    public float VyronFallDamageMultiplier {get;set;}=float.NaN;
+    public float ShepherdDamageMultiplier {get;set;}=float.NaN;
+    public float PulseRadiusSourceUnits {get;set;}=float.NaN;
+    public float PulseSeconds {get;set;}=float.NaN;
+    public float PulseSlowModifier {get;set;}=float.NaN;
+    public int HealHp {get;set;}=0; // unresolved sentinel, never applied
+    public float ReconRadiusSourceUnits {get;set;}=float.NaN;
+    public float RushSpeedSourceUnits {get;set;}=float.NaN;
+    public float TrapRadiusSourceUnits {get;set;}=float.NaN;
+    public float TrapLifetimeSeconds {get;set;}=float.NaN;
+    public float TrapSlowSeconds {get;set;}=float.NaN;
+    public float TrapVelocityModifier {get;set;}=float.NaN;
 }
 public sealed partial class DeltaOpsPlugin
 {
@@ -111,7 +110,7 @@ public sealed partial class DeltaOpsPlugin
         private bool Valid()=>plugin.NativeAdmission(player,actor.Controller,actor.Pawn);
         public IDisposable? Heal()
         {
-            if(!NativeApiCapabilityEvidence.HealingActivation||!Valid()||plugin.Config.NativePorts.HealHp is <1 or >200||Pawn.Health>=Pawn.MaxHealth)return null;
+            if(!NativeNumericEvidence.Allowed(20010101)||!NativeApiCapabilityEvidence.HealingActivation||!Valid()||plugin.Config.NativePorts.HealHp is <1 or >200||Pawn.Health>=Pawn.MaxHealth)return null;
             // Register the committed instant-effect boundary before a native setter can throw.
             // Health is never rolled back across a competing damage/heal event.
             var body=Pawn;
@@ -127,7 +126,7 @@ public sealed partial class DeltaOpsPlugin
         }
         public IDisposable? Grant(string weapon)
         {
-            if(!NativeApiCapabilityEvidence.EntityCreation||!Valid()||plugin._entityEscrow==null)return null;
+            if(!NativeNumericEvidence.Allowed(2008002)||!NativeApiCapabilityEvidence.EntityCreation||!Valid()||plugin._entityEscrow==null)return null;
             var designer=weapon switch{
                 "weapon_smokegrenade"=>"smokegrenade_projectile",
                 "weapon_hegrenade"=>"hegrenade_projectile",
@@ -166,7 +165,7 @@ public sealed partial class DeltaOpsPlugin
         public IDisposable? Recon()
         {
             var radius=plugin.Config.NativePorts.ReconRadiusSourceUnits;
-            if(!Valid()||!float.IsFinite(radius)||radius<=0||radius>10000)return null;
+            if(!NativeNumericEvidence.Allowed(2002017)||!Valid()||!float.IsFinite(radius)||radius<=0||radius>10000)return null;
             var targets=plugin.GetEnemies(player).Where(e=>Distance(player,e)<=radius).ToArray();
             // Private owner-only telemetry, no globally replicated wallhack or native-team targeting.
             var text=targets.Length==0?"no contacts":string.Join(", ",targets.Select(t=>$"{t.PlayerName} {Distance(player,t):0}su"));
@@ -175,7 +174,7 @@ public sealed partial class DeltaOpsPlugin
         public IDisposable? Rush()
         {
             var speed=plugin.Config.NativePorts.RushSpeedSourceUnits;
-            if(!NativeApiCapabilityEvidence.MovementMutation||!Valid()||!float.IsFinite(speed)||speed<=0||speed>1000)return null;
+            if(!NativeNumericEvidence.Allowed(1009001)||!NativeApiCapabilityEvidence.MovementMutation||!Valid()||!float.IsFinite(speed)||speed<=0||speed>1000)return null;
             var body=Pawn;
             if(!NativeRushImpulse.TryCreate(body.EyeAngles.Y,speed,body.AbsVelocity.Z,out var impulse))return null;
             // Official source: CBaseEntity.cs L15-L59 at CSS f58e383b.
@@ -187,7 +186,7 @@ public sealed partial class DeltaOpsPlugin
         }
         public IDisposable? Pulse(bool suppress)
         {
-            if(!NativeApiCapabilityEvidence.ScalarMutation)return null;
+            if(!NativeNumericEvidence.Allowed(3008001)||!NativeApiCapabilityEvidence.ScalarMutation)return null;
             var t=plugin.Config.NativePorts;
             if(!Valid()||!float.IsFinite(t.PulseRadiusSourceUnits)||t.PulseRadiusSourceUnits<=0||t.PulseRadiusSourceUnits>1000||
                 !float.IsFinite(t.PulseSeconds)||t.PulseSeconds<=0||t.PulseSeconds>10||
@@ -230,7 +229,7 @@ public sealed partial class DeltaOpsPlugin
         }
         public IDisposable? Trap()
         {
-            if(!NativeApiCapabilityEvidence.ScalarMutation)return null;
+            if(!NativeNumericEvidence.Allowed(3008001)||!NativeApiCapabilityEvidence.ScalarMutation)return null;
             var t=plugin.Config.NativePorts;
             if(!Valid()||Pawn.AbsOrigin==null||!float.IsFinite(t.TrapRadiusSourceUnits)||t.TrapRadiusSourceUnits<=0||t.TrapRadiusSourceUnits>1000||
                 !float.IsFinite(t.TrapLifetimeSeconds)||t.TrapLifetimeSeconds<=0||t.TrapLifetimeSeconds>300||

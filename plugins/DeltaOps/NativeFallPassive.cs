@@ -4,7 +4,7 @@ namespace DeltaOps;
 public sealed partial class DeltaOpsPlugin
 {
  private HookResult NativeFallPassive(CEntityInstance entity,CTakeDamageInfo info){
-  if(!NativeApiCapabilityEvidence.DamageMutation||!Config.UseInterpretedAbilities||_fixtureMode||entity.DesignerName!="player")return HookResult.Continue;
+  if(!NativeNumericEvidence.Allowed(1009004)||!NativeApiCapabilityEvidence.DamageMutation||!Config.UseInterpretedAbilities||_fixtureMode||entity.DesignerName!="player")return HookResult.Continue;
   // As<T> is only a pointer wrapper, not runtime type validation. Resolve through
   // current connected controllers and their typed pawn handles instead.
   var player=Utilities.GetPlayers().FirstOrDefault(p=>IsHumanController(p)&&

@@ -6,9 +6,10 @@ namespace DeltaOps;
 public static class NativeApiCapabilityEvidence
 {
     public static bool ReadOnlyRecon(int operatorId,int skillId)=>
-        (operatorId,skillId) is (2,2002017) or (4,1002016);
+        false;
     // Status and activation must use the same blocker, not merely router coverage.
     public static string? Blocker(int operatorId,int skillId)=>
+        (!NativeNumericEvidence.Allowed(skillId)?NativeNumericEvidence.Unresolved:null) ??
         NativeAbilityRouter.Blocker(operatorId,skillId) ??
         (ReadOnlyRecon(operatorId,skillId)?null:
             (NativeImplementationEvidence.SafetyBlocker(skillId) ??

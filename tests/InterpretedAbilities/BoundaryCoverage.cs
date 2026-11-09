@@ -14,22 +14,7 @@ static class BoundaryCoverage
   2008002 or 2008005 or 3008002 or 3008008 or 4009003=>Urls("managed/CounterStrikeSharp.API/Utilities.cs#L59-L62","managed/CounterStrikeSharp.API/Core/Model/CBaseEntity.cs#L63-L75","managed/CounterStrikeSharp.API/Core/Model/CEntityInstance.cs#L35-L40","managed/CounterStrikeSharp.API/Core/Model/CEntityInstance.cs#L89-L118"),
   _=>[]
  };
- public static object[] Tuning(int id)=>id switch {
-  10010301=>[new{Field="ScopedMobilityModifier",Default=1.1d,Unit="dimensionless",Authority="CS2 cooperative scoped-only assumption, not decoded DF buff303054"}],
-  20010101=>[new{Field="HealHp",Default=25d,Unit="HP",Authority="CS2 assumption, not extracted DF magnitude"}],
-  2002017 or 1002016=>[new{Field="ReconRadiusSourceUnits",Default=1200d,Unit="Source units",Authority="CS2 assumption, no DF distance conversion claimed"}],
-  1009001=>[new{Field="RushSpeedSourceUnits",Default=400d,Unit="Source units per second",Authority="CS2 horizontal impulse assumption; yaw degrees; existing Z velocity retained"}],
-  4008002 or 30010101 or 4009002=>[
-   new{Field="PulseRadiusSourceUnits",Default=240d,Unit="Source units",Authority="CS2 assumption"},
-   new{Field="PulseSeconds",Default=2d,Unit="seconds",Authority="CS2 assumption; runtime converts to monotonic milliseconds"},
-   new{Field="PulseSlowModifier",Default=.65d,Unit="dimensionless",Authority="CS2 speed scalar, not DF fire-rate suppression"}],
-  3008001=>[
-   new{Field="TrapRadiusSourceUnits",Default=160d,Unit="Source units",Authority="CS2 assumption"},
-   new{Field="TrapLifetimeSeconds",Default=30d,Unit="seconds",Authority="CS2 assumption"},
-   new{Field="TrapSlowSeconds",Default=2d,Unit="seconds",Authority="CS2 assumption"},
-   new{Field="TrapVelocityModifier",Default=.5d,Unit="dimensionless",Authority="CS2 assumption"}],
-  30010201=>[new{Field="DamgeCoifficient[0].fModifyRateExplodeDamage",Default=.7d,Unit="dimensionless",Authority="DFPROVEN literal; raw assault1.0 and LimitPlayMode[] retained; DMG_BLAST mapping CS2 assumption"}],
-  1009004=>[new{Field="VyronFallDamageMultiplier",Default=.5d,Unit="dimensionless",Authority="CS2 assumption; DF buff magnitudes not decoded"}],
-  _=>[]
- };
+ public static object[] Tuning(int id)=>id==30010201
+ ? [new{Field="SkillDataConfig SkillID30010201.DamgeCoifficient[0].fModifyRateExplodeDamage",Value=.7d,Unit="dimensionless",Authority="Extracted DF literal; assault1.0 and LimitPlayMode[] retained; native mapping activation held"}]
+ : [new{Status="UNRESOLVED",Authority="No permitted behavior default; old CS2 tuning withdrawn"}];
 }

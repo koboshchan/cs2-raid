@@ -17,9 +17,14 @@
       "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Core/Model/CEntityInstance.cs#L35-L40",
       "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Core/Model/CEntityInstance.cs#L89-L118"
     ],
-    "InterpretationTuning": [],
+    "InterpretationTuning": [
+      {
+        "Status": "UNRESOLVED",
+        "Authority": "No permitted behavior default; old CS2 tuning withdrawn"
+      }
+    ],
     "Activation": "activation held pending reviewed deployment approval; offline implementation permitted",
-    "NativeSafetyBlocker": "Native inert creation/type/spawn preservation and unload-independent projectile expiry not established.",
+    "NativeSafetyBlocker": "UNRESOLVED: exact extracted DF effect magnitudes and/or engine unit mapping not proved; activation blocked.",
     "Fidelity": "Partial CS2 interpretation; remaining DF behavior is separately listed in ABILITY_SOL26_COVERAGE.md, not a blanket prohibition on offline implementation",
     "TypedSourceFields": {
       "CdId": {
@@ -73,9 +78,14 @@
       "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Core/Model/CEntityInstance.cs#L35-L40",
       "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Core/Model/CEntityInstance.cs#L89-L118"
     ],
-    "InterpretationTuning": [],
+    "InterpretationTuning": [
+      {
+        "Status": "UNRESOLVED",
+        "Authority": "No permitted behavior default; old CS2 tuning withdrawn"
+      }
+    ],
     "Activation": "activation held pending reviewed deployment approval; offline implementation permitted",
-    "NativeSafetyBlocker": "Native inert creation/type/spawn preservation and unload-independent projectile expiry not established.",
+    "NativeSafetyBlocker": "UNRESOLVED: exact extracted DF effect magnitudes and/or engine unit mapping not proved; activation blocked.",
     "Fidelity": "Partial CS2 interpretation; remaining DF behavior is separately listed in ABILITY_SOL26_COVERAGE.md, not a blanket prohibition on offline implementation",
     "TypedSourceFields": {
       "CdId": {
@@ -124,9 +134,14 @@
     "Approximation": "No enabled approximation; blocked/incomplete",
     "Implementation": "skill-specific effect unimplemented",
     "ExactApiReferences": [],
-    "InterpretationTuning": [],
+    "InterpretationTuning": [
+      {
+        "Status": "UNRESOLVED",
+        "Authority": "No permitted behavior default; old CS2 tuning withdrawn"
+      }
+    ],
     "Activation": "activation held pending reviewed deployment approval; offline implementation permitted",
-    "NativeSafetyBlocker": "No skill-specific native effect boundary implemented.",
+    "NativeSafetyBlocker": "UNRESOLVED: exact extracted DF effect magnitudes and/or engine unit mapping not proved; activation blocked.",
     "Fidelity": "Partial CS2 interpretation; remaining DF behavior is separately listed in ABILITY_SOL26_COVERAGE.md, not a blanket prohibition on offline implementation",
     "TypedSourceFields": {
       "CdId": {
@@ -181,14 +196,12 @@
     ],
     "InterpretationTuning": [
       {
-        "Field": "HealHp",
-        "Default": 25,
-        "Unit": "HP",
-        "Authority": "CS2 assumption, not extracted DF magnitude"
+        "Status": "UNRESOLVED",
+        "Authority": "No permitted behavior default; old CS2 tuning withdrawn"
       }
     ],
     "Activation": "activation held pending reviewed deployment approval; offline implementation permitted",
-    "NativeSafetyBlocker": null,
+    "NativeSafetyBlocker": "UNRESOLVED: exact extracted DF effect magnitudes and/or engine unit mapping not proved; activation blocked.",
     "Fidelity": "Partial CS2 interpretation; remaining DF behavior is separately listed in ABILITY_SOL26_COVERAGE.md, not a blanket prohibition on offline implementation",
     "TypedSourceFields": {
       "CdId": {
@@ -237,9 +250,14 @@
     "Approximation": "No enabled approximation; blocked/incomplete",
     "Implementation": "skill-specific effect unimplemented",
     "ExactApiReferences": [],
-    "InterpretationTuning": [],
+    "InterpretationTuning": [
+      {
+        "Status": "UNRESOLVED",
+        "Authority": "No permitted behavior default; old CS2 tuning withdrawn"
+      }
+    ],
     "Activation": "activation held pending reviewed deployment approval; offline implementation permitted",
-    "NativeSafetyBlocker": "No skill-specific native effect boundary implemented.",
+    "NativeSafetyBlocker": "UNRESOLVED: exact extracted DF effect magnitudes and/or engine unit mapping not proved; activation blocked.",
     "Fidelity": "Partial CS2 interpretation; remaining DF behavior is separately listed in ABILITY_SOL26_COVERAGE.md, not a blanket prohibition on offline implementation",
     "TypedSourceFields": {
       "CdId": {
@@ -296,14 +314,12 @@
     ],
     "InterpretationTuning": [
       {
-        "Field": "ReconRadiusSourceUnits",
-        "Default": 1200,
-        "Unit": "Source units",
-        "Authority": "CS2 assumption, no DF distance conversion claimed"
+        "Status": "UNRESOLVED",
+        "Authority": "No permitted behavior default; old CS2 tuning withdrawn"
       }
     ],
-    "Activation": "source-reviewed private telemetry path; normal configuration and Raid admission required",
-    "NativeSafetyBlocker": null,
+    "Activation": "activation held pending reviewed deployment approval; offline implementation permitted",
+    "NativeSafetyBlocker": "UNRESOLVED: exact extracted DF effect magnitudes and/or engine unit mapping not proved; activation blocked.",
     "Fidelity": "Partial CS2 interpretation; remaining DF behavior is separately listed in ABILITY_SOL26_COVERAGE.md, not a blanket prohibition on offline implementation",
     "TypedSourceFields": {
       "CdId": {
@@ -333,7 +349,7 @@
     "Values": "docs/ABILITY_SOL_VALUES.Generated.md; effect magnitude tuning is separate CS2 interpretation",
     "Adapter": "partial experimental implementation only; consult per-capability NativeAdmission; NOT full DF effect completion",
     "Blocker": null,
-    "NativeAdmission": "source-reviewed private telemetry implementation only; requires configured interpreted mode and normal Raid/pawn admission; NOT DF recon/nativeQA",
+    "NativeAdmission": "disabled pending per-capability API contract audit; NativeApiEvidenceGate.cs",
     "ApiLedger": "docs/ABILITY_EFFECT_BOUNDARIES.json; docs/ABILITY_API_EVIDENCE.json; call-site inventory docs/ABILITY_API_CALLS.json",
     "SignatureEvidence": "reference API self-reports pinned source SHA; bound symbols inventoried; contract review incomplete",
     "EngineContractEvidence": "per-boundary partial; unsupported damage construction/expiry/competing scalar ownership fail closed",
@@ -357,9 +373,14 @@
       "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Core/Model/CEntityInstance.cs#L35-L40",
       "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Core/Model/CEntityInstance.cs#L89-L118"
     ],
-    "InterpretationTuning": [],
+    "InterpretationTuning": [
+      {
+        "Status": "UNRESOLVED",
+        "Authority": "No permitted behavior default; old CS2 tuning withdrawn"
+      }
+    ],
     "Activation": "activation held pending reviewed deployment approval; offline implementation permitted",
-    "NativeSafetyBlocker": "Native inert creation/type/spawn preservation and unload-independent projectile expiry not established.",
+    "NativeSafetyBlocker": "UNRESOLVED: exact extracted DF effect magnitudes and/or engine unit mapping not proved; activation blocked.",
     "Fidelity": "Partial CS2 interpretation; remaining DF behavior is separately listed in ABILITY_SOL26_COVERAGE.md, not a blanket prohibition on offline implementation",
     "TypedSourceFields": {
       "CdId": {
@@ -415,26 +436,12 @@
     ],
     "InterpretationTuning": [
       {
-        "Field": "PulseRadiusSourceUnits",
-        "Default": 240,
-        "Unit": "Source units",
-        "Authority": "CS2 assumption"
-      },
-      {
-        "Field": "PulseSeconds",
-        "Default": 2,
-        "Unit": "seconds",
-        "Authority": "CS2 assumption; runtime converts to monotonic milliseconds"
-      },
-      {
-        "Field": "PulseSlowModifier",
-        "Default": 0.65,
-        "Unit": "dimensionless",
-        "Authority": "CS2 speed scalar, not DF fire-rate suppression"
+        "Status": "UNRESOLVED",
+        "Authority": "No permitted behavior default; old CS2 tuning withdrawn"
       }
     ],
     "Activation": "activation held pending reviewed deployment approval; offline implementation permitted",
-    "NativeSafetyBlocker": "Reversible shared scalar cannot distinguish identical-value competing writers; unload failure cannot guarantee restoration.",
+    "NativeSafetyBlocker": "UNRESOLVED: exact extracted DF effect magnitudes and/or engine unit mapping not proved; activation blocked.",
     "Fidelity": "Partial CS2 interpretation; remaining DF behavior is separately listed in ABILITY_SOL26_COVERAGE.md, not a blanket prohibition on offline implementation",
     "TypedSourceFields": {
       "CdId": {
@@ -483,9 +490,14 @@
     "Approximation": "No enabled approximation; blocked/incomplete",
     "Implementation": "skill-specific effect unimplemented",
     "ExactApiReferences": [],
-    "InterpretationTuning": [],
+    "InterpretationTuning": [
+      {
+        "Status": "UNRESOLVED",
+        "Authority": "No permitted behavior default; old CS2 tuning withdrawn"
+      }
+    ],
     "Activation": "activation held pending reviewed deployment approval; offline implementation permitted",
-    "NativeSafetyBlocker": "No skill-specific native effect boundary implemented.",
+    "NativeSafetyBlocker": "UNRESOLVED: exact extracted DF effect magnitudes and/or engine unit mapping not proved; activation blocked.",
     "Fidelity": "Partial CS2 interpretation; remaining DF behavior is separately listed in ABILITY_SOL26_COVERAGE.md, not a blanket prohibition on offline implementation",
     "TypedSourceFields": {
       "CdId": {
@@ -537,9 +549,14 @@
       "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Generated/GameEvents/EventPlayerHurt.g.cs",
       "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Core/Model/CCSPlayerController.cs#L49-L54"
     ],
-    "InterpretationTuning": [],
+    "InterpretationTuning": [
+      {
+        "Status": "UNRESOLVED",
+        "Authority": "No permitted behavior default; old CS2 tuning withdrawn"
+      }
+    ],
     "Activation": "activation held pending reviewed deployment approval; offline implementation permitted",
-    "NativeSafetyBlocker": null,
+    "NativeSafetyBlocker": "UNRESOLVED: exact extracted DF effect magnitudes and/or engine unit mapping not proved; activation blocked.",
     "Fidelity": "Partial CS2 interpretation; remaining DF behavior is separately listed in ABILITY_SOL26_COVERAGE.md, not a blanket prohibition on offline implementation",
     "TypedSourceFields": {
       "CdId": {
@@ -593,14 +610,12 @@
     ],
     "InterpretationTuning": [
       {
-        "Field": "RushSpeedSourceUnits",
-        "Default": 400,
-        "Unit": "Source units per second",
-        "Authority": "CS2 horizontal impulse assumption; yaw degrees; existing Z velocity retained"
+        "Status": "UNRESOLVED",
+        "Authority": "No permitted behavior default; old CS2 tuning withdrawn"
       }
     ],
     "Activation": "activation held pending reviewed deployment approval; offline implementation permitted",
-    "NativeSafetyBlocker": null,
+    "NativeSafetyBlocker": "UNRESOLVED: exact extracted DF effect magnitudes and/or engine unit mapping not proved; activation blocked.",
     "Fidelity": "Partial CS2 interpretation; remaining DF behavior is separately listed in ABILITY_SOL26_COVERAGE.md, not a blanket prohibition on offline implementation",
     "TypedSourceFields": {
       "CdId": {
@@ -649,9 +664,14 @@
     "Approximation": "No enabled approximation; blocked/incomplete",
     "Implementation": "skill-specific effect unimplemented",
     "ExactApiReferences": [],
-    "InterpretationTuning": [],
+    "InterpretationTuning": [
+      {
+        "Status": "UNRESOLVED",
+        "Authority": "No permitted behavior default; old CS2 tuning withdrawn"
+      }
+    ],
     "Activation": "activation held pending reviewed deployment approval; offline implementation permitted",
-    "NativeSafetyBlocker": "No skill-specific native effect boundary implemented.",
+    "NativeSafetyBlocker": "UNRESOLVED: exact extracted DF effect magnitudes and/or engine unit mapping not proved; activation blocked.",
     "Fidelity": "Partial CS2 interpretation; remaining DF behavior is separately listed in ABILITY_SOL26_COVERAGE.md, not a blanket prohibition on offline implementation",
     "TypedSourceFields": {
       "CdId": {
@@ -708,14 +728,12 @@
     ],
     "InterpretationTuning": [
       {
-        "Field": "VyronFallDamageMultiplier",
-        "Default": 0.5,
-        "Unit": "dimensionless",
-        "Authority": "CS2 assumption; DF buff magnitudes not decoded"
+        "Status": "UNRESOLVED",
+        "Authority": "No permitted behavior default; old CS2 tuning withdrawn"
       }
     ],
     "Activation": "activation held pending reviewed deployment approval; offline implementation permitted",
-    "NativeSafetyBlocker": null,
+    "NativeSafetyBlocker": "UNRESOLVED: exact extracted DF effect magnitudes and/or engine unit mapping not proved; activation blocked.",
     "Fidelity": "Partial CS2 interpretation; remaining DF behavior is separately listed in ABILITY_SOL26_COVERAGE.md, not a blanket prohibition on offline implementation",
     "TypedSourceFields": {
       "CdId": {
@@ -764,9 +782,14 @@
     "Approximation": "No enabled approximation; blocked/incomplete",
     "Implementation": "skill-specific effect unimplemented",
     "ExactApiReferences": [],
-    "InterpretationTuning": [],
+    "InterpretationTuning": [
+      {
+        "Status": "UNRESOLVED",
+        "Authority": "No permitted behavior default; old CS2 tuning withdrawn"
+      }
+    ],
     "Activation": "activation held pending reviewed deployment approval; offline implementation permitted",
-    "NativeSafetyBlocker": "No skill-specific native effect boundary implemented.",
+    "NativeSafetyBlocker": "UNRESOLVED: exact extracted DF effect magnitudes and/or engine unit mapping not proved; activation blocked.",
     "Fidelity": "Partial CS2 interpretation; remaining DF behavior is separately listed in ABILITY_SOL26_COVERAGE.md, not a blanket prohibition on offline implementation",
     "TypedSourceFields": {
       "CdId": {
@@ -815,9 +838,14 @@
     "Approximation": "No enabled approximation; blocked/incomplete",
     "Implementation": "skill-specific effect unimplemented",
     "ExactApiReferences": [],
-    "InterpretationTuning": [],
+    "InterpretationTuning": [
+      {
+        "Status": "UNRESOLVED",
+        "Authority": "No permitted behavior default; old CS2 tuning withdrawn"
+      }
+    ],
     "Activation": "activation held pending reviewed deployment approval; offline implementation permitted",
-    "NativeSafetyBlocker": "No skill-specific native effect boundary implemented.",
+    "NativeSafetyBlocker": "UNRESOLVED: exact extracted DF effect magnitudes and/or engine unit mapping not proved; activation blocked.",
     "Fidelity": "Partial CS2 interpretation; remaining DF behavior is separately listed in ABILITY_SOL26_COVERAGE.md, not a blanket prohibition on offline implementation",
     "TypedSourceFields": {
       "CdId": {
@@ -873,14 +901,12 @@
     ],
     "InterpretationTuning": [
       {
-        "Field": "ScopedMobilityModifier",
-        "Default": 1.1,
-        "Unit": "dimensionless",
-        "Authority": "CS2 cooperative scoped-only assumption, not decoded DF buff303054"
+        "Status": "UNRESOLVED",
+        "Authority": "No permitted behavior default; old CS2 tuning withdrawn"
       }
     ],
     "Activation": "activation held pending reviewed deployment approval; offline implementation permitted",
-    "NativeSafetyBlocker": "Cooperative-only scalar lease; nonparticipant writers and unload restoration remain outside guarantee.",
+    "NativeSafetyBlocker": "UNRESOLVED: exact extracted DF effect magnitudes and/or engine unit mapping not proved; activation blocked.",
     "Fidelity": "Partial CS2 interpretation; remaining DF behavior is separately listed in ABILITY_SOL26_COVERAGE.md, not a blanket prohibition on offline implementation",
     "TypedSourceFields": {
       "CdId": {
@@ -937,14 +963,12 @@
     ],
     "InterpretationTuning": [
       {
-        "Field": "ReconRadiusSourceUnits",
-        "Default": 1200,
-        "Unit": "Source units",
-        "Authority": "CS2 assumption, no DF distance conversion claimed"
+        "Status": "UNRESOLVED",
+        "Authority": "No permitted behavior default; old CS2 tuning withdrawn"
       }
     ],
-    "Activation": "source-reviewed private telemetry path; normal configuration and Raid admission required",
-    "NativeSafetyBlocker": null,
+    "Activation": "activation held pending reviewed deployment approval; offline implementation permitted",
+    "NativeSafetyBlocker": "UNRESOLVED: exact extracted DF effect magnitudes and/or engine unit mapping not proved; activation blocked.",
     "Fidelity": "Partial CS2 interpretation; remaining DF behavior is separately listed in ABILITY_SOL26_COVERAGE.md, not a blanket prohibition on offline implementation",
     "TypedSourceFields": {
       "CdId": {
@@ -974,7 +998,7 @@
     "Values": "docs/ABILITY_SOL_VALUES.Generated.md; effect magnitude tuning is separate CS2 interpretation",
     "Adapter": "partial experimental implementation only; consult per-capability NativeAdmission; NOT full DF effect completion",
     "Blocker": null,
-    "NativeAdmission": "source-reviewed private telemetry implementation only; requires configured interpreted mode and normal Raid/pawn admission; NOT DF recon/nativeQA",
+    "NativeAdmission": "disabled pending per-capability API contract audit; NativeApiEvidenceGate.cs",
     "ApiLedger": "docs/ABILITY_EFFECT_BOUNDARIES.json; docs/ABILITY_API_EVIDENCE.json; call-site inventory docs/ABILITY_API_CALLS.json",
     "SignatureEvidence": "reference API self-reports pinned source SHA; bound symbols inventoried; contract review incomplete",
     "EngineContractEvidence": "per-boundary partial; unsupported damage construction/expiry/competing scalar ownership fail closed",
@@ -993,9 +1017,14 @@
     "Approximation": "No enabled approximation; blocked/incomplete",
     "Implementation": "skill-specific effect unimplemented",
     "ExactApiReferences": [],
-    "InterpretationTuning": [],
+    "InterpretationTuning": [
+      {
+        "Status": "UNRESOLVED",
+        "Authority": "No permitted behavior default; old CS2 tuning withdrawn"
+      }
+    ],
     "Activation": "activation held pending reviewed deployment approval; offline implementation permitted",
-    "NativeSafetyBlocker": "No skill-specific native effect boundary implemented.",
+    "NativeSafetyBlocker": "UNRESOLVED: exact extracted DF effect magnitudes and/or engine unit mapping not proved; activation blocked.",
     "Fidelity": "Partial CS2 interpretation; remaining DF behavior is separately listed in ABILITY_SOL26_COVERAGE.md, not a blanket prohibition on offline implementation",
     "TypedSourceFields": {
       "CdId": {
@@ -1051,26 +1080,12 @@
     ],
     "InterpretationTuning": [
       {
-        "Field": "PulseRadiusSourceUnits",
-        "Default": 240,
-        "Unit": "Source units",
-        "Authority": "CS2 assumption"
-      },
-      {
-        "Field": "PulseSeconds",
-        "Default": 2,
-        "Unit": "seconds",
-        "Authority": "CS2 assumption; runtime converts to monotonic milliseconds"
-      },
-      {
-        "Field": "PulseSlowModifier",
-        "Default": 0.65,
-        "Unit": "dimensionless",
-        "Authority": "CS2 speed scalar, not DF fire-rate suppression"
+        "Status": "UNRESOLVED",
+        "Authority": "No permitted behavior default; old CS2 tuning withdrawn"
       }
     ],
     "Activation": "activation held pending reviewed deployment approval; offline implementation permitted",
-    "NativeSafetyBlocker": "Reversible shared scalar cannot distinguish identical-value competing writers; unload failure cannot guarantee restoration.",
+    "NativeSafetyBlocker": "UNRESOLVED: exact extracted DF effect magnitudes and/or engine unit mapping not proved; activation blocked.",
     "Fidelity": "Partial CS2 interpretation; remaining DF behavior is separately listed in ABILITY_SOL26_COVERAGE.md, not a blanket prohibition on offline implementation",
     "TypedSourceFields": {
       "CdId": {
@@ -1124,9 +1139,14 @@
       "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Core/Model/CEntityInstance.cs#L35-L40",
       "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Core/Model/CEntityInstance.cs#L89-L118"
     ],
-    "InterpretationTuning": [],
+    "InterpretationTuning": [
+      {
+        "Status": "UNRESOLVED",
+        "Authority": "No permitted behavior default; old CS2 tuning withdrawn"
+      }
+    ],
     "Activation": "activation held pending reviewed deployment approval; offline implementation permitted",
-    "NativeSafetyBlocker": "Native inert creation/type/spawn preservation and unload-independent projectile expiry not established.",
+    "NativeSafetyBlocker": "UNRESOLVED: exact extracted DF effect magnitudes and/or engine unit mapping not proved; activation blocked.",
     "Fidelity": "Partial CS2 interpretation; remaining DF behavior is separately listed in ABILITY_SOL26_COVERAGE.md, not a blanket prohibition on offline implementation",
     "TypedSourceFields": {
       "CdId": {
@@ -1175,9 +1195,14 @@
     "Approximation": "No enabled approximation; blocked/incomplete",
     "Implementation": "skill-specific effect unimplemented",
     "ExactApiReferences": [],
-    "InterpretationTuning": [],
+    "InterpretationTuning": [
+      {
+        "Status": "UNRESOLVED",
+        "Authority": "No permitted behavior default; old CS2 tuning withdrawn"
+      }
+    ],
     "Activation": "activation held pending reviewed deployment approval; offline implementation permitted",
-    "NativeSafetyBlocker": "No skill-specific native effect boundary implemented.",
+    "NativeSafetyBlocker": "UNRESOLVED: exact extracted DF effect magnitudes and/or engine unit mapping not proved; activation blocked.",
     "Fidelity": "Partial CS2 interpretation; remaining DF behavior is separately listed in ABILITY_SOL26_COVERAGE.md, not a blanket prohibition on offline implementation",
     "TypedSourceFields": {
       "CdId": {
@@ -1233,32 +1258,12 @@
     ],
     "InterpretationTuning": [
       {
-        "Field": "TrapRadiusSourceUnits",
-        "Default": 160,
-        "Unit": "Source units",
-        "Authority": "CS2 assumption"
-      },
-      {
-        "Field": "TrapLifetimeSeconds",
-        "Default": 30,
-        "Unit": "seconds",
-        "Authority": "CS2 assumption"
-      },
-      {
-        "Field": "TrapSlowSeconds",
-        "Default": 2,
-        "Unit": "seconds",
-        "Authority": "CS2 assumption"
-      },
-      {
-        "Field": "TrapVelocityModifier",
-        "Default": 0.5,
-        "Unit": "dimensionless",
-        "Authority": "CS2 assumption"
+        "Status": "UNRESOLVED",
+        "Authority": "No permitted behavior default; old CS2 tuning withdrawn"
       }
     ],
     "Activation": "activation held pending reviewed deployment approval; offline implementation permitted",
-    "NativeSafetyBlocker": "Reversible shared scalar cannot distinguish identical-value competing writers; unload failure cannot guarantee restoration.",
+    "NativeSafetyBlocker": "UNRESOLVED: exact extracted DF effect magnitudes and/or engine unit mapping not proved; activation blocked.",
     "Fidelity": "Partial CS2 interpretation; remaining DF behavior is separately listed in ABILITY_SOL26_COVERAGE.md, not a blanket prohibition on offline implementation",
     "TypedSourceFields": {
       "CdId": {
@@ -1312,9 +1317,14 @@
       "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Core/Model/CEntityInstance.cs#L35-L40",
       "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Core/Model/CEntityInstance.cs#L89-L118"
     ],
-    "InterpretationTuning": [],
+    "InterpretationTuning": [
+      {
+        "Status": "UNRESOLVED",
+        "Authority": "No permitted behavior default; old CS2 tuning withdrawn"
+      }
+    ],
     "Activation": "activation held pending reviewed deployment approval; offline implementation permitted",
-    "NativeSafetyBlocker": "Native inert creation/type/spawn preservation and unload-independent projectile expiry not established.",
+    "NativeSafetyBlocker": "UNRESOLVED: exact extracted DF effect magnitudes and/or engine unit mapping not proved; activation blocked.",
     "Fidelity": "Partial CS2 interpretation; remaining DF behavior is separately listed in ABILITY_SOL26_COVERAGE.md, not a blanket prohibition on offline implementation",
     "TypedSourceFields": {
       "CdId": {
@@ -1363,9 +1373,14 @@
     "Approximation": "No enabled approximation; blocked/incomplete",
     "Implementation": "skill-specific effect unimplemented",
     "ExactApiReferences": [],
-    "InterpretationTuning": [],
+    "InterpretationTuning": [
+      {
+        "Status": "UNRESOLVED",
+        "Authority": "No permitted behavior default; old CS2 tuning withdrawn"
+      }
+    ],
     "Activation": "activation held pending reviewed deployment approval; offline implementation permitted",
-    "NativeSafetyBlocker": "No skill-specific native effect boundary implemented.",
+    "NativeSafetyBlocker": "UNRESOLVED: exact extracted DF effect magnitudes and/or engine unit mapping not proved; activation blocked.",
     "Fidelity": "Partial CS2 interpretation; remaining DF behavior is separately listed in ABILITY_SOL26_COVERAGE.md, not a blanket prohibition on offline implementation",
     "TypedSourceFields": {
       "CdId": {
@@ -1421,26 +1436,12 @@
     ],
     "InterpretationTuning": [
       {
-        "Field": "PulseRadiusSourceUnits",
-        "Default": 240,
-        "Unit": "Source units",
-        "Authority": "CS2 assumption"
-      },
-      {
-        "Field": "PulseSeconds",
-        "Default": 2,
-        "Unit": "seconds",
-        "Authority": "CS2 assumption; runtime converts to monotonic milliseconds"
-      },
-      {
-        "Field": "PulseSlowModifier",
-        "Default": 0.65,
-        "Unit": "dimensionless",
-        "Authority": "CS2 speed scalar, not DF fire-rate suppression"
+        "Status": "UNRESOLVED",
+        "Authority": "No permitted behavior default; old CS2 tuning withdrawn"
       }
     ],
     "Activation": "activation held pending reviewed deployment approval; offline implementation permitted",
-    "NativeSafetyBlocker": "Reversible shared scalar cannot distinguish identical-value competing writers; unload failure cannot guarantee restoration.",
+    "NativeSafetyBlocker": "UNRESOLVED: exact extracted DF effect magnitudes and/or engine unit mapping not proved; activation blocked.",
     "Fidelity": "Partial CS2 interpretation; remaining DF behavior is separately listed in ABILITY_SOL26_COVERAGE.md, not a blanket prohibition on offline implementation",
     "TypedSourceFields": {
       "CdId": {
@@ -1497,10 +1498,10 @@
     ],
     "InterpretationTuning": [
       {
-        "Field": "DamgeCoifficient[0].fModifyRateExplodeDamage",
-        "Default": 0.7,
+        "Field": "SkillDataConfig SkillID30010201.DamgeCoifficient[0].fModifyRateExplodeDamage",
+        "Value": 0.7,
         "Unit": "dimensionless",
-        "Authority": "DFPROVEN literal; raw assault1.0 and LimitPlayMode[] retained; DMG_BLAST mapping CS2 assumption"
+        "Authority": "Extracted DF literal; assault1.0 and LimitPlayMode[] retained; native mapping activation held"
       }
     ],
     "Activation": "activation held pending reviewed deployment approval; offline implementation permitted",
