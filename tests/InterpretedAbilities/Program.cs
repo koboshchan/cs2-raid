@@ -460,6 +460,19 @@ foreach(var staleBaseline in new[]{0.8f,float.NaN}) {
  failedRollback=false;pending!.Dispose();pending.Dispose();
  var fresh=cooperation.Reserve("world",42,"speed");Check(fresh!=null);fresh!.Dispose();
 }
+
+{
+ var cooperation=new CooperativeStatusOwnership();
+ var cs=new InterpretedAbilitySession(1,0);bool rollbackUnavailable=true;int mutationCount=0;
+ Check(!cs.Activate(2008002,0,()=>true,()=>cooperation.Enact(cs,"world",42,"speed",
+     ()=>{mutationCount++;throw new Exception();},
+     ()=>{if(rollbackUnavailable)throw new Exception();})));
+ Check(cs.Quarantined&&cs.PendingCleanup==1&&mutationCount==1);
+ Check(cooperation.Reserve("world",42,"speed")==null);
+ rollbackUnavailable=false;Check(cs.Revoke());Check(cs.PendingCleanup==0);
+ var releasedReservation=cooperation.Reserve("world",42,"speed");Check(releasedReservation!=null);
+ releasedReservation!.Dispose();
+}
 Console.WriteLine($"{count} interpreted lifecycle checks PASS; router + lifecycle PASS; CSS calls compile, not native QA");
 sealed class Effect:IDisposable{public bool Disposed;public void Dispose()=>Disposed=true;}
 

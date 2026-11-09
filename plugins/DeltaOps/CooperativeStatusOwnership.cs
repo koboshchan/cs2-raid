@@ -17,6 +17,16 @@ public sealed class CooperativeStatusOwnership
             if(owners.TryGetValue(key,out var current)&&current==token)owners.Remove(key);
         });
     }
+    // Session installs rollback ownership before native mutation; a failed rollback
+    // remains both reserved and quarantined in the session's PendingCleanup.
+    public IDisposable? Enact(InterpretedAbilitySession session,string world,uint pawn,
+        string field,Action mutation,Action rollback)
+    {
+        var reservation=Reserve(world,pawn,field);
+        if(reservation==null)return null;
+        var effect=new CooperativeEffect(reservation,rollback);
+        return session.EnactOwned(mutation,effect.Dispose);
+    }
     public IDisposable? Apply(string world,uint pawn,string field,Action mutation,Action rollback)
     {
         var reservation=Reserve(world,pawn,field);
