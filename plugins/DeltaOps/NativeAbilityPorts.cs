@@ -107,9 +107,12 @@ public sealed partial class DeltaOpsPlugin
         public IDisposable? Heal()
         {
             if(!Valid()||plugin.Config.NativePorts.HealHp is <1 or >200||Pawn.Health>=Pawn.MaxHealth)return null;
-            var effect=new OwnedAbilityEffect(()=>{}); // Instant health is committed, not rolled back on death.
-            Pawn.Health=(int)Math.Min(Pawn.MaxHealth,(long)Pawn.Health+plugin.Config.NativePorts.HealHp);
-            Utilities.SetStateChanged(Pawn,"CBaseEntity","m_iHealth");return effect;
+            // Register the committed instant-effect boundary before a native setter can throw.
+            // Health is never rolled back across a competing damage/heal event.
+            return actor.Session.EnactOwned(()=>{
+                Pawn.Health=(int)Math.Min(Pawn.MaxHealth,(long)Pawn.Health+plugin.Config.NativePorts.HealHp);
+                Utilities.SetStateChanged(Pawn,"CBaseEntity","m_iHealth");
+            },()=>{});
         }
         public IDisposable? Grant(string weapon)
         {
@@ -164,8 +167,9 @@ public sealed partial class DeltaOpsPlugin
             if(!Valid()||!float.IsFinite(speed)||speed<=0||speed>1000)return null;
             var yaw=Pawn.EyeAngles.Y*Math.PI/180;
             // Velocity only, never origin teleport or noclip. Collision is entirely engine-owned.
-            Pawn.Teleport(null,null,new Vector((float)Math.Cos(yaw)*speed,(float)Math.Sin(yaw)*speed,Pawn.AbsVelocity.Z));
-            return new OwnedAbilityEffect(()=>{});
+            return actor.Session.EnactOwned(()=>
+                Pawn.Teleport(null,null,new Vector((float)Math.Cos(yaw)*speed,(float)Math.Sin(yaw)*speed,Pawn.AbsVelocity.Z)),
+                ()=>{});
         }
         public IDisposable? Pulse(bool suppress)
         {
