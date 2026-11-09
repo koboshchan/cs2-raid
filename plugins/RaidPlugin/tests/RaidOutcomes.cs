@@ -8,7 +8,7 @@ public static class RaidOutcomeTests
         GameplayState Active(){
             var g=new GameplayState();foreach(var id in new[]{"a","b","c"})g.Join(id);
             g.ShootRequest("a","b");g.ShootRequest("b","a");g.Solo("c");g.Tick(now,true);
-            foreach(var id in g.Players.Keys)g.SelectCharacter(id,1);
+            foreach(var id in g.Players.Keys)g.SelectCharacter(id,2);
             g.Tick(now,true);g.Tick(now.AddSeconds(45),true);g.Tick(now.AddSeconds(50),true);g.Tick(now.AddSeconds(60),true);return g;
         }
         var clock=now.AddMinutes(6);

@@ -57,7 +57,7 @@ public sealed partial class RaidPlugin
 
     private bool AssignDeltaOpsCharacter(CCSPlayerController player, int number)
     {
-        if (!Human(player) || number is < 1 or > 6 || !DeltaOpsQuery(0, player.SteamID, 0))
+        if (!Human(player) || number is < 2 or > 6 || !DeltaOpsQuery(0, player.SteamID, 0))
             return false;
         try { return DeltaOpsAssignment.Get()?.Invoke(player.SteamID, number) == true; }
         catch { return false; } // Missing/reloaded/failing provider never confirms selection.
@@ -97,7 +97,7 @@ public sealed partial class RaidPlugin
     private bool AssignFixtureDeltaOps(CCSPlayerController player,int number)
     {
         var generation=FixtureGenerationNow();
-        if(number is <1 or >6 || !FixtureDeltaOpsQuery(0,player.EntityHandle.Raw,0,generation))return false;
+        if(number is <2 or >6 || !FixtureDeltaOpsQuery(0,player.EntityHandle.Raw,0,generation))return false;
         try{return FixtureAssignV2.Get()?.Invoke(player.EntityHandle.Raw,number,generation)==true
             && FixtureGenerationNow()==generation && TestParticipant(player);}
         catch{return false;}

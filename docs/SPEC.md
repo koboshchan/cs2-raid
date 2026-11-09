@@ -5,7 +5,7 @@ Rules: one root multi-stage Dockerfile, plugins/ (RaidPlugin, DeltaOps excluded 
 
 ## Game flow (Lucas Nov3)
 1. Lobby box: native T/CT freely chosen, Glock only, no damage. Shoot player = request, shoot back = duo (max 2). Broadcast names. Moved to ready platform. !cancel team -> both back to box; !team single -> solo. Avoid chat commands otherwise.
-2. After team select: frozen + invisible; keep all 6 DeltaOps characters (D-Wolf, Stinger, Luna, Vyron, Hackclaw, Shepherd). Replace the DeltaOps display box with a numbered list printed in chat; choose using `!characterselect <number>`. DeltaOps API via CSS PluginCapability so raid assigns characters; abilities must respect duos.
+2. After team select: frozen + invisible; keep the five DeltaOps characters (Stinger, Luna, Vyron, Hackclaw, Shepherd). Replace the DeltaOps display box with a numbered list printed in chat; choose using `!characterselect <number>`. DeltaOps API via CSS PluginCapability so raid assigns characters; abilities must respect duos.
 3. Cash-in !cashout from SSG: max $15,000 into game per raid. Start $0 otherwise.
 4. Native CS2 Buy phase 45s: weapons, armor, helmet. Vanilla prices (client menu can't show custom prices; custom pricing flag off). Chat shows charge.
 5. Ammo: mag price = weapon price/20 (Deagle 700 -> 35, G3SG1 -> 250). Reload deducts money.
@@ -26,7 +26,7 @@ Plugin no DB (memory + JSON configs). Backend SQLite /data/raid.sqlite (account 
 All-map buyzone, max money, AK 2 shots = ladder points, Glock = texture error, !report <reason>. JSONL reports.
 
 ## TODO
-- [x] Character roster decided: keep all 6 DeltaOps characters.
+- [x] Character roster decided: keep the five DeltaOps characters.
 - [x] Offline replacement of DeltaOps display box with a numbered list printed in chat; choose using `!characterselect <number>`.
 - [ ] Lucas/Ocean: spawn coords, lever coords/entities, extraction trigger name, loot prop names
 - [x] map stage defaults to Ocean repo; real build, digest/ZIP verification and cache reuse verified (743791a)

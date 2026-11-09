@@ -46,7 +46,7 @@ public sealed partial class DeltaOpsPlugin
         try{return FixturePolicy.Get()?.Invoke(op,a,b,generation)==true;}catch{return false;}
     }
     private bool AssignFixtureCharacter(uint raw,int number,long generation) {
-        if(!_fixtureExplicit || number is <1 or >6 || !QueryFixture(0,raw,0,generation))return false;
+        if(!_fixtureExplicit || number is <2 or >6 || !QueryFixture(0,raw,0,generation))return false;
         var player=Utilities.GetPlayers().FirstOrDefault(p=>IsHumanController(p)&&p.EntityHandle.Raw==raw&&p.PawnIsAlive);
         if(player==null)return false;
         var pawn=player.PlayerPawn.Value;
@@ -108,19 +108,20 @@ public sealed partial class DeltaOpsPlugin
     private bool RaidActive(ulong player) => QueryRaid(3, player);
     private bool AssignRaidCharacter(ulong steamId, int number)
     {
-        if (!_bridgeLoaded || !_raidMode || number is < 1 or > 6 ||
+        if (!_bridgeLoaded || !_raidMode || !StableOperatorIdentity.SelectableWire(number) ||
             !QueryRaid(0, steamId)) return false;
         var player = Utilities.GetPlayers().FirstOrDefault(p =>
             IsHumanController(p) && p.SteamID == steamId && p.PawnIsAlive);
         if (player == null) return false;
         var state = GetExistingState(player);
+        if (_states.GetValueOrDefault(GetPlayerKey(player))?.SelectionRetired == true) return false;
         // Repeated assignment cannot reset cooldowns, heal or mint another utility kit.
-        if (state?.Operator != null) return (int)state.Operator.Value == number - 1;
+        if (state?.Operator != null) return StableOperatorIdentity.Wire((int)state.Operator.Value) == number;
         _bridgeAssigning = true;
         try
         {
-            SelectOperator(player, GetPlayerKey(player), _operators[number - 1], automatic: false);
-            return GetExistingState(player)?.Operator == _operators[number - 1].Id;
+            SelectOperator(player, GetPlayerKey(player), _operators.Single(op => StableOperatorIdentity.Wire((int)op.Id) == number), automatic: false);
+            return _states.GetValueOrDefault(GetPlayerKey(player))?.SelectionRetired == false && GetExistingState(player)?.Operator == _operators.Single(op => StableOperatorIdentity.Wire((int)op.Id) == number).Id;
         }
         finally { _bridgeAssigning = false; }
     }

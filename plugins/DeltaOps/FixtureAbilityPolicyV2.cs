@@ -30,7 +30,7 @@ public sealed class FixtureAbilityPolicyV2
     public bool ReserveKit(long generation,uint controller,uint pawn,int character,bool human,bool selection)
     {
         if(generation!=Generation || generation<=0 || !Valid(controller)||!Valid(pawn)
-            ||!human||!selection||character is <1 or >6)return false;
+            ||!human||!selection||character is <2 or >6)return false;
         // Same actor cannot reselect to heal, clear cooldowns or receive a second kit.
         return kits.TryAdd(controller,(pawn,character));
     }

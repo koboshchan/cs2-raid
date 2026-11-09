@@ -26,7 +26,7 @@ Original cvars and rules are captured before mutation. Rules restoration uses en
 
 ## Gates and limitations
 
-All native-purchase, reload, six-kit, coordinates and financial/native-flow proof gates remain unchanged and OFF. ProductionReady remains blocked. There are no SSG/backend calls or money changes in this patch.
+All native-purchase, reload, five-kit, coordinates and financial/native-flow proof gates remain unchanged and OFF. ProductionReady remains blocked. There are no SSG/backend calls or money changes in this patch.
 
 The test fixture still has its existing finite-credit command/grant mechanism. It is not a native B-menu purchase implementation. This patch supplies clock ownership and admission boundaries, not a replacement shop or a claim that both native T/CT menus work. Native buyzone/menu rendering, exact engine menu closure, round-clock interaction, normal/fixture cvar restoration, disconnect and map/unload behavior require explicit runtime acceptance before enabling any gate.
 

@@ -17,12 +17,11 @@ public sealed partial class DeltaOpsPlugin : BasePlugin, IPluginConfig<DeltaOpsC
 {
     private enum OperatorId
     {
-        RedWolf,
-        Stinger,
-        Luna,
-        Vyron,
-        Hackclaw,
-        Shepherd
+        Stinger = StableOperatorIdentity.Stinger,
+        Luna = StableOperatorIdentity.Luna,
+        Vyron = StableOperatorIdentity.Vyron,
+        Hackclaw = StableOperatorIdentity.Hackclaw,
+        Shepherd = StableOperatorIdentity.Shepherd
     }
 
     private enum CookedGrenadeKind
@@ -58,7 +57,12 @@ public sealed partial class DeltaOpsPlugin : BasePlugin, IPluginConfig<DeltaOpsC
 
     private sealed class PlayerState
     {
-        public OperatorId? Operator { get; set; }
+        private readonly StableOperatorSelection selection = new();
+        public bool SelectionRetired => selection.Retired;
+        public OperatorId? Operator {
+            get => selection.Value is {} id ? (OperatorId)id : null;
+            set => selection.Value = value is {} id ? (int)id : null;
+        }
         public long VCooldownUntilMs { get; set; }
         public long XCooldownUntilMs { get; set; }
         public CssTimer? VReadyTimer { get; set; }
@@ -85,17 +89,6 @@ public sealed partial class DeltaOpsPlugin : BasePlugin, IPluginConfig<DeltaOpsC
 
     private readonly List<OperatorDefinition> _operators =
     [
-        new(
-            OperatorId.RedWolf,
-            "红狼",
-            "D-Wolf",
-            "突击",
-            "爆发外骨骼",
-            "4 秒内移动速度提升 35%。",
-            "动力跃迁",
-            "沿 WASD 输入方向跃迁并恢复 15 生命；无输入时向前。",
-            "猎杀本能",
-            "击杀敌人后恢复 50 生命。"),
         new(
             OperatorId.Stinger,
             "蜂医",
@@ -189,9 +182,6 @@ public sealed partial class DeltaOpsPlugin : BasePlugin, IPluginConfig<DeltaOpsC
         config.ShepherdMineDamageRadius = Math.Clamp(config.ShepherdMineDamageRadius, 100f, 800f);
         config.ShepherdMineMaxDamage = Math.Clamp(config.ShepherdMineMaxDamage, 1, 300);
         config.ShepherdMineLifetimeSeconds = Math.Clamp(config.ShepherdMineLifetimeSeconds, 10f, 180f);
-        config.RedWolfKillHeal = Math.Clamp(config.RedWolfKillHeal, 0, 100);
-        config.RedWolfSpeedMultiplier = Math.Clamp(config.RedWolfSpeedMultiplier, 1.0f, 2.0f);
-        config.RedWolfDurationSeconds = Math.Clamp(config.RedWolfDurationSeconds, 1.0f, 15.0f);
         config.StingerHealAmount = Math.Clamp(config.StingerHealAmount, 1, 200);
         config.StingerHealRadius = Math.Clamp(config.StingerHealRadius, 100f, 2000f);
         config.StingerBonusHealth = Math.Clamp(config.StingerBonusHealth, 0, 200);
@@ -374,20 +364,6 @@ public sealed partial class DeltaOpsPlugin : BasePlugin, IPluginConfig<DeltaOpsC
                 victimState.LastLunaDamagedTargetKey = null;
                 victimState.LastLunaAttackerKey = null;
                 StopLunaDot(victimKey);
-            }
-        }
-
-        if (IsHumanController(attacker) && IsCombatController(victim) &&
-            attacker!.Handle != victim!.Handle && IsEnemy(attacker, victim))
-        {
-            var attackerState = GetExistingState(attacker);
-            if (attackerState?.Operator == OperatorId.RedWolf)
-            {
-                var healed = HealPlayer(attacker, Config.RedWolfKillHeal);
-                if (healed > 0)
-                {
-                    attacker.PrintToChat($" [红狼] 猎杀本能触发，恢复 {healed} 生命。");
-                }
             }
         }
 
@@ -709,8 +685,8 @@ public sealed partial class DeltaOpsPlugin : BasePlugin, IPluginConfig<DeltaOpsC
         ClearLandminesForOwner(key);
     }
 
-    [ConsoleCommand("css_characterselect", "选择干员：!characterselect <1-6>；无参数查看列表")]
-    [ConsoleCommand("css_op", "选择或重新查看干员：!op 1")]
+    [ConsoleCommand("css_characterselect", "选择干员：!characterselect <2-6>；无参数查看列表")]
+    [ConsoleCommand("css_op", "选择或重新查看干员：!op 2")]
     public void OnOperatorCommand(CCSPlayerController? player, CommandInfo command)
     {
         if (_raidMode) return; // Raid owns selection and confirms only after capability success.
@@ -727,9 +703,9 @@ public sealed partial class DeltaOpsPlugin : BasePlugin, IPluginConfig<DeltaOpsC
         }
 
         if (!int.TryParse(command.GetArg(1), out var selectedIndex) ||
-            selectedIndex < 1 || selectedIndex > _operators.Count)
+            !StableOperatorIdentity.SelectableWire(selectedIndex))
         {
-            player.PrintToChat($" [三角洲模式] 干员编号应为 1-{_operators.Count}。");
+            player.PrintToChat($" [三角洲模式] 干员编号应为 2-6。");
             return;
         }
 
@@ -741,7 +717,7 @@ public sealed partial class DeltaOpsPlugin : BasePlugin, IPluginConfig<DeltaOpsC
             return;
         }
 
-        SelectOperator(player, key, _operators[selectedIndex - 1], automatic: false);
+        SelectOperator(player, key, _operators.Single(op => StableOperatorIdentity.Wire((int)op.Id) == selectedIndex), automatic: false);
     }
 
     private void ResetOperatorForSwitch(
@@ -859,7 +835,7 @@ public sealed partial class DeltaOpsPlugin : BasePlugin, IPluginConfig<DeltaOpsC
         UseSkillSlot(target, command, useV: slotName == "v");
     }
 
-    [ConsoleCommand("css_ops_assign", "服务器控制台：css_ops_assign <slot> <1-6>")]
+    [ConsoleCommand("css_ops_assign", "服务器控制台：css_ops_assign <slot> <2-6>")]
     public void OnServerAssignOperatorCommand(CCSPlayerController? player, CommandInfo command)
     {
         if(_fixtureMode){command.ReplyToCommand("UNAVAILABLE: fixture native kit acceptance BLOCKED.");return;}
@@ -874,7 +850,7 @@ public sealed partial class DeltaOpsPlugin : BasePlugin, IPluginConfig<DeltaOpsC
             !int.TryParse(command.GetArg(2), out var operatorIndex) ||
             invalidArguments(slot, operatorIndex))
         {
-            command.ReplyToCommand("用法：css_ops_assign <slot> <1-6>");
+            command.ReplyToCommand("用法：css_ops_assign <slot> <2-6>");
             return;
         }
 
@@ -885,12 +861,12 @@ public sealed partial class DeltaOpsPlugin : BasePlugin, IPluginConfig<DeltaOpsC
             return;
         }
 
-        var definition = _operators[operatorIndex - 1];
+        var definition = _operators.Single(op => StableOperatorIdentity.Wire((int)op.Id) == operatorIndex);
         SelectOperator(target, GetPlayerKey(target), definition, automatic: false);
         command.ReplyToCommand($"已将槽位 {slot} 设为 {definition.Name}。");
 
         static bool invalidArguments(int slot, int operatorIndex) =>
-            slot < 0 || operatorIndex < 1 || operatorIndex > 6;
+            slot < 0 || !StableOperatorIdentity.SelectableWire(operatorIndex);
     }
 
     [ConsoleCommand("css_ops_test_smoke", "服务器控制台：测试蜂医长烟")]
@@ -1042,7 +1018,7 @@ public sealed partial class DeltaOpsPlugin : BasePlugin, IPluginConfig<DeltaOpsC
         var state = GetExistingState(player);
         if (state?.Operator == null)
         {
-            player.PrintToChat(" [三角洲模式] 请先输入 !characterselect <1-6> 选择干员。");
+            player.PrintToChat(" [三角洲模式] 请先输入 !characterselect <2-6> 选择干员。");
             return;
         }
 
@@ -1102,7 +1078,7 @@ public sealed partial class DeltaOpsPlugin : BasePlugin, IPluginConfig<DeltaOpsC
     {
         if (_raidMode) return;
         var state = GetOrCreateState(player, key);
-        if (state.Operator.HasValue)
+        if (state.SelectionRetired || state.Operator.HasValue)
         {
             return;
         }
@@ -1114,7 +1090,7 @@ public sealed partial class DeltaOpsPlugin : BasePlugin, IPluginConfig<DeltaOpsC
                 TimerFlags.REPEAT | TimerFlags.STOP_ON_MAPCHANGE);
             player.PrintToChat(
                 $" [三角洲模式] 选角已开始，{Config.SelectionSeconds} 秒内输入 " +
-                "!characterselect <1-6> 选择。");
+                "!characterselect <2-6> 选择。");
         }
 
         PrintRoleList(player, includeDescriptions: false);
@@ -1122,7 +1098,7 @@ public sealed partial class DeltaOpsPlugin : BasePlugin, IPluginConfig<DeltaOpsC
 
     private void TickSelectionTimeout(string key)
     {
-        if (!_states.TryGetValue(key, out var state) || state.Operator.HasValue)
+        if (!_states.TryGetValue(key, out var state) || state.SelectionRetired || state.Operator.HasValue)
         {
             return;
         }
@@ -1152,25 +1128,25 @@ public sealed partial class DeltaOpsPlugin : BasePlugin, IPluginConfig<DeltaOpsC
             var warningPlayer = FindPlayerByKey(key);
             warningPlayer?.PrintToChat(
                 $" [三角洲模式] 选角剩余 {state.SelectionSecondsRemaining} 秒，" +
-                "请尽快输入 !characterselect <1-6>。");
+                "请尽快输入 !characterselect <2-6>。");
         }
     }
 
     private void PrintRoleList(CCSPlayerController player, bool includeDescriptions)
     {
-        player.PrintToChat(" [三角洲模式] 选择干员：!characterselect <1-6>");
+        player.PrintToChat(" [三角洲模式] 选择干员：!characterselect <2-6>");
         for (var i = 0; i < _operators.Count; i++)
         {
             var role = _operators[i];
             if (includeDescriptions)
             {
                 player.PrintToChat(
-                    $" {i + 1}. {role.Name}({role.EnglishName}) [{role.Role}] " +
+                    $" {StableOperatorIdentity.Wire((int)role.Id)}. {role.Name}({role.EnglishName}) [{role.Role}] " +
                     $"V:{role.VName} | X:{role.XName} | 被动:{role.PassiveName}");
             }
             else
             {
-                player.PrintToChat($" {i + 1}. {role.Name} / {role.EnglishName} [{role.Role}] V:{role.VName} X:{role.XName}");
+                player.PrintToChat($" {StableOperatorIdentity.Wire((int)role.Id)}. {role.Name} / {role.EnglishName} [{role.Role}] V:{role.VName} X:{role.XName}");
             }
         }
     }
@@ -1183,6 +1159,7 @@ public sealed partial class DeltaOpsPlugin : BasePlugin, IPluginConfig<DeltaOpsC
     {
         if (_fixtureMode || _raidMode && !_bridgeAssigning) return;
         var state = GetOrCreateState(player, key);
+        if (state.SelectionRetired) return; // Explicit global reset required, never migrate to another identity.
         if (state.Operator.HasValue && state.Operator.Value != definition.Id)
         {
             ResetOperatorForSwitch(player, key, state);
@@ -1212,11 +1189,6 @@ public sealed partial class DeltaOpsPlugin : BasePlugin, IPluginConfig<DeltaOpsC
     {
         switch (operatorId)
         {
-            case OperatorId.RedWolf:
-                ApplyTemporarySpeed(player, Config.RedWolfSpeedMultiplier, Config.RedWolfDurationSeconds);
-                player.PrintToChat(" [红狼] 动力外骨骼启动，移动速度大幅提升。");
-                return true;
-
             case OperatorId.Stinger:
                 return UseStingerHeal(player);
 
@@ -1246,9 +1218,6 @@ public sealed partial class DeltaOpsPlugin : BasePlugin, IPluginConfig<DeltaOpsC
     {
         switch (operatorId)
         {
-            case OperatorId.RedWolf:
-                return UseRedWolfLeap(player);
-
             case OperatorId.Stinger:
                 return UseStingerSmoke(player);
 
@@ -1296,18 +1265,6 @@ public sealed partial class DeltaOpsPlugin : BasePlugin, IPluginConfig<DeltaOpsC
         }
 
         player.PrintToChat($" [蜂医] 激素治疗完成，共治疗 {healed} 名队友。");
-        return true;
-    }
-
-    private bool UseRedWolfLeap(CCSPlayerController player)
-    {
-        if (!ApplyDirectionalBoost(player, horizontal: 500f, vertical: 280f))
-        {
-            return false;
-        }
-
-        HealPlayer(player, 15);
-        player.PrintToChat(" [红狼] 按输入方向动力跃迁，恢复 15 生命。");
         return true;
     }
 
@@ -2890,7 +2847,8 @@ public sealed partial class DeltaOpsPlugin : BasePlugin, IPluginConfig<DeltaOpsC
 
     private PlayerState? GetExistingState(CCSPlayerController player)
     {
-        return IsHumanController(player) ? _states.GetValueOrDefault(GetPlayerKey(player)) : null;
+        var state = IsHumanController(player) ? _states.GetValueOrDefault(GetPlayerKey(player)) : null;
+        return state?.SelectionRetired == true ? null : state;
     }
 
     private IEnumerable<CCSPlayerController> GetEnemies(CCSPlayerController player)

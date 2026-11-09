@@ -38,7 +38,7 @@ internal static class SettlementTests
         Check(SettlementProtocol.ProofMatches(zero,key,"extract",hash,0));Check(!SettlementProtocol.ProofMatches(zero with{Operation="cashin"},key,"cashin",hash,0));
         var failed=fence.Issue("failed","extract",hash,0,"frozen");
         Check(!failed.Complete(zero with{OperationKey="failed"},()=>false));Check(failed.Completed==null);
-        var game=new GameplayState();game.Join("a");game.Solo("a");var t=DateTimeOffset.UtcNow;game.Tick(t,true);game.SelectCharacter("a",1);game.Tick(t,true);
+        var game=new GameplayState();game.Join("a");game.Solo("a");var t=DateTimeOffset.UtcNow;game.Tick(t,true);game.SelectCharacter("a",2);game.Tick(t,true);
         Check(game.ApplyCashIn("a",15000));Check(game.Players["a"].Cash==15000);Check(!game.ApplyCashIn("a",15000));
         Check(!new GameplayConfig().FinancialNativeVerified);
         fence.Clear();Check(fence.Find(key)==null);

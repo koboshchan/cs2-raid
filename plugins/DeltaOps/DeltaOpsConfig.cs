@@ -47,15 +47,6 @@ public sealed class DeltaOpsConfig : BasePluginConfig
     [JsonPropertyName("ShepherdMineLifetimeSeconds")]
     public float ShepherdMineLifetimeSeconds { get; set; } = 60f;
 
-    [JsonPropertyName("RedWolfKillHeal")]
-    public int RedWolfKillHeal { get; set; } = 50;
-
-    [JsonPropertyName("RedWolfSpeedMultiplier")]
-    public float RedWolfSpeedMultiplier { get; set; } = 1.35f;
-
-    [JsonPropertyName("RedWolfDurationSeconds")]
-    public float RedWolfDurationSeconds { get; set; } = 4.0f;
-
     [JsonPropertyName("StingerHealAmount")]
     public int StingerHealAmount { get; set; } = 60;
 

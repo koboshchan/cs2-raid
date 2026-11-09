@@ -19,7 +19,7 @@ static class TestModeTests
         policy.Stop();Check(!policy.CallbackAllowed(queued,false));
         policy.Start(true);Check(policy.NativeActive);Check(policy.CanRespawn(true));Check(!policy.CanRespawn(false));
         policy.Join("native",true);policy.Advance();Check(!policy.CanRespawn(true));
-        policy.Select("native",1);
+        policy.Select("native",2);
         while(policy.Phase!=TestModeState.Stage.Closed)policy.Advance();
         Check(!policy.NativeActive);Check(!policy.CanRespawn(true));
         foreach(var fail in new[]{"pawn","observer","spread","cvar"}){
@@ -64,10 +64,10 @@ static class TestModeTests
         state.Join("a",true);state.Join("b",true);state.Join("a",true);Check(state.Participants.Count==2);
         Reject(()=>state.Duo("a","a"));Reject(()=>state.Duo("a","unknown"));
         state.Duo("a","b");Check(state.Participants["a"]=="b"&&state.Participants["b"]=="a");
-        Reject(()=>state.Duo("a","b"));Reject(()=>state.Select("a",1));
+        Reject(()=>state.Duo("a","b"));Reject(()=>state.Select("a",2));
         state.Advance();Check(state.Phase==TestModeState.Stage.Selection);
         Reject(()=>state.Advance());Reject(()=>state.Select("a",0));Reject(()=>state.Select("missing",1));
-        state.Select("a",1);state.Select("b",6);state.Advance();Check(state.Phase==TestModeState.Stage.Buy);
+        Reject(()=>state.Select("a",1));state.Select("a",2);state.Select("b",6);state.Advance();Check(state.Phase==TestModeState.Stage.Buy);
         state.Advance();Check(state.Phase==TestModeState.Stage.Countdown);
         state.Advance();Check(state.Phase==TestModeState.Stage.Freeze);
         state.Advance();Check(state.Phase==TestModeState.Stage.Active);
@@ -89,7 +89,7 @@ static class TestModeTests
         full.Tick(now,false);Check(full.Teams.Phase==GamePhase.Lobby);
         full.Tick(now,true);Check(full.Teams.Phase==GamePhase.CharacterSelect);
         Check(!full.Teams.SelectCharacter("a",0)&&!full.Teams.SelectCharacter("a",7));
-        Check(full.Teams.SelectCharacter("a",1)&&full.Teams.SelectCharacter("b",6));
+        Check(full.Teams.SelectCharacter("a",2)&&full.Teams.SelectCharacter("b",6));
         Check(!full.Spend("a","glock")&&!full.Teams.CanDamage("a","c"));
         Check(full.Teams.Cancel("a").Length==2&&full.Teams.Phase==GamePhase.Lobby);
         Check(!full.Teams.SameTeam("a","b")&&full.Teams.Players["a"].Character==null);
@@ -115,7 +115,7 @@ static class TestModeTests
         var duoFlow=new TestFlow();duoFlow.Join("x");duoFlow.Join("y");duoFlow.Join("z");
         duoFlow.Teams.ShootRequest("x","y");Check(duoFlow.Teams.ShootRequest("y","x"));
         duoFlow.Teams.Solo("z");duoFlow.Tick(now,true);
-        foreach(var id in new[]{"x","y","z"})duoFlow.Teams.SelectCharacter(id,1);
+        foreach(var id in new[]{"x","y","z"})duoFlow.Teams.SelectCharacter(id,2);
         duoFlow.Tick(now,true);duoFlow.Tick(now.AddSeconds(45),true);duoFlow.Tick(now.AddSeconds(50),true);duoFlow.Tick(now.AddSeconds(60),true);
         Check(!duoFlow.Teams.CanDamage("x","y")&&duoFlow.Teams.CanDamage("x","z")&&duoFlow.Teams.Spectate("x")=="y");
         duoFlow.Teams.Kill("y",null);Check(duoFlow.Teams.Spectate("x")==null);
@@ -169,7 +169,7 @@ static class TestModeTests
         botflow.Teams.ShootRequest("h1","h2");botflow.Teams.ShootRequest("h2","h1");botflow.Teams.Solo("h3");
         var bt=DateTimeOffset.UtcNow;botflow.Tick(bt,true);
         Check(botflow.Teams.Phase==GamePhase.CharacterSelect);
-        foreach(var h in new[]{"h1","h2","h3"})botflow.Teams.SelectCharacter(h,1);
+        foreach(var h in new[]{"h1","h2","h3"})botflow.Teams.SelectCharacter(h,2);
         botflow.Tick(bt,true);Check(botflow.Teams.Phase==GamePhase.Buy);
         Check(!botflow.Spend("bot:1","glock"));
         botflow.Tick(bt.AddSeconds(46),true);botflow.Tick(bt.AddSeconds(52),true);botflow.Tick(bt.AddSeconds(63),true);

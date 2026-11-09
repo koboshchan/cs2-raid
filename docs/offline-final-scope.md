@@ -10,7 +10,7 @@ This handoff does not authorize starting or deploying a server. Parent alone own
 | Clock | Typed GameRules phase clock, replication dirty mark, exact native identity restore | Client display and engine expiry side effects unverified |
 | Native B menu | Inactive catalog/actor-bound reservation ledger; cancel-before-attempt refund only; ambiguous grant locks Unknown | NOT enabled. Existing custom fixture buy remains fallback, not B-menu acceptance |
 | Reload | Inactive catalog/serial/generation-bound state machine and verified-adapter interface | NOT wired. No native ammo writes or TestFlow debit; requested paid reload runtime unavailable |
-| DeltaOps | Reviewed disabled v2 scaffold, serial human/bot custom-team policy, provenance/quarantine tests and lifecycle hooks | Original KIT STUB remains. Assignment returns false; all six native kits unavailable |
+| DeltaOps | Reviewed disabled v2 scaffold, serial human/bot custom-team policy, provenance/quarantine tests and lifecycle hooks | Original KIT STUB remains. Assignment returns false; all five native kits unavailable |
 | Native damage | Unsafe hardcoded 0x88 call removed | Damage abilities disabled in ALL DeltaOps modes, intentional legacy safety regression |
 | Utility | BUY utility blocked independently; kit utility bookkeeping is nonredeemable | No fixture kit utility delivered; ownership/revocation unproven |
 | Financial recovery | Reviewed durable protocol retained; fixture preflight rejects historical state | External money HARD OFF; no reconciliation economic replay performed |
@@ -40,7 +40,7 @@ https://github.com/roflmuffin/CounterStrikeSharp/issues/377
 
 ## Remaining acceptance work, not completed TODOs
 
-Obtain independently verified catalog and purchase/reload adapters before runtime wiring. Prove native ownership/revocation and safe damage ABI separately for each operator, movement/effect lifecycle and delayed callbacks. Run authorized native matrix for T/CT GUI, failure/cancel/phase changes, insufficient balance, repeated input, partial magazines, reserve behavior, real reconnect, bots, two round cycles, OFF/unload restore, banners, HUD/clock and knife. No fake reconnect or native acceptance from compiler success. Read the exact ability worker handoff at /home/kit/out/raid-fixture-abilities-v2-handoff.md for all six BLOCKED operator rows.
+Obtain independently verified catalog and purchase/reload adapters before runtime wiring. Prove native ownership/revocation and safe damage ABI separately for each operator, movement/effect lifecycle and delayed callbacks. Run authorized native matrix for T/CT GUI, failure/cancel/phase changes, insufficient balance, repeated input, partial magazines, reserve behavior, real reconnect, bots, two round cycles, OFF/unload restore, banners, HUD/clock and knife. No fake reconnect or native acceptance from compiler success. Read the exact ability worker handoff at /home/kit/out/raid-fixture-abilities-v2-handoff.md for all five BLOCKED operator rows.
 
 Reproduce with root Docker targets raid-artifacts and deltaops-artifacts. Dependency image/CSS archive are pinned; compile/test RUN steps have network=none. Each target compiles twice and compares DLL/PDB/deps. Raid model tests and separate FixtureAbilitiesV2 policy tests are included. Build receipts under /home/kit/out/raid-final-offline-combined record no server start/deploy.
 

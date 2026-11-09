@@ -39,7 +39,7 @@ public sealed partial class RaidPlugin
     }
     private static string FixturePrompt(GamePhase phase)=>phase switch{
         GamePhase.Lobby=>"Choose a partner or !team single",
-        GamePhase.CharacterSelect=>"Select your operator: !characterselect 1..6",
+        GamePhase.CharacterSelect=>"Select your operator: !characterselect 2..6",
         GamePhase.Buy=>"BUY PHASE | finite fixture credits",
         GamePhase.Countdown=>"Prepare for insertion",
         GamePhase.Freeze=>"Insertion grace period",

@@ -20,7 +20,18 @@ public sealed class GameplayState
 {
     public const int BuySeconds = 45;
     public bool BuyOpen(DateTimeOffset now) => Phase==GamePhase.Buy && StartsAt is {} end && now<end && now>=end.AddSeconds(-BuySeconds);
-    public static readonly string[] Characters = ["D-Wolf", "Stinger", "Luna", "Vyron", "Hackclaw", "Shepherd"];
+    // Stable bridge/persistent IDs. Retired D-Wolf 1 is deliberately absent.
+    public static readonly System.Collections.ObjectModel.ReadOnlyDictionary<int,string> Characters =
+        new(new Dictionary<int,string> { [2]="Stinger", [3]="Luna", [4]="Vyron", [5]="Hackclaw", [6]="Shepherd" });
+    private bool retiredSelectionDetected;
+    // Invalid persisted identity latches a stop until the existing game/session reset.
+    public bool SelectionRecoveryRequired {
+        get {
+            if(Players.Values.Any(p=>p.Character is {} id && !Characters.ContainsKey(id)))
+                retiredSelectionDetected=true;
+            return retiredSelectionDetected;
+        }
+    }
     public string MatchId { get; } = Guid.NewGuid().ToString("N");
     public Dictionary<string, Member> Players { get; } = [];
     public Dictionary<string, GroundLoot> Ground { get; } = [];
@@ -81,11 +92,16 @@ public sealed class GameplayState
     private void ForgetRequests(string id) => requests.RemoveWhere(x=>x.From==id || x.To==id);
     public bool SelectCharacter(string id,int number)
     {
-        if (Phase!=GamePhase.CharacterSelect || !Players.TryGetValue(id,out var p) || p.Team==null || number<1 || number>Characters.Length) return false;
+        if (SelectionRecoveryRequired || Phase!=GamePhase.CharacterSelect || !Players.TryGetValue(id,out var p) || p.Team==null || !Characters.ContainsKey(number)) return false;
         p.Character=number; return true;
     }
     public int? Tick(DateTimeOffset now, bool configured)
     {
+        if(SelectionRecoveryRequired) {
+            foreach(var p in Players.Values)
+                if(p.Character is {} id && !Characters.ContainsKey(id))p.Character=null;
+            return null; // Adapter uses StopGameplay cleanup, never skip ahead or silently reassign.
+        }
         if (!configured && Phase is not (GamePhase.Lobby or GamePhase.Closed)) return null; // adapter must halt on lost configuration
         if (Phase==GamePhase.Lobby && configured && Players.Count>0 && Players.Values.All(x=>x.Team!=null))
             Phase=GamePhase.CharacterSelect;
@@ -112,7 +128,7 @@ public sealed class GameplayState
     }
     public bool TryPurchase(string id,int price)
     {
-        if(Phase!=GamePhase.Buy || !Living(id) || price<0 || Players[id].Cash<price)return false;
+        if(SelectionRecoveryRequired || Phase!=GamePhase.Buy || !Living(id) || price<0 || Players[id].Cash<price)return false;
         Players[id].Cash-=price;return true;
     }
     public bool SameTeam(string a,string b) => Players.TryGetValue(a,out var x) && Players.TryGetValue(b,out var y) && x.Team!=null && x.Team==y.Team;

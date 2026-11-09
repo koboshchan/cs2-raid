@@ -10,7 +10,7 @@ public static class FlowTests
         GameplayState Ready(){
             var s=Lobby("a","b","c");s.ShootRequest("a","b");s.ShootRequest("b","a");s.Solo("c");return s;
         }
-        GameplayState Buy(){var s=Ready();s.Tick(now,true);foreach(var id in s.Players.Keys)s.SelectCharacter(id,1);s.Tick(now,true);return s;}
+        GameplayState Buy(){var s=Ready();s.Tick(now,true);foreach(var id in s.Players.Keys)s.SelectCharacter(id,2);s.Tick(now,true);return s;}
         GameplayState Active(){var s=Buy();s.Tick(now.AddSeconds(45),true);s.Tick(now.AddSeconds(50),true);s.Tick(now.AddSeconds(60),true);return s;}
         var g=Lobby("a","b","c");
         Check(!g.ShootRequest("a","a"));Check(!g.ShootRequest("ghost","a"));Check(!g.ShootRequest("a","b"));Check(g.ShootRequest("b","a"));
@@ -24,6 +24,27 @@ public static class FlowTests
         Check(!g.ShootRequest("b","a"));Check(g.ShootRequest("a","b"));g.Tick(now,true);
         Check(g.Join("d"));Check(g.Phase==GamePhase.Lobby);Check(g.Solo("d"));g.Tick(now,true);
         g.Leave("b");Check(g.Players["a"].Team==null);Check(!g.Players.ContainsKey("b"));
+        var stable=Ready();stable.Tick(now,true);
+        Check(!stable.SelectCharacter("a",1)); // Retired ID must not silently become Stinger.
+        Check(GameplayState.Characters.Count==5);
+        foreach(var entry in new Dictionary<int,string>{{2,"Stinger"},{3,"Luna"},{4,"Vyron"},{5,"Hackclaw"},{6,"Shepherd"}}){
+            Check(GameplayState.Characters[entry.Key]==entry.Value);
+            Check(stable.SelectCharacter("a",entry.Key)); Check(stable.Players["a"].Character==entry.Key);
+        }
+        stable.Players["a"].Character=1; // Simulate an old persisted selection.
+        stable.Tick(now,true); Check(stable.Players["a"].Character==null); Check(stable.Phase==GamePhase.CharacterSelect); Check(stable.SelectionRecoveryRequired);Check(!stable.SelectCharacter("a",2));
+        foreach(var phase in new[]{GamePhase.Buy,GamePhase.Countdown,GamePhase.Freeze,GamePhase.Active}){
+            var stale=Ready();stale.Tick(now,true);stale.SelectCharacter("a",2);stale.SelectCharacter("b",6);stale.SelectCharacter("c",3);
+            stale.Tick(now,true);
+            if(phase>=GamePhase.Countdown)stale.Tick(now.AddSeconds(45),true);
+            if(phase>=GamePhase.Freeze)stale.Tick(now.AddSeconds(50),true);
+            if(phase>=GamePhase.Active)stale.Tick(now.AddSeconds(60),true);
+            Check(stale.Phase==phase);
+            stale.Players["a"].Cash=100;stale.Players["a"].Character=1;
+            Check(stale.SelectionRecoveryRequired);Check(!stale.TryPurchase("a",1));Check(stale.Players["a"].Cash==100);
+            Check(stale.Tick(now.AddHours(1),true)==null);Check(stale.Phase==phase);
+            Check(stale.Players["a"].Character==null);Check(stale.SelectionRecoveryRequired);
+        }
         // Actual shared StopGameplay orchestration: adapter failures cannot bypass
         // the fence, clock restore, later teardown or pending-reset protection.
         foreach(var failingAdapter in new[]{0,1}){

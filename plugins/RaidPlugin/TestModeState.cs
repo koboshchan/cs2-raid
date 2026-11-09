@@ -75,12 +75,12 @@ public sealed class TestModeState
     public void Leave(string id){if(Participants.Remove(id,out var mate)&&mate!=null&&Participants.ContainsKey(mate))Participants[mate]=null;Characters.Remove(id);}
     public void Select(string id,int number)
     {
-        if(!Enabled || Phase!=Stage.Selection || !Participants.ContainsKey(id)||number<1||number>6)throw new InvalidOperationException("Selection fixture requires enrolled participant and label 1-6.");
+        if(!Enabled || Phase!=Stage.Selection || !Participants.ContainsKey(id)||number<2||number>6)throw new InvalidOperationException("Selection fixture requires enrolled participant and stable ID 2-6.");
         Characters[id]=number;
     }
     public void Advance()
     {
-        if(!Enabled || Participants.Count==0 || Phase==Stage.Closed || Phase==Stage.Selection&&Participants.Keys.Any(id=>!Characters.ContainsKey(id)))
+        if(!Enabled || Participants.Count==0 || Phase==Stage.Closed || Phase==Stage.Selection&&Participants.Keys.Any(id=>(!Characters.TryGetValue(id,out var character)||character is <2 or >6)))
             throw new InvalidOperationException("Enroll participants / select kit-stub labels before advancing.");
         Phase++;
     }

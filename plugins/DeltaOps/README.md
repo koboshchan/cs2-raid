@@ -45,15 +45,11 @@ disabled; `css_ops_assign` remains server-console only for testing.
 When V or X finishes cooling down, the owning player receives an alert below
 the crosshair with the slot and skill name.
 
-The server sets the HE grenade carry limit to 3. Items granted by abilities are
+The server sets the HE grenade carry limit to 2. Items granted by abilities are
 added to the inventory and immediately selected in the player's hand.
 
 ## Roster
 
-1. 红狼 / D-Wolf
-   - V: 4 seconds of +35% movement speed
-   - X: leap in the current WASD direction and recover 15 HP; default forward
-   - Passive: killing an enemy restores 50 HP
 2. 蜂医 / Stinger
    - V: heals yourself and nearby teammates for 60 HP
    - X: creates a long smoke trail from five real CS2 smoke segments
@@ -133,3 +129,5 @@ C:\cs2server\game\csgo\addons\counterstrikesharp\configs\plugins\DeltaOps\DeltaO
 Repository build note
 
 The original build.ps1 mentioned above is intentionally omitted by owner request. Use only the root Dockerfile targets documented in the repository README. No host scripts are retained.
+
+Offline roster update retains stable enum IDs 1..5 and existing bridge/command IDs 2..6. Retired D-Wolf wire ID 1 is rejected, never remapped. Menus display those stable IDs, not contiguous new indexes. Legacy guessed ability effects are not exact archive implementations.

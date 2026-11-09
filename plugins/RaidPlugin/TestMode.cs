@@ -122,7 +122,7 @@ try{
                             testFlow.Teams.ShootRequest(first,second);testFlow.Teams.ShootRequest(second,first);break;
                         case "character":
                             var who=Participant(2);
-                            if(c.ArgCount!=4||!int.TryParse(c.GetArg(3),out var label))throw new InvalidOperationException("character userid label(1-6)");
+                            if(c.ArgCount!=4||!int.TryParse(c.GetArg(3),out var label))throw new InvalidOperationException("character userid label(2-6)");
                             testMode.Select(Id(who),label);testFlow.Teams.SelectCharacter(Id(who),label);break;
                         case "give":
                             throw new InvalidOperationException("Free give removed. Use native buy <allowlisted gun> during automatic Buy; finite fixture credits.");
@@ -130,7 +130,7 @@ try{
                             if(testMode.Phase==TestModeState.Stage.Lobby && testMode.Participants.Keys.Any(id=>Find(id) is not {} live || !TestParticipant(live)||!live.PawnIsAlive))
                                 throw new InvalidOperationException("All enrolled players must be alive. Use spawn userid 2|3 in Lobby.");
                             testFlow.Manual=true;testMode.Advance();ApplyTestPhase();break;
-                        default:throw new InvalidOperationException("on/off/status/join userid/spawn userid 2|3/capture userid/duo userid userid/character userid 1-6/next (manual QA disables auto)");
+                        default:throw new InvalidOperationException("on/off/status/join userid/spawn userid 2|3/capture userid/duo userid userid/character userid 2-6/next (manual QA disables auto)");
                     }
                 }
                 c.ReplyToCommand(TestStatus());
@@ -151,11 +151,11 @@ try{
                 var changed=testFlow.Teams.Cancel(Id(p!));
                 if(changed.Length>0){SyncTestTeams();testMode.Sync(TestModeState.Stage.Lobby);ApplyTestPhase();TestAnnounce("Team cancelled. Shoot each other or !team single.");}
             });
-            AddCommand("css_characterselect","Fixture character state 1..6, no DeltaOps abilities",(p,c)=>{
+            AddCommand("css_characterselect","Fixture character state 2..6, no DeltaOps abilities",(p,c)=>{
                 if(!TestPlayerCommand(p,c))return;
                 if(c.ArgCount==2&&int.TryParse(c.GetArg(1),out var n)&&testFlow.Teams.SelectCharacter(Id(p!),n))
-                    p!.PrintToChat("TEST selected "+GameplayState.Characters[n-1]+"; KIT STUB, NO DeltaOps abilities.");
-                else p!.PrintToChat("Select during Selection with !characterselect 1..6.");
+                    p!.PrintToChat("TEST selected "+GameplayState.Characters[n]+"; KIT STUB, NO DeltaOps abilities.");
+                else p!.PrintToChat("Select during Selection with !characterselect 2..6.");
             });
             AddCommand("css_testshop","Fixture credits and strict gun prices",(p,c)=>{
                 if(!TestPlayerCommand(p,c))return;
@@ -390,7 +390,7 @@ try{
         // Inventory is not an economic snapshot and is never restored/refunded on OFF.
         p.RemoveWeapons();
         GrantTestGun(p,"glock");GiveFixtureKnife(p);
-        p.PrintToChat("TEST lobby: shoot each other to duo; !team single; !cancelteam. Then !characterselect 1..6. !testshop lists finite-credit guns. NO DeltaOps abilities / SSG.");
+        p.PrintToChat("TEST lobby: shoot each other to duo; !team single; !cancelteam. Then !characterselect 2..6. !testshop lists finite-credit guns. NO DeltaOps abilities / SSG.");
     }
     private bool GrantTestGun(CCSPlayerController p,string name){
         var gun=p.GiveNamedItem<CCSWeaponBase>("weapon_"+name);
@@ -508,7 +508,7 @@ try{
                 ApplyTestPhase();testLastCount=-1;
                 if(testMode.NativeActive)UpdateTestNativeClock(count??1800);
                 TestAnnounce(after switch{
-                    GamePhase.CharacterSelect=>"Selection: !characterselect 1..6 (state complete, KIT STUB only, no DeltaOps). !cancelteam allowed.",
+                    GamePhase.CharacterSelect=>"Selection: !characterselect 2..6 (state complete, KIT STUB only, no DeltaOps). !cancelteam allowed.",
                     GamePhase.Buy=>"Buy 45s: native console buy <gun> or !testbuy <gun>; !testshop. Free 15000 fixture credits; no SSG or projected cash.",
                     GamePhase.Countdown=>"Countdown 5s, then real-map insertion.",
                     GamePhase.Freeze=>"Inserted, frozen 10s at actual native/captured map positions.",

@@ -65,10 +65,10 @@ public sealed partial class RaidPlugin
         AddCommand("css_team","Ready as solo",(p,c)=>{
             if(Human(p)&&!FinancialFrozen(Id(p))&&c.ArgString.Trim().Equals("single",StringComparison.OrdinalIgnoreCase)&&game.Solo(Id(p))) Place(p,gameplayConfig.ReadyPlatform);
         });
-        AddCommand("css_characterselect","Select character 1-6",(p,c)=>{
-            if(!Human(p) || FinancialFrozen(Id(p)) || game.Phase!=GamePhase.CharacterSelect || c.ArgCount!=2 || !int.TryParse(c.GetArg(1),out var number) || number<1 || number>6)return;
+        AddCommand("css_characterselect","Select stable character ID 2-6",(p,c)=>{
+            if(!Human(p) || FinancialFrozen(Id(p)) || game.Phase!=GamePhase.CharacterSelect || c.ArgCount!=2 || !int.TryParse(c.GetArg(1),out var number) || !GameplayState.Characters.ContainsKey(number))return;
             if(!deltaOpsCharactersReady || assignCharacter==null || !assignCharacter(p,number)) {p.PrintToChat("Character bridge unavailable. Selection not confirmed; raid stays in selection.");return;}
-            if(game.SelectCharacter(Id(p),number))p.PrintToChat("Selected "+GameplayState.Characters[number-1]);
+            if(game.SelectCharacter(Id(p),number))p.PrintToChat("Selected "+GameplayState.Characters[number]);
         });
         AddCommand("css_cashout","Cash in from SSG",(p,c)=>BeginCashIn(p,c.ArgCount==2?c.GetArg(1):""));
         RegisterListener<Listeners.OnEntityTakeDamagePre>(Damage);
@@ -201,6 +201,7 @@ public sealed partial class RaidPlugin
         TickSettlementRecovery();
         if(raidBuyOwnership.Blocked){raidBuyOwnership.Cleanup(CleanupRaidBuyFailure,()=>raidBuyBaselines.Count!=0,RaidBuyError);return;}
         if(!sessionLoaded)return;
+        if(game.SelectionRecoveryRequired){StopGameplay();return;}
         var now=DateTimeOffset.UtcNow;
         // Eligibility is sampled once at the first game-thread second at/after the
         // deadline, before phase advancement or unrelated financial work can delay it.
@@ -276,7 +277,7 @@ public sealed partial class RaidPlugin
                 if(FinancialFrozen(m.Id)){HoldFinancialInventory(p);continue;}
             SetPresentation(p,game.Phase is GamePhase.CharacterSelect or GamePhase.Countdown or GamePhase.Freeze,game.Phase==GamePhase.CharacterSelect);
             if(game.Phase==GamePhase.CharacterSelect) {
-                for(var i=0;i<GameplayState.Characters.Length;i++)p.PrintToChat((i+1)+". "+GameplayState.Characters[i]);
+                foreach(var entry in GameplayState.Characters)p.PrintToChat(entry.Key+". "+entry.Value);
                 p.PrintToChat("Choose with !characterselect <number>.");
             }
         }

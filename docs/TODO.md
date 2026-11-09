@@ -4,7 +4,7 @@ Authoritative requirements remain in [SPEC.md](SPEC.md). Implementation status b
 
 ## Flow v2 implemented offline
 
-- [x] Pure phase model: lobby, six-character selection, native buy 45s, countdown 5s, spawn freeze 10s, active 30min, close.
+- [x] Pure phase model: lobby, five-character selection, native buy 45s, countdown 5s, spawn freeze 10s, active 30min, close.
 - [x] Pure duo request/cancel guards, seven-player cap and damage eligibility.
 - [x] Fixed-value instant E item/equipment/bag claiming. No inventory pickup award or shoot-to-loot.
 - [x] Safe hold timer, release/range reset, configured money range and single-consumer award.
@@ -17,7 +17,7 @@ Authoritative requirements remain in [SPEC.md](SPEC.md). Implementation status b
 
 ## Blocking work, NOT complete
 
-- [x] Offline DeltaOps PluginCapability assignment, six characters, custom duo/FFA targeting and fail-closed reset lifecycle. Unsafe global enemy reveals suppressed; live ability/utility QA remains blocked.
+- [x] Offline DeltaOps PluginCapability assignment, five characters, custom duo/FFA targeting and fail-closed reset lifecycle. Unsafe global enemy reveals suppressed; live ability/utility QA remains blocked.
 - [ ] Live verify all twelve ability routes, kit utility delivery/economy fencing and selection lifecycle.
 - [ ] Financial ENABLEMENT remains blocked. Offline backend durable debit/mint receipt journal and gated native polling/proof adapter exist. Cash-in max $15,000; full-price guns and unused utility extraction. Backend RAID_FINANCIAL_ENABLED defaults unset and native FinancialNativeVerified defaults false. Native partial-completion recovery, durable cleanup evidence, manual reconciliation/lifecycle, live input freeze and end-to-end QA remain unfinished. No automatic refunds/regrants.
 - [ ] Reload/magazine economy (weapon price / 20), reserve-ammo control and native affordability.
@@ -56,7 +56,7 @@ Dedicated cs2-raid Docker daemon, SDK 10.0.403 and pinned CSS 1.0.379. Two Relea
 Source-only isolated raid-bot-combat-v1 from deployed aecc49c. Stage2 retained separately untouched.
 Typed captured mp_do_warmup_period=false, mp_freezetime=0, roundtime/defuse/hostage=30f; existing ignore-round-win=true. ON executes constant mp_warmup_end after scope and captures; elapsed warmup cannot be restored, but cvar baselines restore OFF/unload. No fake restoration promise.
 Console inspect now accepts bots and shows native HP, max, team, alive, move/actualmove/flags, bot/enrollment/solo-id and phase. trace 0..32 prints damage policy decisions console-only, reset on OFF/round. No health-delta acceptance implied.
-Lobby now allows enrolled living human-bot and bot-bot damage; human-human retains no-damage mutual-shot pairing. Selection/Buy/Countdown/Freeze remain protected; Active custom-duo immunity/FFA unchanged. No silent advance after !team single: selection still required; use !characterselect 1..6 and normal automatic phases. Live real health deltas BOTH directions, bot AI target behavior, freeze flags and cvar types still owner-native QA.
+Lobby now allows enrolled living human-bot and bot-bot damage; human-human retains no-damage mutual-shot pairing. Selection/Buy/Countdown/Freeze remain protected; Active custom-duo immunity/FFA unchanged. No silent advance after !team single: selection still required; use !characterselect 2..6 and normal automatic phases. Live real health deltas BOTH directions, bot AI target behavior, freeze flags and cvar types still owner-native QA.
 Stage3 utility from proven ability-kit provenance remains allowed as future scope; only BUY-menu utility prohibited. Stage2 inactive policy has no runtime integration.
 
 - [x] Offline 45-second Buy model, deadline admission, fixed engine clock anchor, typed scoped mp_buytime capture/restore; current-engine seconds receipt documented.
