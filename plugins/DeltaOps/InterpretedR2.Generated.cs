@@ -2,7 +2,7 @@ using System.Collections.Frozen;
 namespace DeltaOps;
 public sealed record InterpretedSkill(int Operator, int Id, string Name, int CdId, int Initial, int Capacity, double RechargeSeconds, bool Passive);
 public static class InterpretedR2 {
-public static readonly FrozenDictionary<int,InterpretedSkill> Skills = new InterpretedSkill[] {
+public static readonly FrozenDictionary<(int Operator,int Skill),InterpretedSkill> Skills = new InterpretedSkill[] {
 new(1,2008002,"烟幕",2002,1,1,60.0,false),
 new(1,2008005,"蜂巢科技烟雾弹",2001,1,1,40.0,false),
 new(1,4008007,"拔箭",0,1,1,1.0,false),
@@ -36,5 +36,5 @@ new(5,4008007,"拔箭",0,1,1,1.0,false),
 new(5,30010101,"声波震慑",12,0,1,90.0,false),
 new(5,30010201,"共振防御",0,1,1,1.0,true),
 new(5,30010202,"工程兵喷枪",1030,1,1,1.0,false),
-}.ToFrozenDictionary(s=>s.Id);
+}.ToFrozenDictionary(s=>(s.Operator,s.Id));
 }
