@@ -14,10 +14,11 @@ public interface INativeEntityCreation:INativeEntityBoundary
 public sealed class NativeEntityTransaction(NativeEntityEscrow escrow,INativeEntityCreation native):IDisposable
 {
     private NativeEntityTicket? created;
-    private bool recorded,closed;
+    private bool recorded,closed,attempted;
     public void Activate()
     {
-        if(closed||created!=null)throw new InvalidOperationException("Entity transaction reused");
+        if(closed||attempted)throw new InvalidOperationException("Entity transaction reused");
+        attempted=true;
         try{created=native.CreateInert();}
         catch{native.CleanupIncompleteCreation();throw;}
         escrow.Record(created);

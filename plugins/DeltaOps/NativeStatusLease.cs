@@ -4,10 +4,19 @@ namespace DeltaOps;
 // validation belongs in samePawn, never an entity-index lookup.
 public sealed class NativeStatusLease(Func<bool> samePawn,Func<float> read,Action<float> write,Action notify,float before,float applied)
 {
-    private bool restored,closed;
-    public void Apply(){write(applied);notify();}
+    private bool restored,closed,attempted,mutationPossible;
+    public void Apply(){
+        if(closed||attempted)throw new InvalidOperationException("Status lease cannot be replayed");
+        attempted=true;
+        if(!float.IsFinite(before)||!float.IsFinite(applied)||!samePawn()||read()!=before)
+            throw new InvalidOperationException("Status baseline or pawn changed");
+        // A throwing native setter can already have committed.
+        mutationPossible=true;
+        write(applied);notify();
+    }
     public void Dispose(){
         if(closed)return;
+        if(!mutationPossible){closed=true;return;}
         if(!samePawn()){closed=true;return;}
         if(!restored){
             // Preserve a different writer. Identical-value concurrent writers cannot

@@ -422,6 +422,28 @@ foreach(var sk in InterpretedR2.Skills.Values) {
  Check(!string.IsNullOrEmpty(NativeImplementationEvidence.Implementation(sk.Id)));
  Check(!string.IsNullOrEmpty(NativeImplementationEvidence.Approval(sk.Operator,sk.Id)));
 }
+
+// A stale captured baseline cannot authorize replacing another writer's scalar.
+foreach(var stale in new[]{0.8f,float.NaN}) {
+ float actual=stale;int changes=0;
+ var guarded=new NativeStatusLease(()=>true,()=>actual,v=>{actual=v;changes++;},()=>{},1,.5f);
+ try{guarded.Apply();Check(false);}catch(InvalidOperationException){Check(true);}
+ guarded.Dispose();Check(changes==0);
+}
+{
+ float actual=1;int changes=0;
+ var guarded=new NativeStatusLease(()=>true,()=>actual,v=>{actual=v;changes++;},()=>{},1,.5f);
+ guarded.Dispose();
+ try{guarded.Apply();Check(false);}catch(InvalidOperationException){Check(true);}
+ Check(changes==0);
+}
+{
+ float actual=1;int changes=0;
+ var guarded=new NativeStatusLease(()=>true,()=>actual,v=>{actual=v;changes++;},()=>{},1,.5f);
+ guarded.Apply();
+ try{guarded.Apply();Check(false);}catch(InvalidOperationException){Check(true);}
+ Check(changes==1);guarded.Dispose();Check(actual==1&&changes==2);
+}
 Console.WriteLine($"{count} interpreted lifecycle checks PASS; router + lifecycle PASS; CSS calls compile, not native QA");
 sealed class Effect:IDisposable{public bool Disposed;public void Dispose()=>Disposed=true;}
 
