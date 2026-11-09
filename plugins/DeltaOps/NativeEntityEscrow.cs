@@ -32,7 +32,8 @@ public sealed class NativeEntityEscrow
     public int Pending=>tickets.Count;
     private static void Validate(NativeEntityTicket t){
         if(t.Serial==0||t.Serial==uint.MaxValue||string.IsNullOrWhiteSpace(t.World)||
-            !t.Marker.StartsWith("deltaops-owned-",StringComparison.Ordinal)||t.Marker.Length<48||
+            !t.Marker.StartsWith("deltaops-owned-",StringComparison.Ordinal)||
+            !Guid.TryParseExact(t.Marker["deltaops-owned-".Length..],"N",out _)||
             string.IsNullOrWhiteSpace(t.Kind))
             throw new ArgumentException("Incomplete native identity");
     }
