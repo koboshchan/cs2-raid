@@ -196,3 +196,7 @@ ABILITY_API_CALLS.json records 1,629 external invocation/constructor/member-acce
 ## Read-only recon capability exception
 
 The two source-reviewed pairs produce only owner-directed, instantaneous coordinate text under existing pawn/raid policy. No entity creation, native mutation, timer or delayed cleanup is used. The referenced schema/handle/print contracts and exact URLs are in capabilityAdmission and readOnlyReconDependencies in the JSON ledger. DF recon equivalence and installed-engine QA are explicitly false. This is not a route to enable hit marks, passive damage, dash or scalar effects. Failed printing may leave partial disclosed text; there is no rollback/exactly-once promise.
+
+## Expanded syntax audit
+
+The refreshed semantic inventory includes indexers and source-defined operators in binary/unary/cast syntax, excluding built-in primitive operators. There are now 1754 occurrences, including 1164 CSS occurrences. Existing source candidate links are retained by exact bound symbol. Entity equality delegates to Equals/full handle equality; it does not validate liveness or the world/session. Implicit conversions and generated calls remain outside this inventory. All pending rows remain pending.

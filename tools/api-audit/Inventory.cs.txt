@@ -17,10 +17,11 @@ var rows=new List<object>();
 foreach(var tree in trees){
  var m=c.GetSemanticModel(tree);
  foreach(var n in tree.GetRoot().DescendantNodes()){
-  if(n is not InvocationExpressionSyntax && n is not ObjectCreationExpressionSyntax && n is not ImplicitObjectCreationExpressionSyntax && n is not MemberAccessExpressionSyntax)continue;
+  if(n is not InvocationExpressionSyntax && n is not ObjectCreationExpressionSyntax && n is not ImplicitObjectCreationExpressionSyntax && n is not MemberAccessExpressionSyntax && n is not ElementAccessExpressionSyntax && n is not BinaryExpressionSyntax && n is not PrefixUnaryExpressionSyntax && n is not PostfixUnaryExpressionSyntax && n is not CastExpressionSyntax)continue;
   if(n is MemberAccessExpressionSyntax && n.Parent is InvocationExpressionSyntax)continue;
   var si=m.GetSymbolInfo(n);var s=si.Symbol;
   if(s==null)continue;
+  if(s is IMethodSymbol {MethodKind:MethodKind.BuiltinOperator})continue;
   if(s.ContainingAssembly?.Name=="DeltaOpsAudit")continue;
   rows.Add(new {file=Path.GetRelativePath(repo,tree.FilePath),line=n.GetLocation().GetLineSpan().StartLinePosition.Line+1,kind=s.Kind.ToString(),symbol=s.ToDisplayString(),assembly=s.ContainingAssembly?.Identity.ToString(),syntax=n.ToString(),verification="PENDING", original=s.OriginalDefinition.ToDisplayString(), owner=s.ContainingType?.OriginalDefinition.ToDisplayString(), name=s.MetadataName});
  }
