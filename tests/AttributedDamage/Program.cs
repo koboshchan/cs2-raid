@@ -27,6 +27,13 @@ for(int mask=0;mask<32;mask++){
  Check(boundary.Apply(r)==(mask==31?AbilityDamageOutcome.NativeRejected:AbilityDamageOutcome.Denied));
  Check(driver.Calls==calls+(mask==31?1:0));
 }
+for(int mask=0;mask<2048;mask++){
+ bool B(int bit)=>(mask&(1<<bit))!=0;
+ var authority=new AbilityDamageAuthority(B(0),B(1),request.Generation,B(2),B(3),
+ B(4),B(5),B(6),B(7),B(8),B(9),B(10));
+ Check(AbilityDamageAuthorization.Allow(request,authority)==(mask==2047));
+ Check(!AbilityDamageAuthorization.Allow(request with{Generation=2},authority));
+}
 Console.WriteLine($"Attributed damage boundary {n} checks PASS; native ABI NOT accepted");
 sealed class Driver:IAttributedDamageDriver{
  public bool Supported=>true;public bool Throw,Accept=true;public int Calls;public Action? Callback;

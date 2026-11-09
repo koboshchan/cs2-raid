@@ -43,3 +43,15 @@ public sealed class UnvalidatedAbilityDamageDriver:IAttributedDamageDriver
     public bool Supported=>false;
     public bool Apply(AbilityDamageRequest request)=>false;
 }
+
+public readonly record struct AbilityDamageAuthority(bool ResidentLoaded,bool OnGameThread,
+    long CurrentGeneration,bool Active,bool AttackerLiving,bool TargetLiving,
+    bool FinancialAllowed,bool Hostile,bool AttackerIdentity,bool TargetIdentity,
+    bool InflictorOwned,bool OutcomeOpen);
+public static class AbilityDamageAuthorization
+{
+    public static bool Allow(AbilityDamageRequest request,AbilityDamageAuthority a)=>
+        a.ResidentLoaded&&a.OnGameThread&&a.CurrentGeneration==request.Generation&&a.Active&&
+        a.AttackerLiving&&a.TargetLiving&&a.FinancialAllowed&&a.Hostile&&
+        a.AttackerIdentity&&a.TargetIdentity&&a.InflictorOwned&&a.OutcomeOpen;
+}
