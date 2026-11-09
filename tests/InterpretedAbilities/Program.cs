@@ -163,6 +163,26 @@ reentryEscrow=new NativeEntityEscrow("map-A",[],snapshot=>{
  try{reentryEscrow.Record(nestedTicket);}catch(InvalidOperationException){nestedBlocked=true;}
 });
 reentryEscrow.Record(Ticket(888));Check(nestedBlocked);Check(reentryEscrow.Pending==1);
+// Actual disk-backed handoff, not a mock claiming to be durable.
+var tempDirectory=Path.Combine(Path.GetTempPath(),"ability-escrow-test-"+Guid.NewGuid().ToString("N"));
+Directory.CreateDirectory(tempDirectory);
+try{
+ var file=Path.Combine(tempDirectory,"ownership.json");var store=new NativeEntityFileStore(file);
+ Check(store.Read().Count==0);store.Write(new[]{first,second});
+ Check(new NativeEntityFileStore(file).Read().SequenceEqual(new[]{first,second}));
+ var recovered=new NativeEntityEscrow("map-A",new NativeEntityFileStore(file).Read(),store.Write);
+ var recoveryNative=new EntityMock();recoveryNative.Entities[first.Serial]=first;
+ recoveryNative.Entities[second.Serial]=second;recoveryNative.FailRemove=true;
+ Check(!recovered.Drain(recoveryNative));Check(new NativeEntityFileStore(file).Read().Count==2);
+ recoveryNative.FailRemove=false;Check(recovered.Drain(recoveryNative));
+ Check(new NativeEntityFileStore(file).Read().Count==0);
+ Check(Directory.GetFiles(tempDirectory).Length==1);
+ File.WriteAllText(file,"corrupt");
+ try{store.Read();Check(false);}catch(System.Text.Json.JsonException){}
+ File.WriteAllText(file,"{\"Schema\":2,\"Tickets\":[]}");
+ try{store.Read();Check(false);}catch(InvalidDataException){}
+ Check(File.ReadAllText(file).Contains("2"));
+}finally{Directory.Delete(tempDirectory,recursive:true);}
 Console.WriteLine($"{count} interpreted lifecycle checks PASS; router + lifecycle PASS; CSS calls compile, not native QA");
 sealed class Effect:IDisposable{public bool Disposed;public void Dispose()=>Disposed=true;}
 
