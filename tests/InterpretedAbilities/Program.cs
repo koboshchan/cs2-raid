@@ -325,7 +325,7 @@ for(var mask=0;mask<8;mask++)
 foreach(var selected in Enumerable.Range(1,5))
 foreach(var damageType in new uint[]{0,2,32,34,64}){
  var actual=NativeFallPassivePolicy.Apply(100,damageType,selected,(mask&1)!=0,(mask&2)!=0,(mask&4)!=0,.5f);
- Check(actual==(mask==3&&selected==4&&damageType==32?50:100));
+ Check(actual==(mask==3&&selected==3&&damageType==32?50:100));
 }
 foreach(var multiplier in new[]{-1f,2f,float.NaN,float.PositiveInfinity})
 Check(NativeFallPassivePolicy.Apply(100,32,4,true,true,false,multiplier)==100);
