@@ -9,7 +9,7 @@ public sealed class NativeCommittedHeal(Func<bool> samePawn,Func<int> health,
     private bool attempted,notificationPending,closed;
     public void Apply()
     {
-        if(attempted)throw new InvalidOperationException("Heal mutation cannot be replayed");
+        if(closed||attempted)throw new InvalidOperationException("Heal mutation cannot be replayed");
         attempted=true;
         if(!samePawn())throw new InvalidOperationException("Heal pawn changed");
         var before=health();var cap=maximum();

@@ -380,6 +380,26 @@ foreach(var initial in new[]{0,100,101}) {
  try{heal.Apply();Check(false);}catch(InvalidOperationException){Check(true);}
  heal.Dispose();Check(hp==initial&&healWrites==0);
 }
+
+// Integration with admitted session: failed notify retains cleanup until retry,
+// spends only once, and later health changes survive quarantine/revocation.
+{
+ var hs=new InterpretedAbilitySession(1,0);
+ int hp=50,healWriteCount=0,notifyCount=0;bool broken=true;
+ var h=new NativeCommittedHeal(()=>true,()=>hp,()=>100,v=>{hp=v;healWriteCount++;},
+     ()=>{notifyCount++;if(broken)throw new Exception();},25);
+ Check(!hs.Activate(20010101,30000,()=>true,()=>hs.EnactOwned(h.Apply,h.Dispose)));
+ Check(hs.Quarantined&&hs.PendingCleanup==1&&hp==75&&healWriteCount==1);
+ hp=31;broken=false;Check(hs.Revoke());
+ Check(hs.PendingCleanup==0&&hp==31&&healWriteCount==1&&notifyCount==3);
+}
+{
+ int hp=50;
+ var h=new NativeCommittedHeal(()=>true,()=>hp,()=>100,v=>hp=v,()=>{},25);
+ h.Dispose();
+ try{h.Apply();Check(false);}catch(InvalidOperationException){Check(true);}
+ Check(hp==50);
+}
 Console.WriteLine($"{count} interpreted lifecycle checks PASS; router + lifecycle PASS; CSS calls compile, not native QA");
 sealed class Effect:IDisposable{public bool Disposed;public void Dispose()=>Disposed=true;}
 
