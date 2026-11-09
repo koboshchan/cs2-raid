@@ -320,6 +320,7 @@ Check(readmission.Available(4008002,0)==0);
 Check(readmission.Revoke());Check(!readmission.Alive);
 readmission.Resume();Check(readmission.Alive);Check(readmission.Available(4008002,0)==0);
 readmission.Quarantine();readmission.Resume();Check(!readmission.Alive);
+if(args.Length==2&&args[0]=="--coverage")CoverageReceipt.Write(args[1]);
 Console.WriteLine($"{count} interpreted lifecycle checks PASS; router + lifecycle PASS; CSS calls compile, not native QA");
 sealed class Effect:IDisposable{public bool Disposed;public void Dispose()=>Disposed=true;}
 
