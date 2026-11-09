@@ -284,6 +284,26 @@ var nextOwner=new NativeEntityEscrow("map-A",disk,Save);
 creation.FailRemove=false;Check(nextOwner.Drain(creation));
 Check(disk.Count==0);Check(!creation.Exists(831));
 Check(spawnSession.Revoke());Check(spawnSession.PendingCleanup==0);
+// Concrete failed-unload -> engine expiry while plugin absent -> next-loader recovery.
+disk=[];var expiryStore=new NativeEntityEscrow("map-A",[],Save);
+creation=new CreationMock(Ticket(840));transaction=new NativeEntityTransaction(expiryStore,creation);
+transaction.Activate();creation.FailRemove=true;
+Check(!expiryStore.Drain(creation));Check(disk.Single().Serial==840);
+var unloadRemoveCount=creation.Removes;
+creation.EngineExpire(); // Independent engine lifetime, not a plugin timer or cleanup callback.
+Check(creation.Removes==unloadRemoveCount);Check(!creation.Exists(840));
+Check(disk.Count==1); // No promise of file cleanup while unloaded.
+var expiryReload=new NativeEntityEscrow("map-A",disk,Save);
+Check(expiryReload.Drain(creation));Check(disk.Count==0);Check(creation.Removes==unloadRemoveCount);
+// Expired record plus a foreign full serial still cannot authorize foreign deletion.
+creation=new CreationMock(Ticket(841));transaction=new NativeEntityTransaction(expiryStore,creation);
+transaction.Activate();creation.FailRemove=true;Check(!expiryStore.Drain(creation));
+creation.EngineExpire();
+var reusedForeign=new EntityMock();
+reusedForeign.Entities[841]=Ticket(841) with {Marker="deltaops-owned-"+Guid.NewGuid().ToString("N")};
+var foreignReload=new NativeEntityEscrow("map-A",disk,Save);
+Check(!foreignReload.Drain(reusedForeign));Check(reusedForeign.Entities.Count==1);
+Check(disk.Single().Serial==841);
 Console.WriteLine($"{count} interpreted lifecycle checks PASS; router + lifecycle PASS; CSS calls compile, not native QA");
 sealed class Effect:IDisposable{public bool Disposed;public void Dispose()=>Disposed=true;}
 
@@ -315,6 +335,7 @@ sealed class CreationMock(NativeEntityTicket ticket):INativeEntityCreation{
   exists=true;if(FailCreate)throw new InvalidOperationException("marker write failed");return ticket;
  }
  public void CleanupIncompleteCreation(){if(exists)Remove(ticket);}
+ public void EngineExpire(){exists=false;}
  public void Activate(NativeEntityTicket t){
   if(t!=ticket||!exists)throw new Exception("invalid activation");
   Activations++;if(FailActivate)throw new InvalidOperationException("post-spawn failure");
