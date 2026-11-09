@@ -2,6 +2,16 @@ using DeltaOps;
 int count=0;
 void Check(bool x){count++;if(!x)throw new Exception($"check {count}");}
 Check(InterpretedR2.Skills.Count==26);
+foreach(var skill in InterpretedR2.Skills.Values)
+ Check(NativeApiCapabilityEvidence.ReadOnlyRecon(skill.Operator,skill.Id)==
+       ((skill.Operator==2&&skill.Id==2002017)||(skill.Operator==4&&skill.Id==1002016)));
+Check(!NativeApiCapabilityEvidence.ReadOnlyRecon(1,2002017));
+Check(!NativeApiCapabilityEvidence.ReadOnlyRecon(4,4008010));
+Check(!NativeApiCapabilityEvidence.EntityCreation);
+Check(!NativeApiCapabilityEvidence.ScalarMutation);
+Check(!NativeApiCapabilityEvidence.MovementMutation);
+Check(!NativeApiCapabilityEvidence.DamageMutation);
+Check(!NativeApiCapabilityEvidence.HitMark);
 foreach(var excluded in new[]{(1,20010215),(1,30010203),(2,30010203),(3,1009002),(3,30010203),(4,30010203),(5,30010202)}){
  Check(!InterpretedR2.Skills.ContainsKey(excluded));
  var rejectedPort=new FakePort();

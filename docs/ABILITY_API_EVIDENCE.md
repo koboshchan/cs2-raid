@@ -1,6 +1,6 @@
 # Ability API evidence audit
 
-INCOMPLETE. New interpreted native admission and pre-admission anchor creation are disabled by NativeApiEvidenceComplete=false. Offline only. No target integration or push/live action.
+INCOMPLETE, capability-specific review. Read-only private text recon has source-reviewed admission for operator2/2002017 and operator4/1002016 only. Every mutating capability and pre-admission world-anchor creation remain individually disabled in NativeApiCapabilityEvidence. Offline only. No target integration or push/live action.
 
 Official upstream checkout v1.0.379 at f58e383b0553be16c0f8c6dd68a8194de17691e9 was read locally and is clean. The referenced build assembly informational version matches this source commit exactly (reflection); actual server binary and gamedata equivalence is NOT established. Source signature evidence is not native acceptance. No build or mock test fills that gap.
 
@@ -155,7 +155,7 @@ Disabled new effect path: True
 ## Explicitly disabled / absent
 
 Native damage creation and TakeDamageOld invocation, fixed-size native damage buffers, bare health-subtraction damage, raw offset writes, native knockdown, unowned weapon-to-projectile conversion and guessed audio/collision fields remain disabled or unimplemented.
-All interpreted effects now fail admission while evidence review is incomplete, even ones with known signatures. The owned grenade router already rejects smoke/HE/flash. Delayed Kill is a verified queue API signature, NOT proven post-unload cleanup.
+Mutating interpreted effects fail admission while their evidence review is incomplete. Read-only recon does not require entity-world recovery because it creates no persistent native state. The owned grenade router already rejects smoke/HE/flash. Delayed Kill is a verified queue API signature, NOT proven post-unload cleanup.
 
 ## Next audit scope
 
@@ -192,3 +192,7 @@ Reference API assembly SHA256 652ac51d86a963d3cf795bad9271f821579a3bb65bc871313b
 ## Semantic call-site inventory
 
 ABILITY_API_CALLS.json records 1,629 external invocation/constructor/member-access occurrences, including 1,060 CSS occurrences across 195 distinct constructed symbols. All have explicit pending review state. Roslyn binding compiled with zero errors against the hashed reference API. This includes legacy paths and is not proof every boundary is new; implicit operators/indexers still need inventory. Reproduction code is tools/api-audit/Inventory.cs.txt.
+
+## Read-only recon capability exception
+
+The two source-reviewed pairs produce only owner-directed, instantaneous coordinate text under existing pawn/raid policy. No entity creation, native mutation, timer or delayed cleanup is used. The referenced schema/handle/print contracts and exact URLs are in capabilityAdmission and readOnlyReconDependencies in the JSON ledger. DF recon equivalence and installed-engine QA are explicitly false. This is not a route to enable hit marks, passive damage, dash or scalar effects. Failed printing may leave partial disclosed text; there is no rollback/exactly-once promise.

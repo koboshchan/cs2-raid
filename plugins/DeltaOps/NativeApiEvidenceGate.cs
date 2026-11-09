@@ -1,8 +1,15 @@
 namespace DeltaOps;
-public sealed partial class DeltaOpsPlugin
+
+// Capability-specific admission, not a claim of DF equivalence or runtime QA.
+// Read-only private coordinate telemetry has verified managed API contracts.
+// Mutating effects retain independent blockers documented in the source ledger.
+public static class NativeApiCapabilityEvidence
 {
-    // Source ledger docs/ABILITY_API_EVIDENCE.md. Signature evidence is NOT a
-    // lifecycle contract or installed-version acceptance. Fail closed until each
-    // new boundary and its assumptions are audited; no config can bypass this.
-    private static readonly bool NativeApiEvidenceComplete = false;
+    public static bool ReadOnlyRecon(int operatorId,int skillId)=>
+        (operatorId,skillId) is (2,2002017) or (4,1002016);
+    public static bool EntityCreation => false; // Engine allocation/spawn/expiry contract pending.
+    public static bool ScalarMutation => false; // Competing-owner restore/teardown not proved.
+    public static bool MovementMutation => false; // Collision and displacement acceptance pending.
+    public static bool DamageMutation => false; // Native classification/driver contracts incomplete.
+    public static bool HitMark => false; // DF trigger/scope unresolved; no silent assumption.
 }

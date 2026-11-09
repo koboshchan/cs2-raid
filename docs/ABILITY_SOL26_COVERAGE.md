@@ -1,6 +1,6 @@
 # PC SOL effect coverage and concrete remaining work
 
-DF extracted behavior and values outrank all wiki hints. All native acceptance remains unperformed. All new interpreted native admission is currently DISABLED pending API contract audit. Call paths below describe offline implementation, not enabled gameplay. This is NOT a full-effect completion report. Repeated remove-arrow entries are distinct operator-skill instances, giving exactly 26 entries. Missing 4008010 remains outside executable catalog.
+DF extracted behavior and values outrank all wiki hints. All native acceptance remains unperformed. Only private read-only recon telemetry (operator2/2002017 and operator4/1002016) has source-reviewed API admission; all mutating capabilities remain DISABLED pending their own API contract audit. No live load has occurred. Call paths describe offline implementation, not deployed gameplay. This is NOT a full-effect completion report. Repeated remove-arrow entries are distinct operator-skill instances, giving exactly 26 entries. Missing 4008010 remains outside executable catalog.
 
 ## Operator 1 / Skill 2008002 / 烟幕
 
@@ -48,7 +48,7 @@ Actual path: CssPorts.Recon -> enemy policy -> private PrintToChat coordinates
 Current interpretation: 1200 Source-unit radius; one-shot coordinate telemetry, no DF-duration reveal
 Evidence: Literal allSerializedFields retained in raw r2; full runtime behavior not recovered
 Remaining: Private radius recon is not arrow trajectory, dropped sensors or minimap reveal. Need owned sensor lifecycle and DF sensor evidence.
-Admission blocker: API contract audit gate disables this partial adapter; full DF mechanic also remains incomplete.
+Admission: Read-only private text API contract reviewed; no native entity or scalar mutation, no persistent reveal effect. Native runtime QA remains unperformed, and full DF recon behavior remains incomplete.
 
 ## Operator 2 / Skill 3008002 / 破片手雷
 
@@ -136,7 +136,7 @@ Actual path: CssPorts.Recon -> enemy policy -> private PrintToChat coordinates
 Current interpretation: 1200 Source-unit radius; one-shot coordinate telemetry, no DF-duration reveal
 Evidence: Literal allSerializedFields retained in raw r2; full runtime behavior not recovered
 Remaining: One-shot recon is not periodic decoder signal paths. Need source-decoded selection, duration and owner-specific presentation.
-Admission blocker: API contract audit gate disables this partial adapter; full DF mechanic also remains incomplete.
+Admission: Read-only private text API contract reviewed; no native entity or scalar mutation, no persistent reveal effect. Native runtime QA remains unperformed, and full DF recon behavior remains incomplete.
 
 ## Operator 4 / Skill 4008007 / 拔箭
 

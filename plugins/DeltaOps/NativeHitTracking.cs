@@ -5,7 +5,7 @@ public sealed partial class DeltaOpsPlugin
 {
     private HookResult NativeTrackedHit(EventPlayerHurt evt,GameEventInfo _)
     {
-        if(!Config.UseInterpretedAbilities||_fixtureMode)return HookResult.Continue;
+        if(!NativeApiCapabilityEvidence.HitMark||!Config.UseInterpretedAbilities||_fixtureMode)return HookResult.Continue;
         var source=evt.Attacker;var target=evt.Userid;
         if(source==null||target==null||!IsHumanController(source)||!IsHumanController(target))
             return HookResult.Continue;

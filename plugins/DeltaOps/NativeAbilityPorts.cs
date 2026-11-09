@@ -28,7 +28,7 @@ public sealed partial class DeltaOpsPlugin
 {
     private HookResult NativePassiveDamage(CBaseEntity entity,CTakeDamageInfo info)
     {
-        if(!Config.UseInterpretedAbilities||_fixtureMode)return HookResult.Continue;
+        if(!NativeApiCapabilityEvidence.DamageMutation||!Config.UseInterpretedAbilities||_fixtureMode)return HookResult.Continue;
         var victim=Utilities.GetPlayers().FirstOrDefault(p=>IsHumanController(p)&&p.PlayerPawn.Value is {IsValid:true} pawn&&pawn.EntityHandle.Raw==entity.EntityHandle.Raw);
         if(victim==null||GetExistingState(victim)?.Operator!=OperatorId.Shepherd)return HookResult.Continue;
         if(!_nativeActors.TryGetValue(GetPlayerKey(victim),out var actor)||!actor.Session.Alive||actor.Session.Quarantined)return HookResult.Continue;
@@ -43,7 +43,7 @@ public sealed partial class DeltaOpsPlugin
     private readonly List<Action> _nativeTicks=[];
     private readonly Dictionary<uint,int> _nativeSuppressed=[];
     private bool NativeAdmission(CCSPlayerController p,uint controller,uint pawn)=>
-        NativeApiEvidenceComplete && Config.UseInterpretedAbilities && EntityWorldReady() && !_fixtureMode && !_nativeSuppressed.ContainsKey(pawn) && IsHumanController(p) && p.EntityHandle.Raw==controller && p.PawnIsAlive &&
+        Config.UseInterpretedAbilities && !_fixtureMode && !_nativeSuppressed.ContainsKey(pawn) && IsHumanController(p) && p.EntityHandle.Raw==controller && p.PawnIsAlive &&
         p.PlayerPawn.Value is {IsValid:true} body && body.EntityHandle.Raw==pawn && (!_raidMode||RaidActive(p.SteamID));
 
     private NativeActor? NativeActorFor(CCSPlayerController p,int op)
@@ -76,6 +76,7 @@ public sealed partial class DeltaOpsPlugin
         var actor=NativeActorFor(p,(int)selected.Value);
         if(actor==null||!NativeAdmission(p,actor.Controller,actor.Pawn))return false;
         var blocker=NativeAbilityRouter.Blocker((int)selected.Value,id);
+        if(blocker==null&&!NativeApiCapabilityEvidence.ReadOnlyRecon((int)selected.Value,id))blocker="Native capability contract incomplete; effect disabled. See API evidence ledger.";
         if(blocker!=null){p.PrintToChat($" [r2 blocked] {id}: {blocker}");return false;}
         var ok=actor.Session.Activate(id,Environment.TickCount64,
             ()=>NativeAdmission(p,actor.Controller,actor.Pawn),
@@ -109,7 +110,7 @@ public sealed partial class DeltaOpsPlugin
         private bool Valid()=>plugin.NativeAdmission(player,actor.Controller,actor.Pawn);
         public IDisposable? Heal()
         {
-            if(!Valid()||plugin.Config.NativePorts.HealHp is <1 or >200||Pawn.Health>=Pawn.MaxHealth)return null;
+            if(!NativeApiCapabilityEvidence.ScalarMutation||!Valid()||plugin.Config.NativePorts.HealHp is <1 or >200||Pawn.Health>=Pawn.MaxHealth)return null;
             // Register the committed instant-effect boundary before a native setter can throw.
             // Health is never rolled back across a competing damage/heal event.
             return actor.Session.EnactOwned(()=>{
@@ -119,7 +120,7 @@ public sealed partial class DeltaOpsPlugin
         }
         public IDisposable? Grant(string weapon)
         {
-            if(!Valid()||plugin._entityEscrow==null)return null;
+            if(!NativeApiCapabilityEvidence.EntityCreation||!Valid()||plugin._entityEscrow==null)return null;
             var designer=weapon switch{
                 "weapon_smokegrenade"=>"smokegrenade_projectile",
                 "weapon_hegrenade"=>"hegrenade_projectile",
@@ -167,7 +168,7 @@ public sealed partial class DeltaOpsPlugin
         public IDisposable? Rush()
         {
             var speed=plugin.Config.NativePorts.RushSpeedSourceUnits;
-            if(!Valid()||!float.IsFinite(speed)||speed<=0||speed>1000)return null;
+            if(!NativeApiCapabilityEvidence.MovementMutation||!Valid()||!float.IsFinite(speed)||speed<=0||speed>1000)return null;
             var yaw=Pawn.EyeAngles.Y*Math.PI/180;
             // Velocity only, never origin teleport or noclip. Collision is entirely engine-owned.
             return actor.Session.EnactOwned(()=>
@@ -176,6 +177,7 @@ public sealed partial class DeltaOpsPlugin
         }
         public IDisposable? Pulse(bool suppress)
         {
+            if(!NativeApiCapabilityEvidence.ScalarMutation)return null;
             var t=plugin.Config.NativePorts;
             if(!Valid()||!float.IsFinite(t.PulseRadiusSourceUnits)||t.PulseRadiusSourceUnits<=0||t.PulseRadiusSourceUnits>1000||
                 !float.IsFinite(t.PulseSeconds)||t.PulseSeconds<=0||t.PulseSeconds>10||
@@ -218,6 +220,7 @@ public sealed partial class DeltaOpsPlugin
         }
         public IDisposable? Trap()
         {
+            if(!NativeApiCapabilityEvidence.ScalarMutation)return null;
             var t=plugin.Config.NativePorts;
             if(!Valid()||Pawn.AbsOrigin==null||!float.IsFinite(t.TrapRadiusSourceUnits)||t.TrapRadiusSourceUnits<=0||t.TrapRadiusSourceUnits>1000||
                 !float.IsFinite(t.TrapLifetimeSeconds)||t.TrapLifetimeSeconds<=0||t.TrapLifetimeSeconds>300||

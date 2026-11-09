@@ -1,5 +1,5 @@
 {
-  "status": "INCOMPLETE FAIL CLOSED",
+  "status": "PARTIAL CAPABILITY REVIEW; read-only private recon source-reviewed; all mutating capabilities fail closed",
   "sourceCheckout": "f58e383b0553be16c0f8c6dd68a8194de17691e9",
   "installedVersionMatch": "Referenced build assembly self-reports exact pinned source SHA; actual server assembly/gamedata not checked.",
   "boundaries": [
@@ -370,6 +370,64 @@
       "symbol": "Timer(float,Action,TimerFlags?),Kill()",
       "source": "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Modules/Timers/Timer.cs#L39",
       "contract": "CreateTimer then NativeAPI.KillTimer. Flags repeat bit0/mapchange bit1. Engine scheduling and callback disposal not fully audited."
+    }
+  ],
+  "capabilityAdmission": {
+    "readOnlyRecon": {
+      "pairs": [
+        [
+          2,
+          2002017
+        ],
+        [
+          4,
+          1002016
+        ]
+      ],
+      "signature": "bound against hashed 1.0.379 reference assembly; pinned declaration URLs inventoried",
+      "managedContract": "reads existing players/pawns/origins; checks Raid policy, full handle and current alive pawn; prints only to owner slot; no native entity allocation/scalar writes/timer needed",
+      "engineContract": "no persistent native effect requiring post-unload restoration; player/schema/client print primitives source-backed; actual installed server/schema equivalence not established",
+      "nativeQA": false,
+      "dfEquivalence": false,
+      "limitations": "CS2ASSUMPTION 1200-source-unit instantaneous coordinates, no arrow/drone/minimap/duration; partial output may occur before a print failure and cannot be undone; no exactly-once disclosure guarantee"
+    },
+    "mutatingCapabilities": "disabled individually in NativeApiCapabilityEvidence; source proof gaps and native QA tracked separately"
+  },
+  "readOnlyReconDependencies": [
+    {
+      "symbol": "Utilities.GetPlayers",
+      "source": "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Utilities.cs#L155",
+      "contract": "Connected valid player controller list; caller further rejects bots/dead and checks policy."
+    },
+    {
+      "symbol": "CCSPlayerController.PlayerPawn/PawnIsAlive",
+      "source": "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Generated/Schema/Classes/CCSPlayerController.g.cs#L239",
+      "contract": "Schema m_hPlayerPawn handle and m_bPawnIsAlive. Full serial is compared to actor admission."
+    },
+    {
+      "symbol": "CCSPlayerController.IsBot/Slot/AuthorizedSteamID",
+      "source": "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Core/Model/CCSPlayerController.cs#L143",
+      "contract": "IsBot tests FL_FAKECLIENT; Slot=index-1; authorized SteamID checks valid and returns null on -1; key falls back to slot+userid."
+    },
+    {
+      "symbol": "CBaseEntity.AbsOrigin",
+      "source": "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Core/Model/CBaseEntity.cs#L81",
+      "contract": "CBodyComponent?.SceneNode?.AbsOrigin. Null-safe shorthand; generated component pointer chain and borrowed vector reviewed."
+    },
+    {
+      "symbol": "NativeEntity.EntityHandle/CHandle.Raw,Value",
+      "source": "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/NativeEntity.cs",
+      "contract": "Full-handle resolve; EntitySystem.GetEntityByHandle compares full raw handle, not index only."
+    },
+    {
+      "symbol": "CCSPlayerController.PrintToChat",
+      "source": "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Core/Model/CCSPlayerController.cs#L49",
+      "contract": "Valid guard then client print on this slot, not server broadcast."
+    },
+    {
+      "symbol": "PluginCapability<T>.Get",
+      "source": "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Core/Capabilities/PluginCapability.cs",
+      "contract": "First supplier, missing dictionary key can throw. QueryRaid catches failure and returns false. Old supplier after reload may block availability; cannot broaden enemy admission. No damage supplier published."
     }
   ]
 }
