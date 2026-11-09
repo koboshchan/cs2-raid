@@ -1,6 +1,0 @@
-Reference only, never compiled into the CS2 Raid image.
-Extracted source/, docs/ and REQUIREMENTS.md from the user-provided DeltaOps-Friend-Server_01a19af3-0825-70f5-9109-bee7f7a76d04.zip.
-No plugin DLL, personal credentials or Windows startup scripts are included here.
-f3baedabfcff570fd3c116f714e17dfae84228468208d35f22c87b5f006a8904  /files/DeltaOps-Friend-Server_01a19af3-0825-70f5-9109-bee7f7a76d04.zip
-
-Historical build.ps1 removed by owner request. All operational script files are intentionally omitted; root Dockerfile is the sole operational definition.
