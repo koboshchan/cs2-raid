@@ -67,8 +67,9 @@ public sealed partial class DeltaOpsPlugin
             grenade.DmgRadius=0;
             configure(grenade);
             plugin._ownedProjectileAttackers.Add(ticket.Serial,(player.EntityHandle.Raw,pawnSerial));
-            // Engine-owned delayed IO does not depend on plugin timers after unload.
-            // Delivery and full-handle targeting still require installed-engine verification.
+            // Verified queue API, NOT a proved post-unload expiry guarantee.
+            // See docs/ABILITY_API_EVIDENCE.json AddEntityIOEvent native source.
+            // Engine target retention/Kill delivery remain unproved; adapter disabled.
             grenade.DispatchSpawn();
             if(!Matches(ticket))throw new InvalidOperationException("Projectile identity changed during spawn");
             grenade.AddEntityIOEvent("Kill",grenade,grenade,"",lifetime);

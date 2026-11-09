@@ -160,3 +160,31 @@ All interpreted effects now fail admission while evidence review is incomplete, 
 ## Next audit scope
 
 Verify reference assembly version/hash against pinned CSS source; enumerate every new external invocation/property through semantic symbol binding; audit native implementation of queue/handle/remove and BasePlugin listener teardown. Audit server schema fields, smoke color/owner, player and event accessors, chat, commands, capabilities, movement networking, map listeners and all timer uses. Verify BCL persistence/process APIs separately. Keep runtime QA separate from source evidence.
+
+## Native implementation follow-up
+
+AddEntityIOEvent
+
+https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/src/scripting/natives/natives_entities.cpp#L558
+
+Missing signature reports native error. Reads float delay argument5 and delegates target raw pointer + variant to engine queue. Does not prove engine target lifetime/serial retention or Kill support.
+
+EntitySystem.GetEntityByHandle<T>
+
+https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Modules/Entities/EntitySystem.cs#L28
+
+Checks foundHandle.Raw equals requested.Raw before returning pointer. This supports full serial matching within this implementation; does not prove reference assembly/server equivalence.
+
+BasePlugin.Dispose(bool)
+
+https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Core/BasePlugin.cs#L684
+
+Disposes subscriber dictionaries and kills all stored timers. Plugin timers cannot provide cleanup after disposal. No assumption that listeners survive failed custom Unload.
+
+Timer(float,Action,TimerFlags?),Kill()
+
+https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Modules/Timers/Timer.cs#L39
+
+CreateTimer then NativeAPI.KillTimer. Flags repeat bit0/mapchange bit1. Engine scheduling and callback disposal not fully audited.
+
+Reference API assembly SHA256 652ac51d86a963d3cf795bad9271f821579a3bb65bc871313b900ba834f9d1ec. Hash recorded, source/version equivalence still unproved.
