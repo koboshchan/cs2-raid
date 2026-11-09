@@ -117,3 +117,12 @@ https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68
 https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Modules/Utils/CHandle.cs
 
 https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Core/Capabilities/PluginCapability.cs
+
+
+## Offline implementation versus activation
+
+The boundary reviews do not require a live server merely to implement an interpretation offline. Healing's schema setter and separate network notification are source-reviewed, and the owned committed-write failure handling is implemented. Velocity-only Teleport is source-reviewed and a finite typed impulse plan is implemented. Both remain activation-held for reviewed deployment approval and native acceptance, not because uncertain DF fidelity forbids code.
+
+Reversible status restoration and owned projectile lifetime still have concrete native safety gaps. Those are distinct from missing DF behaviors. Borrowed damage callbacks do not require constructing damage objects; their classification/hook interactions remain separately under review. No new damage constructor is attempted.
+
+ABILITY_SOL26_COVERAGE.json now separates Implementation, Activation, NativeSafetyBlocker and Fidelity, and gives each implemented boundary exact pinned API references plus typed source fields and CS2 tuning units. A null NativeSafetyBlocker is not permission to deploy.

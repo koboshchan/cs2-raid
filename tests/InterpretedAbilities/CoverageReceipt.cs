@@ -34,6 +34,8 @@ static class CoverageReceipt
    s.Operator,s.Id,s.Name,s.CdId,s.Initial,s.Capacity,s.RechargeSeconds,s.Passive,
    Calls=Calls(s.Id), Approximation=Approximation(s.Id),
    Implementation=NativeImplementationEvidence.Implementation(s.Id),
+   ExactApiReferences=BoundaryCoverage.Sources(s.Id),
+   InterpretationTuning=BoundaryCoverage.Tuning(s.Id),
    Activation=NativeImplementationEvidence.Approval(s.Operator,s.Id),
    NativeSafetyBlocker=NativeImplementationEvidence.SafetyBlocker(s.Id),
    Fidelity="Partial CS2 interpretation; remaining DF behavior is separately listed in ABILITY_SOL26_COVERAGE.md, not a blanket prohibition on offline implementation",

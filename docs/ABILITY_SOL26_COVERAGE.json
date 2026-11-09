@@ -11,6 +11,13 @@
     "Calls": "Router rejects before native mutation; direct projectile escrow foundation exists but is not enabled",
     "Approximation": "No enabled approximation; blocked/incomplete",
     "Implementation": "shared owned-projectile foundation implemented; skill-specific behavior unimplemented",
+    "ExactApiReferences": [
+      "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Utilities.cs#L59-L62",
+      "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Core/Model/CBaseEntity.cs#L63-L75",
+      "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Core/Model/CEntityInstance.cs#L35-L40",
+      "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Core/Model/CEntityInstance.cs#L89-L118"
+    ],
+    "InterpretationTuning": [],
     "Activation": "activation held pending reviewed deployment approval; offline implementation permitted",
     "NativeSafetyBlocker": "Native inert creation/type/spawn preservation and unload-independent projectile expiry not established.",
     "Fidelity": "Partial CS2 interpretation; remaining DF behavior is separately listed in ABILITY_SOL26_COVERAGE.md, not a blanket prohibition on offline implementation",
@@ -60,6 +67,13 @@
     "Calls": "Router rejects before native mutation; direct projectile escrow foundation exists but is not enabled",
     "Approximation": "No enabled approximation; blocked/incomplete",
     "Implementation": "shared owned-projectile foundation implemented; skill-specific behavior unimplemented",
+    "ExactApiReferences": [
+      "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Utilities.cs#L59-L62",
+      "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Core/Model/CBaseEntity.cs#L63-L75",
+      "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Core/Model/CEntityInstance.cs#L35-L40",
+      "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Core/Model/CEntityInstance.cs#L89-L118"
+    ],
+    "InterpretationTuning": [],
     "Activation": "activation held pending reviewed deployment approval; offline implementation permitted",
     "NativeSafetyBlocker": "Native inert creation/type/spawn preservation and unload-independent projectile expiry not established.",
     "Fidelity": "Partial CS2 interpretation; remaining DF behavior is separately listed in ABILITY_SOL26_COVERAGE.md, not a blanket prohibition on offline implementation",
@@ -109,6 +123,8 @@
     "Calls": "No projectile tracking/removal adapter",
     "Approximation": "No enabled approximation; blocked/incomplete",
     "Implementation": "skill-specific effect unimplemented",
+    "ExactApiReferences": [],
+    "InterpretationTuning": [],
     "Activation": "activation held pending reviewed deployment approval; offline implementation permitted",
     "NativeSafetyBlocker": "No skill-specific native effect boundary implemented.",
     "Fidelity": "Partial CS2 interpretation; remaining DF behavior is separately listed in ABILITY_SOL26_COVERAGE.md, not a blanket prohibition on offline implementation",
@@ -158,6 +174,19 @@
     "Calls": "CssPorts.Heal -\u003E EnactOwned -\u003E NativeCommittedHeal -\u003E Pawn.Health setter \u002B retry-only SetStateChanged",
     "Approximation": "DISABLED CS2-only 25 HP tuning bounded by MaxHealth; pending network notification owned, HP never replayed or rolled back",
     "Implementation": "implemented partial committed heal interpretation",
+    "ExactApiReferences": [
+      "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Generated/Schema/Classes/CBaseEntity.g.cs#L65-L71",
+      "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Modules/Memory/Schema.cs#L109-L114",
+      "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Utilities.cs#L231-L254"
+    ],
+    "InterpretationTuning": [
+      {
+        "Field": "HealHp",
+        "Default": 25,
+        "Unit": "HP",
+        "Authority": "CS2 assumption, not extracted DF magnitude"
+      }
+    ],
     "Activation": "activation held pending reviewed deployment approval; offline implementation permitted",
     "NativeSafetyBlocker": null,
     "Fidelity": "Partial CS2 interpretation; remaining DF behavior is separately listed in ABILITY_SOL26_COVERAGE.md, not a blanket prohibition on offline implementation",
@@ -207,6 +236,8 @@
     "Calls": "No native revive adapter; shared heal action exists but passive is incomplete",
     "Approximation": "No enabled approximation; blocked/incomplete",
     "Implementation": "skill-specific effect unimplemented",
+    "ExactApiReferences": [],
+    "InterpretationTuning": [],
     "Activation": "activation held pending reviewed deployment approval; offline implementation permitted",
     "NativeSafetyBlocker": "No skill-specific native effect boundary implemented.",
     "Fidelity": "Partial CS2 interpretation; remaining DF behavior is separately listed in ABILITY_SOL26_COVERAGE.md, not a blanket prohibition on offline implementation",
@@ -256,6 +287,21 @@
     "Calls": "CssPorts.Recon -\u003E enemy policy -\u003E private PrintToChat names and distances (not XYZ)",
     "Approximation": "CS2-only configured radius (default 1200 Source units); one-shot names and distances, no LOS, no printed XYZ, no DF sensor/projectile mechanics",
     "Implementation": "implemented partial private names-and-distances interpretation",
+    "ExactApiReferences": [
+      "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Utilities.cs#L155-L170",
+      "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Core/Model/CCSPlayerController.cs#L49-L54",
+      "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Core/Model/CBaseEntity.cs#L77-L80",
+      "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Modules/Utils/CHandle.cs",
+      "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Core/Capabilities/PluginCapability.cs"
+    ],
+    "InterpretationTuning": [
+      {
+        "Field": "ReconRadiusSourceUnits",
+        "Default": 1200,
+        "Unit": "Source units",
+        "Authority": "CS2 assumption, no DF distance conversion claimed"
+      }
+    ],
     "Activation": "source-reviewed private telemetry path; normal configuration and Raid admission required",
     "NativeSafetyBlocker": null,
     "Fidelity": "Partial CS2 interpretation; remaining DF behavior is separately listed in ABILITY_SOL26_COVERAGE.md, not a blanket prohibition on offline implementation",
@@ -305,6 +351,13 @@
     "Calls": "Router rejects before native mutation; direct projectile escrow foundation exists but is not enabled",
     "Approximation": "No enabled approximation; blocked/incomplete",
     "Implementation": "shared owned-projectile foundation implemented; skill-specific behavior unimplemented",
+    "ExactApiReferences": [
+      "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Utilities.cs#L59-L62",
+      "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Core/Model/CBaseEntity.cs#L63-L75",
+      "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Core/Model/CEntityInstance.cs#L35-L40",
+      "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Core/Model/CEntityInstance.cs#L89-L118"
+    ],
+    "InterpretationTuning": [],
     "Activation": "activation held pending reviewed deployment approval; offline implementation permitted",
     "NativeSafetyBlocker": "Native inert creation/type/spawn preservation and unload-independent projectile expiry not established.",
     "Fidelity": "Partial CS2 interpretation; remaining DF behavior is separately listed in ABILITY_SOL26_COVERAGE.md, not a blanket prohibition on offline implementation",
@@ -354,6 +407,32 @@
     "Calls": "CssPorts.Pulse -\u003E session-owned velocity modifier leases; optional suppression refcount",
     "Approximation": "240 Source-unit radius; 2 seconds; velocity modifier .65; Hackclaw also suppresses interpreted activations",
     "Implementation": "implemented partial owned status interpretation",
+    "ExactApiReferences": [
+      "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Generated/Schema/Classes/CCSPlayerPawn.g.cs#L317-L319",
+      "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Modules/Memory/Schema.cs#L109-L114",
+      "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Utilities.cs#L231-L254",
+      "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Core/BasePlugin.cs#L684-L730"
+    ],
+    "InterpretationTuning": [
+      {
+        "Field": "PulseRadiusSourceUnits",
+        "Default": 240,
+        "Unit": "Source units",
+        "Authority": "CS2 assumption"
+      },
+      {
+        "Field": "PulseSeconds",
+        "Default": 2,
+        "Unit": "seconds",
+        "Authority": "CS2 assumption; runtime converts to monotonic milliseconds"
+      },
+      {
+        "Field": "PulseSlowModifier",
+        "Default": 0.65,
+        "Unit": "dimensionless",
+        "Authority": "CS2 speed scalar, not DF fire-rate suppression"
+      }
+    ],
     "Activation": "activation held pending reviewed deployment approval; offline implementation permitted",
     "NativeSafetyBlocker": "Reversible shared scalar cannot distinguish identical-value competing writers; unload failure cannot guarantee restoration.",
     "Fidelity": "Partial CS2 interpretation; remaining DF behavior is separately listed in ABILITY_SOL26_COVERAGE.md, not a blanket prohibition on offline implementation",
@@ -403,6 +482,8 @@
     "Calls": "No projectile tracking/removal adapter",
     "Approximation": "No enabled approximation; blocked/incomplete",
     "Implementation": "skill-specific effect unimplemented",
+    "ExactApiReferences": [],
+    "InterpretationTuning": [],
     "Activation": "activation held pending reviewed deployment approval; offline implementation permitted",
     "NativeSafetyBlocker": "No skill-specific native effect boundary implemented.",
     "Fidelity": "Partial CS2 interpretation; remaining DF behavior is separately listed in ABILITY_SOL26_COVERAGE.md, not a blanket prohibition on offline implementation",
@@ -452,6 +533,11 @@
     "Calls": "NativeTrackedHit -\u003E EventPlayerHurt -\u003E private PrintToChat coordinates",
     "Approximation": "CS2ASSUMPTION post-hit allied coordinate telemetry; squad scope not proved by extracted buffs",
     "Implementation": "implemented partial post-hit telemetry interpretation",
+    "ExactApiReferences": [
+      "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Generated/GameEvents/EventPlayerHurt.g.cs",
+      "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Core/Model/CCSPlayerController.cs#L49-L54"
+    ],
+    "InterpretationTuning": [],
     "Activation": "activation held pending reviewed deployment approval; offline implementation permitted",
     "NativeSafetyBlocker": null,
     "Fidelity": "Partial CS2 interpretation; remaining DF behavior is separately listed in ABILITY_SOL26_COVERAGE.md, not a blanket prohibition on offline implementation",
@@ -501,6 +587,18 @@
     "Calls": "CssPorts.Rush -\u003E EnactOwned -\u003E Pawn.Teleport velocity",
     "Approximation": "400 Source-units/s horizontal velocity; current vertical velocity retained",
     "Implementation": "implemented partial velocity-only impulse interpretation",
+    "ExactApiReferences": [
+      "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Core/Model/CBaseEntity.cs#L15-L59",
+      "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Generated/Schema/Classes/CBaseEntity.g.cs"
+    ],
+    "InterpretationTuning": [
+      {
+        "Field": "RushSpeedSourceUnits",
+        "Default": 400,
+        "Unit": "Source units per second",
+        "Authority": "CS2 horizontal impulse assumption; yaw degrees; existing Z velocity retained"
+      }
+    ],
     "Activation": "activation held pending reviewed deployment approval; offline implementation permitted",
     "NativeSafetyBlocker": null,
     "Fidelity": "Partial CS2 interpretation; remaining DF behavior is separately listed in ABILITY_SOL26_COVERAGE.md, not a blanket prohibition on offline implementation",
@@ -550,6 +648,8 @@
     "Calls": "Blocked compressed-air/cannon adapter",
     "Approximation": "No enabled approximation; blocked/incomplete",
     "Implementation": "skill-specific effect unimplemented",
+    "ExactApiReferences": [],
+    "InterpretationTuning": [],
     "Activation": "activation held pending reviewed deployment approval; offline implementation permitted",
     "NativeSafetyBlocker": "No skill-specific native effect boundary implemented.",
     "Fidelity": "Partial CS2 interpretation; remaining DF behavior is separately listed in ABILITY_SOL26_COVERAGE.md, not a blanket prohibition on offline implementation",
@@ -599,6 +699,19 @@
     "Calls": "NativeFallPassive -\u003E existing pure fall CTakeDamageInfo.Damage modification; speed boost absent",
     "Approximation": "Pure fall damage multiplier .5; buff-referenced speed boost not yet interpreted",
     "Implementation": "implemented partial borrowed damage-info modifier",
+    "ExactApiReferences": [
+      "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Core/Listeners.g.cs#L40-L78",
+      "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/src/core/managers/entity_manager.cpp#L248-L325",
+      "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/src/core/detours.h#L14-L37"
+    ],
+    "InterpretationTuning": [
+      {
+        "Field": "VyronFallDamageMultiplier",
+        "Default": 0.5,
+        "Unit": "dimensionless",
+        "Authority": "CS2 assumption; DF buff magnitudes not decoded"
+      }
+    ],
     "Activation": "activation held pending reviewed deployment approval; offline implementation permitted",
     "NativeSafetyBlocker": "Damage classification and other resident hook interactions require separate review; no damage construction is used.",
     "Fidelity": "Partial CS2 interpretation; remaining DF behavior is separately listed in ABILITY_SOL26_COVERAGE.md, not a blanket prohibition on offline implementation",
@@ -648,6 +761,8 @@
     "Calls": "Blocked magnetic attachment and damage; NOT dash",
     "Approximation": "No enabled approximation; blocked/incomplete",
     "Implementation": "skill-specific effect unimplemented",
+    "ExactApiReferences": [],
+    "InterpretationTuning": [],
     "Activation": "activation held pending reviewed deployment approval; offline implementation permitted",
     "NativeSafetyBlocker": "No skill-specific native effect boundary implemented.",
     "Fidelity": "Partial CS2 interpretation; remaining DF behavior is separately listed in ABILITY_SOL26_COVERAGE.md, not a blanket prohibition on offline implementation",
@@ -697,6 +812,8 @@
     "Calls": "No projectile tracking/removal adapter",
     "Approximation": "No enabled approximation; blocked/incomplete",
     "Implementation": "skill-specific effect unimplemented",
+    "ExactApiReferences": [],
+    "InterpretationTuning": [],
     "Activation": "activation held pending reviewed deployment approval; offline implementation permitted",
     "NativeSafetyBlocker": "No skill-specific native effect boundary implemented.",
     "Fidelity": "Partial CS2 interpretation; remaining DF behavior is separately listed in ABILITY_SOL26_COVERAGE.md, not a blanket prohibition on offline implementation",
@@ -746,6 +863,8 @@
     "Calls": "No native ADS movement adapter",
     "Approximation": "No enabled approximation; blocked/incomplete",
     "Implementation": "skill-specific effect unimplemented",
+    "ExactApiReferences": [],
+    "InterpretationTuning": [],
     "Activation": "activation held pending reviewed deployment approval; offline implementation permitted",
     "NativeSafetyBlocker": "No skill-specific native effect boundary implemented.",
     "Fidelity": "Partial CS2 interpretation; remaining DF behavior is separately listed in ABILITY_SOL26_COVERAGE.md, not a blanket prohibition on offline implementation",
@@ -795,6 +914,21 @@
     "Calls": "CssPorts.Recon -\u003E enemy policy -\u003E private PrintToChat names and distances (not XYZ)",
     "Approximation": "CS2-only configured radius (default 1200 Source units); one-shot names and distances, no LOS, no printed XYZ, no DF sensor/projectile mechanics",
     "Implementation": "implemented partial private names-and-distances interpretation",
+    "ExactApiReferences": [
+      "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Utilities.cs#L155-L170",
+      "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Core/Model/CCSPlayerController.cs#L49-L54",
+      "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Core/Model/CBaseEntity.cs#L77-L80",
+      "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Modules/Utils/CHandle.cs",
+      "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Core/Capabilities/PluginCapability.cs"
+    ],
+    "InterpretationTuning": [
+      {
+        "Field": "ReconRadiusSourceUnits",
+        "Default": 1200,
+        "Unit": "Source units",
+        "Authority": "CS2 assumption, no DF distance conversion claimed"
+      }
+    ],
     "Activation": "source-reviewed private telemetry path; normal configuration and Raid admission required",
     "NativeSafetyBlocker": null,
     "Fidelity": "Partial CS2 interpretation; remaining DF behavior is separately listed in ABILITY_SOL26_COVERAGE.md, not a blanket prohibition on offline implementation",
@@ -844,6 +978,8 @@
     "Calls": "No projectile tracking/removal adapter",
     "Approximation": "No enabled approximation; blocked/incomplete",
     "Implementation": "skill-specific effect unimplemented",
+    "ExactApiReferences": [],
+    "InterpretationTuning": [],
     "Activation": "activation held pending reviewed deployment approval; offline implementation permitted",
     "NativeSafetyBlocker": "No skill-specific native effect boundary implemented.",
     "Fidelity": "Partial CS2 interpretation; remaining DF behavior is separately listed in ABILITY_SOL26_COVERAGE.md, not a blanket prohibition on offline implementation",
@@ -893,6 +1029,32 @@
     "Calls": "CssPorts.Pulse -\u003E session-owned velocity modifier leases; optional suppression refcount",
     "Approximation": "240 Source-unit radius; 2 seconds; velocity modifier .65; Hackclaw also suppresses interpreted activations",
     "Implementation": "implemented partial owned status interpretation",
+    "ExactApiReferences": [
+      "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Generated/Schema/Classes/CCSPlayerPawn.g.cs#L317-L319",
+      "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Modules/Memory/Schema.cs#L109-L114",
+      "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Utilities.cs#L231-L254",
+      "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Core/BasePlugin.cs#L684-L730"
+    ],
+    "InterpretationTuning": [
+      {
+        "Field": "PulseRadiusSourceUnits",
+        "Default": 240,
+        "Unit": "Source units",
+        "Authority": "CS2 assumption"
+      },
+      {
+        "Field": "PulseSeconds",
+        "Default": 2,
+        "Unit": "seconds",
+        "Authority": "CS2 assumption; runtime converts to monotonic milliseconds"
+      },
+      {
+        "Field": "PulseSlowModifier",
+        "Default": 0.65,
+        "Unit": "dimensionless",
+        "Authority": "CS2 speed scalar, not DF fire-rate suppression"
+      }
+    ],
     "Activation": "activation held pending reviewed deployment approval; offline implementation permitted",
     "NativeSafetyBlocker": "Reversible shared scalar cannot distinguish identical-value competing writers; unload failure cannot guarantee restoration.",
     "Fidelity": "Partial CS2 interpretation; remaining DF behavior is separately listed in ABILITY_SOL26_COVERAGE.md, not a blanket prohibition on offline implementation",
@@ -942,6 +1104,13 @@
     "Calls": "Router rejects before native mutation; direct projectile escrow foundation exists but is not enabled",
     "Approximation": "No enabled approximation; blocked/incomplete",
     "Implementation": "shared owned-projectile foundation implemented; skill-specific behavior unimplemented",
+    "ExactApiReferences": [
+      "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Utilities.cs#L59-L62",
+      "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Core/Model/CBaseEntity.cs#L63-L75",
+      "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Core/Model/CEntityInstance.cs#L35-L40",
+      "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Core/Model/CEntityInstance.cs#L89-L118"
+    ],
+    "InterpretationTuning": [],
     "Activation": "activation held pending reviewed deployment approval; offline implementation permitted",
     "NativeSafetyBlocker": "Native inert creation/type/spawn preservation and unload-independent projectile expiry not established.",
     "Fidelity": "Partial CS2 interpretation; remaining DF behavior is separately listed in ABILITY_SOL26_COVERAGE.md, not a blanket prohibition on offline implementation",
@@ -991,6 +1160,8 @@
     "Calls": "No native recipient-filtered footstep audio adapter",
     "Approximation": "No enabled approximation; blocked/incomplete",
     "Implementation": "skill-specific effect unimplemented",
+    "ExactApiReferences": [],
+    "InterpretationTuning": [],
     "Activation": "activation held pending reviewed deployment approval; offline implementation permitted",
     "NativeSafetyBlocker": "No skill-specific native effect boundary implemented.",
     "Fidelity": "Partial CS2 interpretation; remaining DF behavior is separately listed in ABILITY_SOL26_COVERAGE.md, not a blanket prohibition on offline implementation",
@@ -1040,6 +1211,38 @@
     "Calls": "CssPorts.Trap -\u003E owned zone -\u003E serial-safe velocity leases",
     "Approximation": "No enabled approximation; blocked/incomplete",
     "Implementation": "implemented partial owned status interpretation",
+    "ExactApiReferences": [
+      "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Generated/Schema/Classes/CCSPlayerPawn.g.cs#L317-L319",
+      "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Modules/Memory/Schema.cs#L109-L114",
+      "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Utilities.cs#L231-L254",
+      "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Core/BasePlugin.cs#L684-L730"
+    ],
+    "InterpretationTuning": [
+      {
+        "Field": "TrapRadiusSourceUnits",
+        "Default": 160,
+        "Unit": "Source units",
+        "Authority": "CS2 assumption"
+      },
+      {
+        "Field": "TrapLifetimeSeconds",
+        "Default": 30,
+        "Unit": "seconds",
+        "Authority": "CS2 assumption"
+      },
+      {
+        "Field": "TrapSlowSeconds",
+        "Default": 2,
+        "Unit": "seconds",
+        "Authority": "CS2 assumption"
+      },
+      {
+        "Field": "TrapVelocityModifier",
+        "Default": 0.5,
+        "Unit": "dimensionless",
+        "Authority": "CS2 assumption"
+      }
+    ],
     "Activation": "activation held pending reviewed deployment approval; offline implementation permitted",
     "NativeSafetyBlocker": "Reversible shared scalar cannot distinguish identical-value competing writers; unload failure cannot guarantee restoration.",
     "Fidelity": "Partial CS2 interpretation; remaining DF behavior is separately listed in ABILITY_SOL26_COVERAGE.md, not a blanket prohibition on offline implementation",
@@ -1089,6 +1292,13 @@
     "Calls": "Router rejects before native mutation; direct projectile escrow foundation exists but is not enabled",
     "Approximation": "No enabled approximation; blocked/incomplete",
     "Implementation": "shared owned-projectile foundation implemented; skill-specific behavior unimplemented",
+    "ExactApiReferences": [
+      "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Utilities.cs#L59-L62",
+      "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Core/Model/CBaseEntity.cs#L63-L75",
+      "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Core/Model/CEntityInstance.cs#L35-L40",
+      "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Core/Model/CEntityInstance.cs#L89-L118"
+    ],
+    "InterpretationTuning": [],
     "Activation": "activation held pending reviewed deployment approval; offline implementation permitted",
     "NativeSafetyBlocker": "Native inert creation/type/spawn preservation and unload-independent projectile expiry not established.",
     "Fidelity": "Partial CS2 interpretation; remaining DF behavior is separately listed in ABILITY_SOL26_COVERAGE.md, not a blanket prohibition on offline implementation",
@@ -1138,6 +1348,8 @@
     "Calls": "No projectile tracking/removal adapter",
     "Approximation": "No enabled approximation; blocked/incomplete",
     "Implementation": "skill-specific effect unimplemented",
+    "ExactApiReferences": [],
+    "InterpretationTuning": [],
     "Activation": "activation held pending reviewed deployment approval; offline implementation permitted",
     "NativeSafetyBlocker": "No skill-specific native effect boundary implemented.",
     "Fidelity": "Partial CS2 interpretation; remaining DF behavior is separately listed in ABILITY_SOL26_COVERAGE.md, not a blanket prohibition on offline implementation",
@@ -1187,6 +1399,32 @@
     "Calls": "CssPorts.Pulse -\u003E session-owned velocity modifier leases; optional suppression refcount",
     "Approximation": "240 Source-unit radius; 2 seconds; velocity modifier .65; Hackclaw also suppresses interpreted activations",
     "Implementation": "implemented partial owned status interpretation",
+    "ExactApiReferences": [
+      "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Generated/Schema/Classes/CCSPlayerPawn.g.cs#L317-L319",
+      "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Modules/Memory/Schema.cs#L109-L114",
+      "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Utilities.cs#L231-L254",
+      "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Core/BasePlugin.cs#L684-L730"
+    ],
+    "InterpretationTuning": [
+      {
+        "Field": "PulseRadiusSourceUnits",
+        "Default": 240,
+        "Unit": "Source units",
+        "Authority": "CS2 assumption"
+      },
+      {
+        "Field": "PulseSeconds",
+        "Default": 2,
+        "Unit": "seconds",
+        "Authority": "CS2 assumption; runtime converts to monotonic milliseconds"
+      },
+      {
+        "Field": "PulseSlowModifier",
+        "Default": 0.65,
+        "Unit": "dimensionless",
+        "Authority": "CS2 speed scalar, not DF fire-rate suppression"
+      }
+    ],
     "Activation": "activation held pending reviewed deployment approval; offline implementation permitted",
     "NativeSafetyBlocker": "Reversible shared scalar cannot distinguish identical-value competing writers; unload failure cannot guarantee restoration.",
     "Fidelity": "Partial CS2 interpretation; remaining DF behavior is separately listed in ABILITY_SOL26_COVERAGE.md, not a blanket prohibition on offline implementation",
@@ -1236,6 +1474,19 @@
     "Calls": "NativePassiveDamage -\u003E existing engine CTakeDamageInfo.Damage modification",
     "Approximation": "DFPROVEN SkillID30010201 DamgeCoifficient explosion multiplier .7; native blast classification is CS2 mapping",
     "Implementation": "implemented partial borrowed damage-info modifier",
+    "ExactApiReferences": [
+      "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Core/Listeners.g.cs#L40-L78",
+      "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/src/core/managers/entity_manager.cpp#L248-L325",
+      "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/src/core/detours.h#L14-L37"
+    ],
+    "InterpretationTuning": [
+      {
+        "Field": "DamgeCoifficient[0].fModifyRateExplodeDamage",
+        "Default": 0.7,
+        "Unit": "dimensionless",
+        "Authority": "DFPROVEN literal; raw assault1.0 and LimitPlayMode[] retained; DMG_BLAST mapping CS2 assumption"
+      }
+    ],
     "Activation": "activation held pending reviewed deployment approval; offline implementation permitted",
     "NativeSafetyBlocker": "Damage classification and other resident hook interactions require separate review; no damage construction is used.",
     "Fidelity": "Partial CS2 interpretation; remaining DF behavior is separately listed in ABILITY_SOL26_COVERAGE.md, not a blanket prohibition on offline implementation",

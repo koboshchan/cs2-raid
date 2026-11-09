@@ -19,7 +19,8 @@ public sealed partial class DeltaOpsPlugin
         // networked Glow, no shared scalar and no lingering reveal to clean up.
         var report=FormattableString.Invariant(
             $" [Luna hit tracking] target position ({origin.X:0}, {origin.Y:0}, {origin.Z:0})");
-        // Squad sharing is user-supplied semantics; the fetched wiki only proves marking.
+        // Allied scope and post-hurt trigger are explicit CS2 assumptions, not
+        // decoded DF buff semantics or user mandates. Activation approval remains held.
         foreach(var recipient in Utilities.GetPlayers().ToArray()){
             if(!IsHumanController(recipient)||!recipient.PawnIsAlive||!IsAlly(source,recipient))continue;
             var body=recipient.PlayerPawn.Value;if(body==null||!body.IsValid)continue;

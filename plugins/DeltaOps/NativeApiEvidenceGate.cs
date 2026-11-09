@@ -18,5 +18,5 @@ public static class NativeApiCapabilityEvidence
     public static bool ScalarMutation => false; // Competing-owner restore/teardown not proved.
     public static bool MovementMutation => false; // Velocity-only API reviewed; activation approval/native QA pending.
     public static bool DamageMutation => false; // Native classification/driver contracts incomplete.
-    public static bool HitMark => false; // DF trigger/scope unresolved; no silent assumption.
+    public static bool HitMark => false; // Private telemetry implementation reviewed; activation approval pending.
 }

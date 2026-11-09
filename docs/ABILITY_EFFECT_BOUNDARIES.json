@@ -13,7 +13,7 @@
       "signatureReview": "closed for named symbols only",
       "managedContract": "Ref fields are pointer+runtime-schema-offset writes; network notification separately guards entity and dispatches chain/nonchain update. Notification is not a heal event or transaction.",
       "safeImplementation": "NativeCommittedHeal now owns pending notification before setter, never replays a possibly committed heal, never restores old HP over subsequent damage, and abandons notification on pawn replacement.",
-      "residual": "Disabled: no proof of DF heal targeting/over-time/smoke conversion; direct health mutation bypasses normal healing event semantics. Exact source-derived heal magnitude unresolved. This partial 25HP tuning is explicitly CS2-only.",
+      "residual": "Activation held pending reviewed deployment approval/native acceptance; native setter/notification source contracts reviewed. DF heal targeting/time/smoke conversion remain incomplete, independently of implemented CS2-only 25HP interpretation.",
       "nativeQA": "NOT PERFORMED"
     },
     {
@@ -24,8 +24,8 @@
       ],
       "signatureReview": "closed for named symbols only",
       "managedContract": "Nullable arguments become native stack value pointers or null; requires at least one argument and entity validity; invokes gamedata-resolved virtual Teleport.",
-      "safeImplementation": "Velocity-only path supplies no position pointer; no raw movement schema writes are introduced.",
-      "residual": "Disabled: native collision/displacement result and installed gamedata offset unverified. No line trace is represented as a pawn hull clearance test. No safe sourced knockdown/dash alternative established.",
+      "safeImplementation": "Finite NativeRushImpulse converts yaw degrees to horizontal Source-units/second and retains finite Z velocity; velocity-only Teleport passes null origin/angle. No collision clearance or fixed travel-distance claim.",
+      "residual": "Activation held pending reviewed deployment approval/native acceptance and installed gamedata validation. Velocity-only API source reviewed; DF dash/knockdown fidelity remains separately incomplete.",
       "nativeQA": "NOT PERFORMED"
     },
     {
@@ -89,5 +89,6 @@
       "residual": "API source reviewed, runtime QA not performed. Not DF arrow/sensor mechanics: no projectile, periodic scan, directional sensor, marker replication, stealth interaction or DF-determined coverage. Radius is CS2 interpretation tuning.",
       "nativeQA": "NOT PERFORMED"
     }
-  ]
+  ],
+  "policy": "DF uncertainty alone does not block authorized offline interpretations. Native safety, activation approval, and DF fidelity are separate axes."
 }
