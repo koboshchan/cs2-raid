@@ -9,6 +9,8 @@ namespace DeltaOps;
 public sealed class NativePortTuning
 {
     // Explicit CS2 port choices, NONE are decoded DF effect magnitudes.
+    // CS2 interpretation only; no decoded DF buff magnitude.
+    public float VyronFallDamageMultiplier {get;set;}=0.5f;
     public float ShepherdDamageMultiplier {get;set;}=0.9f;
     public float PulseRadiusSourceUnits {get;set;}=240;
     public float PulseSeconds {get;set;}=2;

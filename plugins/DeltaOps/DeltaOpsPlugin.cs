@@ -227,6 +227,7 @@ public sealed partial class DeltaOpsPlugin : BasePlugin, IPluginConfig<DeltaOpsC
         RegisterEventHandler<EventPlayerHurt>(NativeTrackedHit);
         RegisterListener<Listeners.OnEntityTakeDamagePre>(OwnedProjectileDamage);
         RegisterListener<Listeners.OnEntityTakeDamagePre>(NativePassiveDamage);
+        RegisterListener<Listeners.OnEntityTakeDamagePre>(NativeFallPassive);
         RegisterEventHandler<EventPlayerSpawn>(OnPlayerSpawn);
         RegisterEventHandler<EventPlayerTeam>(OnPlayerTeam);
         RegisterEventHandler<EventRoundStart>(OnRoundStart);
