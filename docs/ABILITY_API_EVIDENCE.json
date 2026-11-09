@@ -429,5 +429,17 @@
       "source": "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Core/Capabilities/PluginCapability.cs",
       "contract": "First supplier, missing dictionary key can throw. QueryRaid catches failure and returns false. Old supplier after reload may block availability; cannot broaden enemy admission. No damage supplier published."
     }
-  ]
+  ],
+  "damageHookNativeContract": {
+    "sources": [
+      "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/src/core/managers/entity_manager.cpp#L248-L325",
+      "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/src/core/detours.h#L14-L37",
+      "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/src/core/cs2_sdk/entity/dump.h#L1071-L1113"
+    ],
+    "verified": "Detour receives existing engine-owned info/result pointers. Entity pre hooks run before player pre hooks. Handled accumulates a veto while later hooks still execute; Stop returns false immediately. A veto skips original damage and post dispatch. Otherwise original native call precedes post dispatch.",
+    "notVerified": "Callback pointer lifetime outside synchronous dispatch, manual object construction/destruction/alignment, hook exception semantics, actual installed hook/gamedata identity. No permission to retain, clone or create info/result.",
+    "constructorFinding": "Native dump declares schema field accessors only, no initializing constructor for either damage class. This does not establish POD/zero-initialization.",
+    "admission": "DamageMutation remains false. UnvalidatedAbilityDamageDriver remains unpublished. Native grenade blast remains zero and projectile admission remains false.",
+    "policyImplication": "A later Handled veto is not undone by an earlier reducing Continue hook. This native source observation does not prove all plugins obey the contract or custom teams are enforced after ability unload."
+  }
 }

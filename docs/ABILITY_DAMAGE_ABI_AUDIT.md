@@ -37,3 +37,27 @@ native classes; synchronous game-thread lifetime; full serial attacker,
 victim and inflictor attribution; reentry behavior; native armor/death events;
 Raid hostility/financial policy and exactly-once outcome settlement; supported
 layout rejection. These cannot be proved by the offline mocks.
+
+## Pinned native hook audit
+
+Read the complete pre-dispatch function and detour at the same pinned API
+commit used by the build reference.
+
+https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/src/core/managers/entity_manager.cpp#L248-L325
+
+https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/src/core/detours.h#L14-L37
+
+https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/src/core/cs2_sdk/entity/dump.h#L1071-L1113
+
+The engine supplies existing info/result pointers. The entity pre-listener list
+runs before the pawn-specific list. Handled records a veto without stopping
+other listeners; Stop vetoes immediately. A veto skips the native original and
+the post-dispatch. With no veto, original damage executes before post-dispatch.
+
+This proves a synchronous dispatch control path in this version's source,
+not an allocator. The native schema class declarations contain field-accessor
+macros, not a validated object initialization/destruction contract. No safe
+manual damage-info or result creation was found here. Borrowed callback pointers
+are not retained, cloned or passed into a second synthetic damage operation.
+The capability remains disabled. Installed-server hook identity, exception
+behavior and engine lifetime require separate evidence.
