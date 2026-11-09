@@ -313,6 +313,13 @@ for(var mask=0;mask<64;mask++){
       TrackBit(3),TrackBit(4),TrackBit(5)?healthDamage:0)==(expected&&TrackBit(5)));
  }
 }
+// Passive readmission on a new pawn must not mint a fresh charge ledger.
+var readmission=new InterpretedAbilitySession(2,0);
+Check(readmission.Activate(4008002,0,()=>true,()=>new OwnedAbilityEffect(()=>{})));
+Check(readmission.Available(4008002,0)==0);
+Check(readmission.Revoke());Check(!readmission.Alive);
+readmission.Resume();Check(readmission.Alive);Check(readmission.Available(4008002,0)==0);
+readmission.Quarantine();readmission.Resume();Check(!readmission.Alive);
 Console.WriteLine($"{count} interpreted lifecycle checks PASS; router + lifecycle PASS; CSS calls compile, not native QA");
 sealed class Effect:IDisposable{public bool Disposed;public void Dispose()=>Disposed=true;}
 

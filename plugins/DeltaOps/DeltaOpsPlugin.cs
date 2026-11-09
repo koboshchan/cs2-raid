@@ -2412,7 +2412,12 @@ public sealed partial class DeltaOpsPlugin : BasePlugin, IPluginConfig<DeltaOpsC
 
     private void ApplyPassive(CCSPlayerController player, OperatorId operatorId)
     {
-        if(Config.UseInterpretedAbilities)return; // No guessed legacy HP/speed/armor or Luna flash grants.
+        if(Config.UseInterpretedAbilities){
+            // Spawn/round callbacks must restore the existing charge ledger's actor admission
+            // as well as first selection. Never heal, change armor or grant legacy utilities.
+            if(!_fixtureMode && player.PawnIsAlive)NativeActorFor(player,(int)operatorId);
+            return;
+        }
         var pawn = player.PlayerPawn.Value;
         if (!IsHumanController(player) || !player.PawnIsAlive ||
             pawn == null || !pawn.IsValid)
