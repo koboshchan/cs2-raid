@@ -75,8 +75,7 @@ public sealed partial class DeltaOpsPlugin
         if(selected==null||_fixtureMode||!p.PawnIsAlive)return false;
         var actor=NativeActorFor(p,(int)selected.Value);
         if(actor==null||!NativeAdmission(p,actor.Controller,actor.Pawn))return false;
-        var blocker=NativeAbilityRouter.Blocker((int)selected.Value,id);
-        if(blocker==null&&!NativeApiCapabilityEvidence.ReadOnlyRecon((int)selected.Value,id))blocker="Native capability contract incomplete; effect disabled. See API evidence ledger.";
+        var blocker=NativeApiCapabilityEvidence.Blocker((int)selected.Value,id);
         if(blocker!=null){p.PrintToChat($" [r2 blocked] {id}: {blocker}");return false;}
         var ok=actor.Session.Activate(id,Environment.TickCount64,
             ()=>NativeAdmission(p,actor.Controller,actor.Pawn),
@@ -88,7 +87,7 @@ public sealed partial class DeltaOpsPlugin
     {
         var actor=NativeActorFor(p,op);if(actor==null)return;
         foreach(var s in InterpretedR2.Skills.Values.Where(s=>s.Operator==op&&!s.Passive))
-            p.PrintToChat($" [r2] {s.Id} {s.Name}: {actor.Session.Available(s.Id,Environment.TickCount64)}/{s.Capacity}; recharge {s.RechargeSeconds}s; {NativeAbilityRouter.Blocker(op,s.Id)??"CS2 port"}");
+            p.PrintToChat($" [r2] {s.Id} {s.Name}: {actor.Session.Available(s.Id,Environment.TickCount64)}/{s.Capacity}; recharge {s.RechargeSeconds}s; {NativeApiCapabilityEvidence.Blocker(op,s.Id)??"partial CS2 recon telemetry"}");
     }
     private void RevokeNative(string key){if(_nativeActors.TryGetValue(key,out var a))a.Session.Revoke();}
     private void TickNative()

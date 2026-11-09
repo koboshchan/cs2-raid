@@ -7,6 +7,13 @@ foreach(var skill in InterpretedR2.Skills.Values)
        ((skill.Operator==2&&skill.Id==2002017)||(skill.Operator==4&&skill.Id==1002016)));
 Check(!NativeApiCapabilityEvidence.ReadOnlyRecon(1,2002017));
 Check(!NativeApiCapabilityEvidence.ReadOnlyRecon(4,4008010));
+foreach(var skill in InterpretedR2.Skills.Values) {
+    var expected=NativeAbilityRouter.Blocker(skill.Operator,skill.Id);
+    var actual=NativeApiCapabilityEvidence.Blocker(skill.Operator,skill.Id);
+    Check(actual==null == (expected==null && NativeApiCapabilityEvidence.ReadOnlyRecon(skill.Operator,skill.Id)));
+    if(expected!=null)Check(actual==expected);
+}
+Check(NativeApiCapabilityEvidence.Blocker(1,4008010)!=null);
 Check(!NativeApiCapabilityEvidence.EntityCreation);
 Check(!NativeApiCapabilityEvidence.ScalarMutation);
 Check(!NativeApiCapabilityEvidence.MovementMutation);
