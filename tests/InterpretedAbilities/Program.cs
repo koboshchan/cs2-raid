@@ -400,6 +400,28 @@ foreach(var initial in new[]{0,100,101}) {
  try{h.Apply();Check(false);}catch(InvalidOperationException){Check(true);}
  Check(hp==50);
 }
+
+foreach(var yawDegrees in new[]{0f,90f,-90f,180f,360f,float.MaxValue}) {
+ Check(NativeRushImpulse.TryCreate(yawDegrees,400,-37,out var impulse));
+ Check(float.IsFinite(impulse.X)&&float.IsFinite(impulse.Y)&&impulse.Z==-37);
+ Check(Math.Abs(Math.Sqrt((double)impulse.X*impulse.X+(double)impulse.Y*impulse.Y)-400)<0.001);
+}
+foreach(var invalid in new[]{float.NaN,float.PositiveInfinity,float.NegativeInfinity}) {
+ Check(!NativeRushImpulse.TryCreate(invalid,400,0,out _));
+ Check(!NativeRushImpulse.TryCreate(0,invalid,0,out _));
+ Check(!NativeRushImpulse.TryCreate(0,400,invalid,out _));
+}
+Check(!NativeRushImpulse.TryCreate(0,0,0,out _));
+Check(!NativeRushImpulse.TryCreate(0,1001,0,out _));
+
+Check(!NativeApiCapabilityEvidence.HealingActivation);
+Check(NativeImplementationEvidence.SafetyBlocker(20010101)==null);
+Check(NativeImplementationEvidence.SafetyBlocker(1009001)==null);
+Check(NativeImplementationEvidence.SafetyBlocker(3008001)!=null);
+foreach(var sk in InterpretedR2.Skills.Values) {
+ Check(!string.IsNullOrEmpty(NativeImplementationEvidence.Implementation(sk.Id)));
+ Check(!string.IsNullOrEmpty(NativeImplementationEvidence.Approval(sk.Operator,sk.Id)));
+}
 Console.WriteLine($"{count} interpreted lifecycle checks PASS; router + lifecycle PASS; CSS calls compile, not native QA");
 sealed class Effect:IDisposable{public bool Disposed;public void Dispose()=>Disposed=true;}
 

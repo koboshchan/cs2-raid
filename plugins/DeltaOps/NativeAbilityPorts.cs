@@ -109,7 +109,7 @@ public sealed partial class DeltaOpsPlugin
         private bool Valid()=>plugin.NativeAdmission(player,actor.Controller,actor.Pawn);
         public IDisposable? Heal()
         {
-            if(!NativeApiCapabilityEvidence.ScalarMutation||!Valid()||plugin.Config.NativePorts.HealHp is <1 or >200||Pawn.Health>=Pawn.MaxHealth)return null;
+            if(!NativeApiCapabilityEvidence.HealingActivation||!Valid()||plugin.Config.NativePorts.HealHp is <1 or >200||Pawn.Health>=Pawn.MaxHealth)return null;
             // Register the committed instant-effect boundary before a native setter can throw.
             // Health is never rolled back across a competing damage/heal event.
             var body=Pawn;
@@ -174,10 +174,13 @@ public sealed partial class DeltaOpsPlugin
         {
             var speed=plugin.Config.NativePorts.RushSpeedSourceUnits;
             if(!NativeApiCapabilityEvidence.MovementMutation||!Valid()||!float.IsFinite(speed)||speed<=0||speed>1000)return null;
-            var yaw=Pawn.EyeAngles.Y*Math.PI/180;
-            // Velocity only, never origin teleport or noclip. Collision is entirely engine-owned.
+            var body=Pawn;
+            if(!NativeRushImpulse.TryCreate(body.EyeAngles.Y,speed,body.AbsVelocity.Z,out var impulse))return null;
+            // Official source: CBaseEntity.cs L15-L59 at CSS f58e383b.
+            // docs/ABILITY_EFFECT_BOUNDARIES.json contains exact URL/contract.
+            // Committed impulse, not a status lease: no later velocity rollback.
             return actor.Session.EnactOwned(()=>
-                Pawn.Teleport(null,null,new Vector((float)Math.Cos(yaw)*speed,(float)Math.Sin(yaw)*speed,Pawn.AbsVelocity.Z)),
+                body.Teleport(null,null,new Vector(impulse.X,impulse.Y,impulse.Z)),
                 ()=>{});
         }
         public IDisposable? Pulse(bool suppress)

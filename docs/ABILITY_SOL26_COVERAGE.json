@@ -10,6 +10,32 @@
     "Passive": false,
     "Calls": "Router rejects before native mutation; direct projectile escrow foundation exists but is not enabled",
     "Approximation": "No enabled approximation; blocked/incomplete",
+    "Implementation": "shared owned-projectile foundation implemented; skill-specific behavior unimplemented",
+    "Activation": "activation held pending reviewed deployment approval; offline implementation permitted",
+    "NativeSafetyBlocker": "Native inert creation/type/spawn preservation and unload-independent projectile expiry not established.",
+    "Fidelity": "Partial CS2 interpretation; remaining DF behavior is separately listed in ABILITY_SOL26_COVERAGE.md, not a blanket prohibition on offline implementation",
+    "TypedSourceFields": {
+      "CdId": {
+        "Raw": 2002,
+        "Type": "DF CDID join key",
+        "Unit": "identifier, not duration"
+      },
+      "Initial": {
+        "Raw": 1,
+        "Type": "DF initial charge count",
+        "Unit": "charges"
+      },
+      "Capacity": {
+        "Raw": 1,
+        "Type": "DF capacity",
+        "Unit": "charges"
+      },
+      "Recharge": {
+        "Raw": 60,
+        "Type": "derived exact SOL cooldown join; raw evidence retained",
+        "Unit": "seconds; monotonic runtime conversion to milliseconds"
+      }
+    },
     "DfBehaviorEvidence": "Literal allSerializedFields retained in raw r2; full runtime behavior not recovered",
     "Evidence": "DFPROVEN PC SOL mapping and literal imported fields; all other adapter mechanics CS2ASSUMPTION unless individually cited; wiki only LOWCONFIDENCE hint",
     "Binding": "PC SOL; sol-binding-v1/receipt.json; raw r2 immutable",
@@ -33,6 +59,32 @@
     "Passive": false,
     "Calls": "Router rejects before native mutation; direct projectile escrow foundation exists but is not enabled",
     "Approximation": "No enabled approximation; blocked/incomplete",
+    "Implementation": "shared owned-projectile foundation implemented; skill-specific behavior unimplemented",
+    "Activation": "activation held pending reviewed deployment approval; offline implementation permitted",
+    "NativeSafetyBlocker": "Native inert creation/type/spawn preservation and unload-independent projectile expiry not established.",
+    "Fidelity": "Partial CS2 interpretation; remaining DF behavior is separately listed in ABILITY_SOL26_COVERAGE.md, not a blanket prohibition on offline implementation",
+    "TypedSourceFields": {
+      "CdId": {
+        "Raw": 2001,
+        "Type": "DF CDID join key",
+        "Unit": "identifier, not duration"
+      },
+      "Initial": {
+        "Raw": 1,
+        "Type": "DF initial charge count",
+        "Unit": "charges"
+      },
+      "Capacity": {
+        "Raw": 1,
+        "Type": "DF capacity",
+        "Unit": "charges"
+      },
+      "Recharge": {
+        "Raw": 40,
+        "Type": "derived exact SOL cooldown join; raw evidence retained",
+        "Unit": "seconds; monotonic runtime conversion to milliseconds"
+      }
+    },
     "DfBehaviorEvidence": "Literal allSerializedFields retained in raw r2; full runtime behavior not recovered",
     "Evidence": "DFPROVEN PC SOL mapping and literal imported fields; all other adapter mechanics CS2ASSUMPTION unless individually cited; wiki only LOWCONFIDENCE hint",
     "Binding": "PC SOL; sol-binding-v1/receipt.json; raw r2 immutable",
@@ -56,6 +108,32 @@
     "Passive": false,
     "Calls": "No projectile tracking/removal adapter",
     "Approximation": "No enabled approximation; blocked/incomplete",
+    "Implementation": "skill-specific effect unimplemented",
+    "Activation": "activation held pending reviewed deployment approval; offline implementation permitted",
+    "NativeSafetyBlocker": "No skill-specific native effect boundary implemented.",
+    "Fidelity": "Partial CS2 interpretation; remaining DF behavior is separately listed in ABILITY_SOL26_COVERAGE.md, not a blanket prohibition on offline implementation",
+    "TypedSourceFields": {
+      "CdId": {
+        "Raw": 0,
+        "Type": "DF CDID join key",
+        "Unit": "identifier, not duration"
+      },
+      "Initial": {
+        "Raw": 1,
+        "Type": "DF initial charge count",
+        "Unit": "charges"
+      },
+      "Capacity": {
+        "Raw": 1,
+        "Type": "DF capacity",
+        "Unit": "charges"
+      },
+      "Recharge": {
+        "Raw": 1,
+        "Type": "derived exact SOL cooldown join; raw evidence retained",
+        "Unit": "seconds; monotonic runtime conversion to milliseconds"
+      }
+    },
     "DfBehaviorEvidence": "Literal allSerializedFields retained in raw r2; full runtime behavior not recovered",
     "Evidence": "DFPROVEN PC SOL mapping and literal imported fields; all other adapter mechanics CS2ASSUMPTION unless individually cited; wiki only LOWCONFIDENCE hint",
     "Binding": "PC SOL; sol-binding-v1/receipt.json; raw r2 immutable",
@@ -79,6 +157,32 @@
     "Passive": false,
     "Calls": "CssPorts.Heal -\u003E EnactOwned -\u003E NativeCommittedHeal -\u003E Pawn.Health setter \u002B retry-only SetStateChanged",
     "Approximation": "DISABLED CS2-only 25 HP tuning bounded by MaxHealth; pending network notification owned, HP never replayed or rolled back",
+    "Implementation": "implemented partial committed heal interpretation",
+    "Activation": "activation held pending reviewed deployment approval; offline implementation permitted",
+    "NativeSafetyBlocker": null,
+    "Fidelity": "Partial CS2 interpretation; remaining DF behavior is separately listed in ABILITY_SOL26_COVERAGE.md, not a blanket prohibition on offline implementation",
+    "TypedSourceFields": {
+      "CdId": {
+        "Raw": 2,
+        "Type": "DF CDID join key",
+        "Unit": "identifier, not duration"
+      },
+      "Initial": {
+        "Raw": 0,
+        "Type": "DF initial charge count",
+        "Unit": "charges"
+      },
+      "Capacity": {
+        "Raw": 3,
+        "Type": "DF capacity",
+        "Unit": "charges"
+      },
+      "Recharge": {
+        "Raw": 30,
+        "Type": "derived exact SOL cooldown join; raw evidence retained",
+        "Unit": "seconds; monotonic runtime conversion to milliseconds"
+      }
+    },
     "DfBehaviorEvidence": "Literal allSerializedFields retained in raw r2; full runtime behavior not recovered",
     "Evidence": "DFPROVEN PC SOL mapping and literal imported fields; all other adapter mechanics CS2ASSUMPTION unless individually cited; wiki only LOWCONFIDENCE hint",
     "Binding": "PC SOL; sol-binding-v1/receipt.json; raw r2 immutable",
@@ -102,6 +206,32 @@
     "Passive": true,
     "Calls": "No native revive adapter; shared heal action exists but passive is incomplete",
     "Approximation": "No enabled approximation; blocked/incomplete",
+    "Implementation": "skill-specific effect unimplemented",
+    "Activation": "activation held pending reviewed deployment approval; offline implementation permitted",
+    "NativeSafetyBlocker": "No skill-specific native effect boundary implemented.",
+    "Fidelity": "Partial CS2 interpretation; remaining DF behavior is separately listed in ABILITY_SOL26_COVERAGE.md, not a blanket prohibition on offline implementation",
+    "TypedSourceFields": {
+      "CdId": {
+        "Raw": 0,
+        "Type": "DF CDID join key",
+        "Unit": "identifier, not duration"
+      },
+      "Initial": {
+        "Raw": 1,
+        "Type": "DF initial charge count",
+        "Unit": "charges"
+      },
+      "Capacity": {
+        "Raw": 1,
+        "Type": "DF capacity",
+        "Unit": "charges"
+      },
+      "Recharge": {
+        "Raw": 1,
+        "Type": "derived exact SOL cooldown join; raw evidence retained",
+        "Unit": "seconds; monotonic runtime conversion to milliseconds"
+      }
+    },
     "DfBehaviorEvidence": "Literal allSerializedFields retained in raw r2; full runtime behavior not recovered",
     "Evidence": "DFPROVEN PC SOL mapping and literal imported fields; all other adapter mechanics CS2ASSUMPTION unless individually cited; wiki only LOWCONFIDENCE hint",
     "Binding": "PC SOL; sol-binding-v1/receipt.json; raw r2 immutable",
@@ -125,6 +255,32 @@
     "Passive": false,
     "Calls": "CssPorts.Recon -\u003E enemy policy -\u003E private PrintToChat names and distances (not XYZ)",
     "Approximation": "CS2-only configured radius (default 1200 Source units); one-shot names and distances, no LOS, no printed XYZ, no DF sensor/projectile mechanics",
+    "Implementation": "implemented partial private names-and-distances interpretation",
+    "Activation": "source-reviewed private telemetry path; normal configuration and Raid admission required",
+    "NativeSafetyBlocker": null,
+    "Fidelity": "Partial CS2 interpretation; remaining DF behavior is separately listed in ABILITY_SOL26_COVERAGE.md, not a blanket prohibition on offline implementation",
+    "TypedSourceFields": {
+      "CdId": {
+        "Raw": 14,
+        "Type": "DF CDID join key",
+        "Unit": "identifier, not duration"
+      },
+      "Initial": {
+        "Raw": 0,
+        "Type": "DF initial charge count",
+        "Unit": "charges"
+      },
+      "Capacity": {
+        "Raw": 1,
+        "Type": "DF capacity",
+        "Unit": "charges"
+      },
+      "Recharge": {
+        "Raw": 75,
+        "Type": "derived exact SOL cooldown join; raw evidence retained",
+        "Unit": "seconds; monotonic runtime conversion to milliseconds"
+      }
+    },
     "DfBehaviorEvidence": "Literal allSerializedFields retained in raw r2; full runtime behavior not recovered",
     "Evidence": "DFPROVEN PC SOL mapping and literal imported fields; all other adapter mechanics CS2ASSUMPTION unless individually cited; wiki only LOWCONFIDENCE hint",
     "Binding": "PC SOL; sol-binding-v1/receipt.json; raw r2 immutable",
@@ -148,6 +304,32 @@
     "Passive": false,
     "Calls": "Router rejects before native mutation; direct projectile escrow foundation exists but is not enabled",
     "Approximation": "No enabled approximation; blocked/incomplete",
+    "Implementation": "shared owned-projectile foundation implemented; skill-specific behavior unimplemented",
+    "Activation": "activation held pending reviewed deployment approval; offline implementation permitted",
+    "NativeSafetyBlocker": "Native inert creation/type/spawn preservation and unload-independent projectile expiry not established.",
+    "Fidelity": "Partial CS2 interpretation; remaining DF behavior is separately listed in ABILITY_SOL26_COVERAGE.md, not a blanket prohibition on offline implementation",
+    "TypedSourceFields": {
+      "CdId": {
+        "Raw": 92,
+        "Type": "DF CDID join key",
+        "Unit": "identifier, not duration"
+      },
+      "Initial": {
+        "Raw": 2,
+        "Type": "DF initial charge count",
+        "Unit": "charges"
+      },
+      "Capacity": {
+        "Raw": 2,
+        "Type": "DF capacity",
+        "Unit": "charges"
+      },
+      "Recharge": {
+        "Raw": 55,
+        "Type": "derived exact SOL cooldown join; raw evidence retained",
+        "Unit": "seconds; monotonic runtime conversion to milliseconds"
+      }
+    },
     "DfBehaviorEvidence": "Literal allSerializedFields retained in raw r2; full runtime behavior not recovered",
     "Evidence": "DFPROVEN PC SOL mapping and literal imported fields; all other adapter mechanics CS2ASSUMPTION unless individually cited; wiki only LOWCONFIDENCE hint",
     "Binding": "PC SOL; sol-binding-v1/receipt.json; raw r2 immutable",
@@ -171,6 +353,32 @@
     "Passive": false,
     "Calls": "CssPorts.Pulse -\u003E session-owned velocity modifier leases; optional suppression refcount",
     "Approximation": "240 Source-unit radius; 2 seconds; velocity modifier .65; Hackclaw also suppresses interpreted activations",
+    "Implementation": "implemented partial owned status interpretation",
+    "Activation": "activation held pending reviewed deployment approval; offline implementation permitted",
+    "NativeSafetyBlocker": "Reversible shared scalar cannot distinguish identical-value competing writers; unload failure cannot guarantee restoration.",
+    "Fidelity": "Partial CS2 interpretation; remaining DF behavior is separately listed in ABILITY_SOL26_COVERAGE.md, not a blanket prohibition on offline implementation",
+    "TypedSourceFields": {
+      "CdId": {
+        "Raw": 13,
+        "Type": "DF CDID join key",
+        "Unit": "identifier, not duration"
+      },
+      "Initial": {
+        "Raw": 1,
+        "Type": "DF initial charge count",
+        "Unit": "charges"
+      },
+      "Capacity": {
+        "Raw": 1,
+        "Type": "DF capacity",
+        "Unit": "charges"
+      },
+      "Recharge": {
+        "Raw": 50,
+        "Type": "derived exact SOL cooldown join; raw evidence retained",
+        "Unit": "seconds; monotonic runtime conversion to milliseconds"
+      }
+    },
     "DfBehaviorEvidence": "Literal allSerializedFields retained in raw r2; full runtime behavior not recovered",
     "Evidence": "DFPROVEN PC SOL mapping and literal imported fields; all other adapter mechanics CS2ASSUMPTION unless individually cited; wiki only LOWCONFIDENCE hint",
     "Binding": "PC SOL; sol-binding-v1/receipt.json; raw r2 immutable",
@@ -194,6 +402,32 @@
     "Passive": false,
     "Calls": "No projectile tracking/removal adapter",
     "Approximation": "No enabled approximation; blocked/incomplete",
+    "Implementation": "skill-specific effect unimplemented",
+    "Activation": "activation held pending reviewed deployment approval; offline implementation permitted",
+    "NativeSafetyBlocker": "No skill-specific native effect boundary implemented.",
+    "Fidelity": "Partial CS2 interpretation; remaining DF behavior is separately listed in ABILITY_SOL26_COVERAGE.md, not a blanket prohibition on offline implementation",
+    "TypedSourceFields": {
+      "CdId": {
+        "Raw": 0,
+        "Type": "DF CDID join key",
+        "Unit": "identifier, not duration"
+      },
+      "Initial": {
+        "Raw": 1,
+        "Type": "DF initial charge count",
+        "Unit": "charges"
+      },
+      "Capacity": {
+        "Raw": 1,
+        "Type": "DF capacity",
+        "Unit": "charges"
+      },
+      "Recharge": {
+        "Raw": 1,
+        "Type": "derived exact SOL cooldown join; raw evidence retained",
+        "Unit": "seconds; monotonic runtime conversion to milliseconds"
+      }
+    },
     "DfBehaviorEvidence": "Literal allSerializedFields retained in raw r2; full runtime behavior not recovered",
     "Evidence": "DFPROVEN PC SOL mapping and literal imported fields; all other adapter mechanics CS2ASSUMPTION unless individually cited; wiki only LOWCONFIDENCE hint",
     "Binding": "PC SOL; sol-binding-v1/receipt.json; raw r2 immutable",
@@ -217,6 +451,32 @@
     "Passive": true,
     "Calls": "NativeTrackedHit -\u003E EventPlayerHurt -\u003E private PrintToChat coordinates",
     "Approximation": "CS2ASSUMPTION post-hit allied coordinate telemetry; squad scope not proved by extracted buffs",
+    "Implementation": "implemented partial post-hit telemetry interpretation",
+    "Activation": "activation held pending reviewed deployment approval; offline implementation permitted",
+    "NativeSafetyBlocker": null,
+    "Fidelity": "Partial CS2 interpretation; remaining DF behavior is separately listed in ABILITY_SOL26_COVERAGE.md, not a blanket prohibition on offline implementation",
+    "TypedSourceFields": {
+      "CdId": {
+        "Raw": 0,
+        "Type": "DF CDID join key",
+        "Unit": "identifier, not duration"
+      },
+      "Initial": {
+        "Raw": 1,
+        "Type": "DF initial charge count",
+        "Unit": "charges"
+      },
+      "Capacity": {
+        "Raw": 1,
+        "Type": "DF capacity",
+        "Unit": "charges"
+      },
+      "Recharge": {
+        "Raw": 1,
+        "Type": "derived exact SOL cooldown join; raw evidence retained",
+        "Unit": "seconds; monotonic runtime conversion to milliseconds"
+      }
+    },
     "DfBehaviorEvidence": "allSerializedFields.AddBuffs=[8011,100008]; bEnableSniperMark=true; bOverrideAimingCheck=true; TeamPlayerIcon.AssetPathName=None; trigger and squad scope unresolved",
     "Evidence": "DFPROVEN PC SOL mapping and literal imported fields; all other adapter mechanics CS2ASSUMPTION unless individually cited; wiki only LOWCONFIDENCE hint",
     "Binding": "PC SOL; sol-binding-v1/receipt.json; raw r2 immutable",
@@ -240,6 +500,32 @@
     "Passive": false,
     "Calls": "CssPorts.Rush -\u003E EnactOwned -\u003E Pawn.Teleport velocity",
     "Approximation": "400 Source-units/s horizontal velocity; current vertical velocity retained",
+    "Implementation": "implemented partial velocity-only impulse interpretation",
+    "Activation": "activation held pending reviewed deployment approval; offline implementation permitted",
+    "NativeSafetyBlocker": null,
+    "Fidelity": "Partial CS2 interpretation; remaining DF behavior is separately listed in ABILITY_SOL26_COVERAGE.md, not a blanket prohibition on offline implementation",
+    "TypedSourceFields": {
+      "CdId": {
+        "Raw": 18,
+        "Type": "DF CDID join key",
+        "Unit": "identifier, not duration"
+      },
+      "Initial": {
+        "Raw": 0,
+        "Type": "DF initial charge count",
+        "Unit": "charges"
+      },
+      "Capacity": {
+        "Raw": 1,
+        "Type": "DF capacity",
+        "Unit": "charges"
+      },
+      "Recharge": {
+        "Raw": 20,
+        "Type": "derived exact SOL cooldown join; raw evidence retained",
+        "Unit": "seconds; monotonic runtime conversion to milliseconds"
+      }
+    },
     "DfBehaviorEvidence": "Literal allSerializedFields retained in raw r2; full runtime behavior not recovered",
     "Evidence": "DFPROVEN PC SOL mapping and literal imported fields; all other adapter mechanics CS2ASSUMPTION unless individually cited; wiki only LOWCONFIDENCE hint",
     "Binding": "PC SOL; sol-binding-v1/receipt.json; raw r2 immutable",
@@ -263,6 +549,32 @@
     "Passive": false,
     "Calls": "Blocked compressed-air/cannon adapter",
     "Approximation": "No enabled approximation; blocked/incomplete",
+    "Implementation": "skill-specific effect unimplemented",
+    "Activation": "activation held pending reviewed deployment approval; offline implementation permitted",
+    "NativeSafetyBlocker": "No skill-specific native effect boundary implemented.",
+    "Fidelity": "Partial CS2 interpretation; remaining DF behavior is separately listed in ABILITY_SOL26_COVERAGE.md, not a blanket prohibition on offline implementation",
+    "TypedSourceFields": {
+      "CdId": {
+        "Raw": 17,
+        "Type": "DF CDID join key",
+        "Unit": "identifier, not duration"
+      },
+      "Initial": {
+        "Raw": 0,
+        "Type": "DF initial charge count",
+        "Unit": "charges"
+      },
+      "Capacity": {
+        "Raw": 1,
+        "Type": "DF capacity",
+        "Unit": "charges"
+      },
+      "Recharge": {
+        "Raw": 70,
+        "Type": "derived exact SOL cooldown join; raw evidence retained",
+        "Unit": "seconds; monotonic runtime conversion to milliseconds"
+      }
+    },
     "DfBehaviorEvidence": "Literal allSerializedFields retained in raw r2; full runtime behavior not recovered",
     "Evidence": "DFPROVEN PC SOL mapping and literal imported fields; all other adapter mechanics CS2ASSUMPTION unless individually cited; wiki only LOWCONFIDENCE hint",
     "Binding": "PC SOL; sol-binding-v1/receipt.json; raw r2 immutable",
@@ -286,6 +598,32 @@
     "Passive": true,
     "Calls": "NativeFallPassive -\u003E existing pure fall CTakeDamageInfo.Damage modification; speed boost absent",
     "Approximation": "Pure fall damage multiplier .5; buff-referenced speed boost not yet interpreted",
+    "Implementation": "implemented partial borrowed damage-info modifier",
+    "Activation": "activation held pending reviewed deployment approval; offline implementation permitted",
+    "NativeSafetyBlocker": "Damage classification and other resident hook interactions require separate review; no damage construction is used.",
+    "Fidelity": "Partial CS2 interpretation; remaining DF behavior is separately listed in ABILITY_SOL26_COVERAGE.md, not a blanket prohibition on offline implementation",
+    "TypedSourceFields": {
+      "CdId": {
+        "Raw": 0,
+        "Type": "DF CDID join key",
+        "Unit": "identifier, not duration"
+      },
+      "Initial": {
+        "Raw": 1,
+        "Type": "DF initial charge count",
+        "Unit": "charges"
+      },
+      "Capacity": {
+        "Raw": 1,
+        "Type": "DF capacity",
+        "Unit": "charges"
+      },
+      "Recharge": {
+        "Raw": 1,
+        "Type": "derived exact SOL cooldown join; raw evidence retained",
+        "Unit": "seconds; monotonic runtime conversion to milliseconds"
+      }
+    },
     "DfBehaviorEvidence": "allSerializedFields.AddSkills=[1009001]; AddBuffs=[303016,8013]; UseCustomHeight=true; decoded buff effects unavailable",
     "Evidence": "DFPROVEN PC SOL mapping and literal imported fields; all other adapter mechanics CS2ASSUMPTION unless individually cited; wiki only LOWCONFIDENCE hint",
     "Binding": "PC SOL; sol-binding-v1/receipt.json; raw r2 immutable",
@@ -309,6 +647,32 @@
     "Passive": false,
     "Calls": "Blocked magnetic attachment and damage; NOT dash",
     "Approximation": "No enabled approximation; blocked/incomplete",
+    "Implementation": "skill-specific effect unimplemented",
+    "Activation": "activation held pending reviewed deployment approval; offline implementation permitted",
+    "NativeSafetyBlocker": "No skill-specific native effect boundary implemented.",
+    "Fidelity": "Partial CS2 interpretation; remaining DF behavior is separately listed in ABILITY_SOL26_COVERAGE.md, not a blanket prohibition on offline implementation",
+    "TypedSourceFields": {
+      "CdId": {
+        "Raw": 16,
+        "Type": "DF CDID join key",
+        "Unit": "identifier, not duration"
+      },
+      "Initial": {
+        "Raw": 0,
+        "Type": "DF initial charge count",
+        "Unit": "charges"
+      },
+      "Capacity": {
+        "Raw": 1,
+        "Type": "DF capacity",
+        "Unit": "charges"
+      },
+      "Recharge": {
+        "Raw": 55,
+        "Type": "derived exact SOL cooldown join; raw evidence retained",
+        "Unit": "seconds; monotonic runtime conversion to milliseconds"
+      }
+    },
     "DfBehaviorEvidence": "Literal allSerializedFields retained in raw r2; full runtime behavior not recovered",
     "Evidence": "DFPROVEN PC SOL mapping and literal imported fields; all other adapter mechanics CS2ASSUMPTION unless individually cited; wiki only LOWCONFIDENCE hint",
     "Binding": "PC SOL; sol-binding-v1/receipt.json; raw r2 immutable",
@@ -332,6 +696,32 @@
     "Passive": false,
     "Calls": "No projectile tracking/removal adapter",
     "Approximation": "No enabled approximation; blocked/incomplete",
+    "Implementation": "skill-specific effect unimplemented",
+    "Activation": "activation held pending reviewed deployment approval; offline implementation permitted",
+    "NativeSafetyBlocker": "No skill-specific native effect boundary implemented.",
+    "Fidelity": "Partial CS2 interpretation; remaining DF behavior is separately listed in ABILITY_SOL26_COVERAGE.md, not a blanket prohibition on offline implementation",
+    "TypedSourceFields": {
+      "CdId": {
+        "Raw": 0,
+        "Type": "DF CDID join key",
+        "Unit": "identifier, not duration"
+      },
+      "Initial": {
+        "Raw": 1,
+        "Type": "DF initial charge count",
+        "Unit": "charges"
+      },
+      "Capacity": {
+        "Raw": 1,
+        "Type": "DF capacity",
+        "Unit": "charges"
+      },
+      "Recharge": {
+        "Raw": 1,
+        "Type": "derived exact SOL cooldown join; raw evidence retained",
+        "Unit": "seconds; monotonic runtime conversion to milliseconds"
+      }
+    },
     "DfBehaviorEvidence": "Literal allSerializedFields retained in raw r2; full runtime behavior not recovered",
     "Evidence": "DFPROVEN PC SOL mapping and literal imported fields; all other adapter mechanics CS2ASSUMPTION unless individually cited; wiki only LOWCONFIDENCE hint",
     "Binding": "PC SOL; sol-binding-v1/receipt.json; raw r2 immutable",
@@ -355,6 +745,32 @@
     "Passive": true,
     "Calls": "No native ADS movement adapter",
     "Approximation": "No enabled approximation; blocked/incomplete",
+    "Implementation": "skill-specific effect unimplemented",
+    "Activation": "activation held pending reviewed deployment approval; offline implementation permitted",
+    "NativeSafetyBlocker": "No skill-specific native effect boundary implemented.",
+    "Fidelity": "Partial CS2 interpretation; remaining DF behavior is separately listed in ABILITY_SOL26_COVERAGE.md, not a blanket prohibition on offline implementation",
+    "TypedSourceFields": {
+      "CdId": {
+        "Raw": 0,
+        "Type": "DF CDID join key",
+        "Unit": "identifier, not duration"
+      },
+      "Initial": {
+        "Raw": 1,
+        "Type": "DF initial charge count",
+        "Unit": "charges"
+      },
+      "Capacity": {
+        "Raw": 1,
+        "Type": "DF capacity",
+        "Unit": "charges"
+      },
+      "Recharge": {
+        "Raw": 1,
+        "Type": "derived exact SOL cooldown join; raw evidence retained",
+        "Unit": "seconds; monotonic runtime conversion to milliseconds"
+      }
+    },
     "DfBehaviorEvidence": "Literal allSerializedFields retained in raw r2; full runtime behavior not recovered",
     "Evidence": "DFPROVEN PC SOL mapping and literal imported fields; all other adapter mechanics CS2ASSUMPTION unless individually cited; wiki only LOWCONFIDENCE hint",
     "Binding": "PC SOL; sol-binding-v1/receipt.json; raw r2 immutable",
@@ -378,6 +794,32 @@
     "Passive": false,
     "Calls": "CssPorts.Recon -\u003E enemy policy -\u003E private PrintToChat names and distances (not XYZ)",
     "Approximation": "CS2-only configured radius (default 1200 Source units); one-shot names and distances, no LOS, no printed XYZ, no DF sensor/projectile mechanics",
+    "Implementation": "implemented partial private names-and-distances interpretation",
+    "Activation": "source-reviewed private telemetry path; normal configuration and Raid admission required",
+    "NativeSafetyBlocker": null,
+    "Fidelity": "Partial CS2 interpretation; remaining DF behavior is separately listed in ABILITY_SOL26_COVERAGE.md, not a blanket prohibition on offline implementation",
+    "TypedSourceFields": {
+      "CdId": {
+        "Raw": 22,
+        "Type": "DF CDID join key",
+        "Unit": "identifier, not duration"
+      },
+      "Initial": {
+        "Raw": 0,
+        "Type": "DF initial charge count",
+        "Unit": "charges"
+      },
+      "Capacity": {
+        "Raw": 1,
+        "Type": "DF capacity",
+        "Unit": "charges"
+      },
+      "Recharge": {
+        "Raw": 90,
+        "Type": "derived exact SOL cooldown join; raw evidence retained",
+        "Unit": "seconds; monotonic runtime conversion to milliseconds"
+      }
+    },
     "DfBehaviorEvidence": "Literal allSerializedFields retained in raw r2; full runtime behavior not recovered",
     "Evidence": "DFPROVEN PC SOL mapping and literal imported fields; all other adapter mechanics CS2ASSUMPTION unless individually cited; wiki only LOWCONFIDENCE hint",
     "Binding": "PC SOL; sol-binding-v1/receipt.json; raw r2 immutable",
@@ -401,6 +843,32 @@
     "Passive": false,
     "Calls": "No projectile tracking/removal adapter",
     "Approximation": "No enabled approximation; blocked/incomplete",
+    "Implementation": "skill-specific effect unimplemented",
+    "Activation": "activation held pending reviewed deployment approval; offline implementation permitted",
+    "NativeSafetyBlocker": "No skill-specific native effect boundary implemented.",
+    "Fidelity": "Partial CS2 interpretation; remaining DF behavior is separately listed in ABILITY_SOL26_COVERAGE.md, not a blanket prohibition on offline implementation",
+    "TypedSourceFields": {
+      "CdId": {
+        "Raw": 0,
+        "Type": "DF CDID join key",
+        "Unit": "identifier, not duration"
+      },
+      "Initial": {
+        "Raw": 1,
+        "Type": "DF initial charge count",
+        "Unit": "charges"
+      },
+      "Capacity": {
+        "Raw": 1,
+        "Type": "DF capacity",
+        "Unit": "charges"
+      },
+      "Recharge": {
+        "Raw": 1,
+        "Type": "derived exact SOL cooldown join; raw evidence retained",
+        "Unit": "seconds; monotonic runtime conversion to milliseconds"
+      }
+    },
     "DfBehaviorEvidence": "Literal allSerializedFields retained in raw r2; full runtime behavior not recovered",
     "Evidence": "DFPROVEN PC SOL mapping and literal imported fields; all other adapter mechanics CS2ASSUMPTION unless individually cited; wiki only LOWCONFIDENCE hint",
     "Binding": "PC SOL; sol-binding-v1/receipt.json; raw r2 immutable",
@@ -424,6 +892,32 @@
     "Passive": false,
     "Calls": "CssPorts.Pulse -\u003E session-owned velocity modifier leases; optional suppression refcount",
     "Approximation": "240 Source-unit radius; 2 seconds; velocity modifier .65; Hackclaw also suppresses interpreted activations",
+    "Implementation": "implemented partial owned status interpretation",
+    "Activation": "activation held pending reviewed deployment approval; offline implementation permitted",
+    "NativeSafetyBlocker": "Reversible shared scalar cannot distinguish identical-value competing writers; unload failure cannot guarantee restoration.",
+    "Fidelity": "Partial CS2 interpretation; remaining DF behavior is separately listed in ABILITY_SOL26_COVERAGE.md, not a blanket prohibition on offline implementation",
+    "TypedSourceFields": {
+      "CdId": {
+        "Raw": 20,
+        "Type": "DF CDID join key",
+        "Unit": "identifier, not duration"
+      },
+      "Initial": {
+        "Raw": 0,
+        "Type": "DF initial charge count",
+        "Unit": "charges"
+      },
+      "Capacity": {
+        "Raw": 1,
+        "Type": "DF capacity",
+        "Unit": "charges"
+      },
+      "Recharge": {
+        "Raw": 40,
+        "Type": "derived exact SOL cooldown join; raw evidence retained",
+        "Unit": "seconds; monotonic runtime conversion to milliseconds"
+      }
+    },
     "DfBehaviorEvidence": "Literal allSerializedFields retained in raw r2; full runtime behavior not recovered",
     "Evidence": "DFPROVEN PC SOL mapping and literal imported fields; all other adapter mechanics CS2ASSUMPTION unless individually cited; wiki only LOWCONFIDENCE hint",
     "Binding": "PC SOL; sol-binding-v1/receipt.json; raw r2 immutable",
@@ -447,6 +941,32 @@
     "Passive": false,
     "Calls": "Router rejects before native mutation; direct projectile escrow foundation exists but is not enabled",
     "Approximation": "No enabled approximation; blocked/incomplete",
+    "Implementation": "shared owned-projectile foundation implemented; skill-specific behavior unimplemented",
+    "Activation": "activation held pending reviewed deployment approval; offline implementation permitted",
+    "NativeSafetyBlocker": "Native inert creation/type/spawn preservation and unload-independent projectile expiry not established.",
+    "Fidelity": "Partial CS2 interpretation; remaining DF behavior is separately listed in ABILITY_SOL26_COVERAGE.md, not a blanket prohibition on offline implementation",
+    "TypedSourceFields": {
+      "CdId": {
+        "Raw": 21,
+        "Type": "DF CDID join key",
+        "Unit": "identifier, not duration"
+      },
+      "Initial": {
+        "Raw": 2,
+        "Type": "DF initial charge count",
+        "Unit": "charges"
+      },
+      "Capacity": {
+        "Raw": 2,
+        "Type": "DF capacity",
+        "Unit": "charges"
+      },
+      "Recharge": {
+        "Raw": 45,
+        "Type": "derived exact SOL cooldown join; raw evidence retained",
+        "Unit": "seconds; monotonic runtime conversion to milliseconds"
+      }
+    },
     "DfBehaviorEvidence": "Literal allSerializedFields retained in raw r2; full runtime behavior not recovered",
     "Evidence": "DFPROVEN PC SOL mapping and literal imported fields; all other adapter mechanics CS2ASSUMPTION unless individually cited; wiki only LOWCONFIDENCE hint",
     "Binding": "PC SOL; sol-binding-v1/receipt.json; raw r2 immutable",
@@ -470,6 +990,32 @@
     "Passive": true,
     "Calls": "No native recipient-filtered footstep audio adapter",
     "Approximation": "No enabled approximation; blocked/incomplete",
+    "Implementation": "skill-specific effect unimplemented",
+    "Activation": "activation held pending reviewed deployment approval; offline implementation permitted",
+    "NativeSafetyBlocker": "No skill-specific native effect boundary implemented.",
+    "Fidelity": "Partial CS2 interpretation; remaining DF behavior is separately listed in ABILITY_SOL26_COVERAGE.md, not a blanket prohibition on offline implementation",
+    "TypedSourceFields": {
+      "CdId": {
+        "Raw": 0,
+        "Type": "DF CDID join key",
+        "Unit": "identifier, not duration"
+      },
+      "Initial": {
+        "Raw": 1,
+        "Type": "DF initial charge count",
+        "Unit": "charges"
+      },
+      "Capacity": {
+        "Raw": 1,
+        "Type": "DF capacity",
+        "Unit": "charges"
+      },
+      "Recharge": {
+        "Raw": 1,
+        "Type": "derived exact SOL cooldown join; raw evidence retained",
+        "Unit": "seconds; monotonic runtime conversion to milliseconds"
+      }
+    },
     "DfBehaviorEvidence": "Literal allSerializedFields retained in raw r2; full runtime behavior not recovered",
     "Evidence": "DFPROVEN PC SOL mapping and literal imported fields; all other adapter mechanics CS2ASSUMPTION unless individually cited; wiki only LOWCONFIDENCE hint",
     "Binding": "PC SOL; sol-binding-v1/receipt.json; raw r2 immutable",
@@ -493,6 +1039,32 @@
     "Passive": false,
     "Calls": "CssPorts.Trap -\u003E owned zone -\u003E serial-safe velocity leases",
     "Approximation": "No enabled approximation; blocked/incomplete",
+    "Implementation": "implemented partial owned status interpretation",
+    "Activation": "activation held pending reviewed deployment approval; offline implementation permitted",
+    "NativeSafetyBlocker": "Reversible shared scalar cannot distinguish identical-value competing writers; unload failure cannot guarantee restoration.",
+    "Fidelity": "Partial CS2 interpretation; remaining DF behavior is separately listed in ABILITY_SOL26_COVERAGE.md, not a blanket prohibition on offline implementation",
+    "TypedSourceFields": {
+      "CdId": {
+        "Raw": 11,
+        "Type": "DF CDID join key",
+        "Unit": "identifier, not duration"
+      },
+      "Initial": {
+        "Raw": 2,
+        "Type": "DF initial charge count",
+        "Unit": "charges"
+      },
+      "Capacity": {
+        "Raw": 2,
+        "Type": "DF capacity",
+        "Unit": "charges"
+      },
+      "Recharge": {
+        "Raw": 40,
+        "Type": "derived exact SOL cooldown join; raw evidence retained",
+        "Unit": "seconds; monotonic runtime conversion to milliseconds"
+      }
+    },
     "DfBehaviorEvidence": "Literal allSerializedFields retained in raw r2; full runtime behavior not recovered",
     "Evidence": "DFPROVEN PC SOL mapping and literal imported fields; all other adapter mechanics CS2ASSUMPTION unless individually cited; wiki only LOWCONFIDENCE hint",
     "Binding": "PC SOL; sol-binding-v1/receipt.json; raw r2 immutable",
@@ -516,6 +1088,32 @@
     "Passive": false,
     "Calls": "Router rejects before native mutation; direct projectile escrow foundation exists but is not enabled",
     "Approximation": "No enabled approximation; blocked/incomplete",
+    "Implementation": "shared owned-projectile foundation implemented; skill-specific behavior unimplemented",
+    "Activation": "activation held pending reviewed deployment approval; offline implementation permitted",
+    "NativeSafetyBlocker": "Native inert creation/type/spawn preservation and unload-independent projectile expiry not established.",
+    "Fidelity": "Partial CS2 interpretation; remaining DF behavior is separately listed in ABILITY_SOL26_COVERAGE.md, not a blanket prohibition on offline implementation",
+    "TypedSourceFields": {
+      "CdId": {
+        "Raw": 15,
+        "Type": "DF CDID join key",
+        "Unit": "identifier, not duration"
+      },
+      "Initial": {
+        "Raw": 2,
+        "Type": "DF initial charge count",
+        "Unit": "charges"
+      },
+      "Capacity": {
+        "Raw": 2,
+        "Type": "DF capacity",
+        "Unit": "charges"
+      },
+      "Recharge": {
+        "Raw": 45,
+        "Type": "derived exact SOL cooldown join; raw evidence retained",
+        "Unit": "seconds; monotonic runtime conversion to milliseconds"
+      }
+    },
     "DfBehaviorEvidence": "Literal allSerializedFields retained in raw r2; full runtime behavior not recovered",
     "Evidence": "DFPROVEN PC SOL mapping and literal imported fields; all other adapter mechanics CS2ASSUMPTION unless individually cited; wiki only LOWCONFIDENCE hint",
     "Binding": "PC SOL; sol-binding-v1/receipt.json; raw r2 immutable",
@@ -539,6 +1137,32 @@
     "Passive": false,
     "Calls": "No projectile tracking/removal adapter",
     "Approximation": "No enabled approximation; blocked/incomplete",
+    "Implementation": "skill-specific effect unimplemented",
+    "Activation": "activation held pending reviewed deployment approval; offline implementation permitted",
+    "NativeSafetyBlocker": "No skill-specific native effect boundary implemented.",
+    "Fidelity": "Partial CS2 interpretation; remaining DF behavior is separately listed in ABILITY_SOL26_COVERAGE.md, not a blanket prohibition on offline implementation",
+    "TypedSourceFields": {
+      "CdId": {
+        "Raw": 0,
+        "Type": "DF CDID join key",
+        "Unit": "identifier, not duration"
+      },
+      "Initial": {
+        "Raw": 1,
+        "Type": "DF initial charge count",
+        "Unit": "charges"
+      },
+      "Capacity": {
+        "Raw": 1,
+        "Type": "DF capacity",
+        "Unit": "charges"
+      },
+      "Recharge": {
+        "Raw": 1,
+        "Type": "derived exact SOL cooldown join; raw evidence retained",
+        "Unit": "seconds; monotonic runtime conversion to milliseconds"
+      }
+    },
     "DfBehaviorEvidence": "Literal allSerializedFields retained in raw r2; full runtime behavior not recovered",
     "Evidence": "DFPROVEN PC SOL mapping and literal imported fields; all other adapter mechanics CS2ASSUMPTION unless individually cited; wiki only LOWCONFIDENCE hint",
     "Binding": "PC SOL; sol-binding-v1/receipt.json; raw r2 immutable",
@@ -562,6 +1186,32 @@
     "Passive": false,
     "Calls": "CssPorts.Pulse -\u003E session-owned velocity modifier leases; optional suppression refcount",
     "Approximation": "240 Source-unit radius; 2 seconds; velocity modifier .65; Hackclaw also suppresses interpreted activations",
+    "Implementation": "implemented partial owned status interpretation",
+    "Activation": "activation held pending reviewed deployment approval; offline implementation permitted",
+    "NativeSafetyBlocker": "Reversible shared scalar cannot distinguish identical-value competing writers; unload failure cannot guarantee restoration.",
+    "Fidelity": "Partial CS2 interpretation; remaining DF behavior is separately listed in ABILITY_SOL26_COVERAGE.md, not a blanket prohibition on offline implementation",
+    "TypedSourceFields": {
+      "CdId": {
+        "Raw": 12,
+        "Type": "DF CDID join key",
+        "Unit": "identifier, not duration"
+      },
+      "Initial": {
+        "Raw": 0,
+        "Type": "DF initial charge count",
+        "Unit": "charges"
+      },
+      "Capacity": {
+        "Raw": 1,
+        "Type": "DF capacity",
+        "Unit": "charges"
+      },
+      "Recharge": {
+        "Raw": 90,
+        "Type": "derived exact SOL cooldown join; raw evidence retained",
+        "Unit": "seconds; monotonic runtime conversion to milliseconds"
+      }
+    },
     "DfBehaviorEvidence": "Literal allSerializedFields retained in raw r2; full runtime behavior not recovered",
     "Evidence": "DFPROVEN PC SOL mapping and literal imported fields; all other adapter mechanics CS2ASSUMPTION unless individually cited; wiki only LOWCONFIDENCE hint",
     "Binding": "PC SOL; sol-binding-v1/receipt.json; raw r2 immutable",
@@ -585,6 +1235,32 @@
     "Passive": true,
     "Calls": "NativePassiveDamage -\u003E existing engine CTakeDamageInfo.Damage modification",
     "Approximation": "DFPROVEN SkillID30010201 DamgeCoifficient explosion multiplier .7; native blast classification is CS2 mapping",
+    "Implementation": "implemented partial borrowed damage-info modifier",
+    "Activation": "activation held pending reviewed deployment approval; offline implementation permitted",
+    "NativeSafetyBlocker": "Damage classification and other resident hook interactions require separate review; no damage construction is used.",
+    "Fidelity": "Partial CS2 interpretation; remaining DF behavior is separately listed in ABILITY_SOL26_COVERAGE.md, not a blanket prohibition on offline implementation",
+    "TypedSourceFields": {
+      "CdId": {
+        "Raw": 0,
+        "Type": "DF CDID join key",
+        "Unit": "identifier, not duration"
+      },
+      "Initial": {
+        "Raw": 1,
+        "Type": "DF initial charge count",
+        "Unit": "charges"
+      },
+      "Capacity": {
+        "Raw": 1,
+        "Type": "DF capacity",
+        "Unit": "charges"
+      },
+      "Recharge": {
+        "Raw": 1,
+        "Type": "derived exact SOL cooldown join; raw evidence retained",
+        "Unit": "seconds; monotonic runtime conversion to milliseconds"
+      }
+    },
     "DfBehaviorEvidence": "allSerializedFields.DamgeCoifficient[0]={fModifyRateExplodeDamage:0.7,fModifyRateAbilitAssault:1.0,LimitPlayMode:[]}",
     "Evidence": "DFPROVEN PC SOL mapping and literal imported fields; all other adapter mechanics CS2ASSUMPTION unless individually cited; wiki only LOWCONFIDENCE hint",
     "Binding": "PC SOL; sol-binding-v1/receipt.json; raw r2 immutable",

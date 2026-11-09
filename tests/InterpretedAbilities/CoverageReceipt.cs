@@ -33,6 +33,16 @@ static class CoverageReceipt
   var rows=InterpretedR2.Skills.Values.OrderBy(s=>s.Operator).ThenBy(s=>s.Id).Select(s=>new{
    s.Operator,s.Id,s.Name,s.CdId,s.Initial,s.Capacity,s.RechargeSeconds,s.Passive,
    Calls=Calls(s.Id), Approximation=Approximation(s.Id),
+   Implementation=NativeImplementationEvidence.Implementation(s.Id),
+   Activation=NativeImplementationEvidence.Approval(s.Operator,s.Id),
+   NativeSafetyBlocker=NativeImplementationEvidence.SafetyBlocker(s.Id),
+   Fidelity="Partial CS2 interpretation; remaining DF behavior is separately listed in ABILITY_SOL26_COVERAGE.md, not a blanket prohibition on offline implementation",
+   TypedSourceFields=new{
+       CdId=new{Raw=s.CdId,Type="DF CDID join key",Unit="identifier, not duration"},
+       Initial=new{Raw=s.Initial,Type="DF initial charge count",Unit="charges"},
+       Capacity=new{Raw=s.Capacity,Type="DF capacity",Unit="charges"},
+       Recharge=new{Raw=s.RechargeSeconds,Type="derived exact SOL cooldown join; raw evidence retained",Unit="seconds; monotonic runtime conversion to milliseconds"}
+   },
    DfBehaviorEvidence=s.Id switch{
     30010201=>"allSerializedFields.DamgeCoifficient[0]={fModifyRateExplodeDamage:0.7,fModifyRateAbilitAssault:1.0,LimitPlayMode:[]}",
     40010201=>"allSerializedFields.AddBuffs=[8011,100008]; bEnableSniperMark=true; bOverrideAimingCheck=true; TeamPlayerIcon.AssetPathName=None; trigger and squad scope unresolved",
