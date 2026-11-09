@@ -1,0 +1,72 @@
+{
+  "auditedAliases": [
+    {
+      "label": "Stinger",
+      "chinese": "蜂医",
+      "cnRealName": "罗伊·斯米",
+      "enRealName": "Roy Smee",
+      "wire": 2,
+      "legacyEnum": 1
+    },
+    {
+      "label": "Luna",
+      "chinese": "露娜",
+      "cnRealName": "金卢娜",
+      "enRealName": "Luna Kim",
+      "wire": 3,
+      "legacyEnum": 2
+    },
+    {
+      "label": "Vyron",
+      "chinese": "威龙",
+      "cnRealName": "王宇昊",
+      "enRealName": "Wang Yuhao",
+      "wire": 4,
+      "legacyEnum": 3,
+      "heroRow": "88000000025",
+      "expertRow": "10010",
+      "callerConfirmation": "881f57f2 explicitly verified actual serialized source join, exports unchanged"
+    },
+    {
+      "label": "Hackclaw",
+      "chinese": "骇爪",
+      "cnRealName": "麦晓雯",
+      "enRealName": "Mai Xiaowen",
+      "wire": 5,
+      "legacyEnum": 4
+    },
+    {
+      "label": "Shepherd",
+      "chinese": "牧羊人",
+      "cnRealName": "泰瑞·缪萨",
+      "enRealName": "Terry Musa",
+      "wire": 6,
+      "legacyEnum": 5
+    }
+  ],
+  "excluded": {
+    "label": "D-Wolf",
+    "chinese": "红狼",
+    "cnRealName": "凯·席尔瓦",
+    "enRealName": "Kai Silva",
+    "wire": 1
+  },
+  "sources": [
+    {
+      "url": "https://df.qq.com/cp/a20240920pcfirst/lenovo.html",
+      "verifiedQuotes": [
+        "红狼 凯·席尔瓦",
+        "威 龙 王宇昊",
+        "蜂 医 罗伊·斯米",
+        "露 娜 金卢娜",
+        "骇 爪 麦晓雯",
+        "牧羊人 泰瑞·缪萨"
+      ]
+    },
+    {
+      "url": "https://www.playdeltaforce.com/en/detail.html?content_id=aadbe71aae52da4797a8825a1536f53aa499&father_content_id=aadbe71aae52da4797a8825a1536f53aa499",
+      "verifiedQuote": "D-wolf - Kai Silva, Stinger - Roy Smee, Luna - Luna Kim, Shepherd - Terry Musa, Vyron - Wang Yuhao, Hackclaw - Mai Xiaowen"
+    }
+  ],
+  "proofBoundary": "Web pages establish aliases via real names, not archive IDs. Archive IDs separately checked against raw HeroData ExpertID and ExpertSkillData/ExpertSkillGroupData rows in immutable report. Original source warnings retained verbatim; no English archive localization proof claimed."
+}

@@ -97,3 +97,10 @@ The separate exact-ability tests use conspicuously synthetic identities and valu
 They are not DF exports and must never be copied into production data. No production
 data JSON is provided, so unresolved work cannot accidentally acquire fallback values.
 Live integration or loading requires explicit parent/user approval.
+
+
+The pinned r2 evidence import now lives in data/exact-abilities, with reproducible tools and regression tests described in tools/exact-abilities/README.md. It preserves original r1 separately and verifies the canonical r2 index plus all six artifacts. The evidence-only loader cannot supply a gameplay AbilityDefinition. Source report hashes are not source asset hashes.
+
+Only Stinger, Luna, Vyron, Hackclaw and Shepherd are selectable. Their legacy enum values remain 1,2,3,4,5 and their original public bridge/command IDs remain 2,3,4,5,6. Retired D-Wolf enum 0 and wire 1 are never reused. Menus show stable public IDs, not new contiguous display indexes. Invalid stored selections latch fail-closed recovery until an explicit session reset; Raid uses its existing StopGameplay cleanup before financial/extraction processing. Tests cover every mapping, invalid-enum retirement, stale selections in Selection/Buy/Countdown/Freeze/Active and no spending or phase advancement.
+
+The preserved legacy DeltaOps effects still use historical guessed defaults for the remaining five characters. Their retention is not an exact-value implementation or a migration of imported raw values into gameplay. No native adapters have been registered, no ability hooks have been added and no live plugin has been loaded.

@@ -1,0 +1,246 @@
+{
+  "generation": "final-vyron-actual-serialized-sourcejoin-audited",
+  "scopeCount": 5,
+  "independentReviewStatus": "Worker full-byte HTTP verification only; no claim caller reviewed full large report.",
+  "mappingWarning": "Vyron = 威龙 is caller-confirmed from official pages. This is NOT archive English-localization proof. Other four English mappings remain archive-candidate-only/unverified. 红狼 / D-Wolf is excluded as an operator. Shared serialized skill references are preserved truthfully, not reassigned.",
+  "operators": [
+    {
+      "label": "Stinger",
+      "candidateHeroRow": "88000000027",
+      "candidateName": {
+        "TableId": "/Game/StringTables/STForDataTable/Common/Base/LOC_HeroData.LOC_HeroData",
+        "Key": "88000000027_Name",
+        "SourceString": "蜂医",
+        "LocalizedString": "蜂医"
+      },
+      "ExpertRow": "20003",
+      "GroupRow": "20003",
+      "missingSkillIDs": [
+        4008010
+      ],
+      "skillConfigCount": 7,
+      "groupIDNotReportedMissing": true
+    },
+    {
+      "label": "Luna",
+      "candidateHeroRow": "88000000028",
+      "candidateName": {
+        "TableId": "/Game/StringTables/STForDataTable/Common/Base/LOC_HeroData.LOC_HeroData",
+        "Key": "88000000028_Name",
+        "SourceString": "露娜",
+        "LocalizedString": "露娜"
+      },
+      "ExpertRow": "40005",
+      "GroupRow": "40005",
+      "missingSkillIDs": [
+        4008010
+      ],
+      "skillConfigCount": 6,
+      "groupIDNotReportedMissing": true
+    },
+    {
+      "label": "Vyron",
+      "candidateHeroRow": "88000000025",
+      "candidateName": {
+        "TableId": "/Game/StringTables/STForDataTable/Common/Base/LOC_HeroData.LOC_HeroData",
+        "Key": "88000000025_Name",
+        "SourceString": "威龙",
+        "LocalizedString": "威龙"
+      },
+      "ExpertRow": "10010",
+      "GroupRow": "10010",
+      "missingSkillIDs": [
+        4008010
+      ],
+      "skillConfigCount": 8,
+      "groupIDNotReportedMissing": true
+    },
+    {
+      "label": "Hackclaw",
+      "candidateHeroRow": "88000000026",
+      "candidateName": {
+        "TableId": "/Game/StringTables/STForDataTable/Common/Base/LOC_HeroData.LOC_HeroData",
+        "Key": "88000000026_Name",
+        "SourceString": "骇爪",
+        "LocalizedString": "骇爪"
+      },
+      "ExpertRow": "40010",
+      "GroupRow": "40010",
+      "missingSkillIDs": [
+        4008010
+      ],
+      "skillConfigCount": 6,
+      "groupIDNotReportedMissing": true
+    },
+    {
+      "label": "Shepherd",
+      "candidateHeroRow": "88000000029",
+      "candidateName": {
+        "TableId": "/Game/StringTables/STForDataTable/Common/Base/LOC_HeroData.LOC_HeroData",
+        "Key": "88000000029_Name",
+        "SourceString": "牧羊人",
+        "LocalizedString": "牧羊人"
+      },
+      "ExpertRow": "30008",
+      "GroupRow": "30008",
+      "missingSkillIDs": [
+        4008010
+      ],
+      "skillConfigCount": 6,
+      "groupIDNotReportedMissing": true
+    }
+  ],
+  "downloads": [
+    {
+      "url": "https://artfully-genuinely-funny-heron.kitten.space/EXACT_ABILITIES-vyron-sourceaudit-r2.md",
+      "bytes": 600902,
+      "sha256": "b7ecb000d2977ee7fbf50f857fc15914628572d066d8383ab37c43bf15417223"
+    },
+    {
+      "url": "https://artfully-genuinely-funny-heron.kitten.space/five-operators-readable-vyron-sourceaudit-r2.txt",
+      "bytes": 600902,
+      "sha256": "b7ecb000d2977ee7fbf50f857fc15914628572d066d8383ab37c43bf15417223"
+    },
+    {
+      "url": "https://artfully-genuinely-funny-heron.kitten.space/five-operators-exact-vyron-sourceaudit-r2.json",
+      "bytes": 714945,
+      "sha256": "c80841bee9bf0d3d93452329921be736a8eb237fe7a495584159eac20a38d246"
+    },
+    {
+      "url": "https://artfully-genuinely-funny-heron.kitten.space/deltaops-exact-values-vyron-sourceaudit-r2.json",
+      "bytes": 16367742,
+      "sha256": "eba371ead6334450f9e3d1b73ce22e539870de0fff29f8de2e5b19fdfd06b69b"
+    },
+    {
+      "url": "https://artfully-genuinely-funny-heron.kitten.space/deltaops-exact-values-vyron-sourceaudit-r2.txt",
+      "bytes": 16098646,
+      "sha256": "89c968fd1adf74b623a2e306b95c9c0e890ef317dc108a7478095baad5220d0d"
+    },
+    {
+      "url": "https://artfully-genuinely-funny-heron.kitten.space/deltaops-summary-vyron-sourceaudit-r2.json",
+      "bytes": 9927,
+      "sha256": "2605d3068c4d2982860155c4bbdf4edb8273c0689a3e5f531941cbd6c5868ac9"
+    }
+  ],
+  "actualSerializedSourceJoinAudit": {
+    "result": "PASS_ALL_FIVE",
+    "method": "Compared actual serialized HeroData, ExpertSkillData, ExpertSkillGroupData, every included SkillDataConfig row/all fields, and every CdID match against original full decode exports. Not labels alone.",
+    "changedIDs": [],
+    "changedSkillCounts": false,
+    "operators": [
+      {
+        "label": "Stinger",
+        "heroRow": "88000000027",
+        "archiveName": "蜂医",
+        "expertRow": "20003",
+        "groupRow": "20003",
+        "skillIDs": [
+          2008002,
+          2008005,
+          4008007,
+          4008010,
+          20010101,
+          20010201,
+          20010215,
+          30010203
+        ],
+        "skillConfigCount": 7,
+        "missingSkillIDs": [
+          4008010
+        ],
+        "allSerializedFieldsMatchOriginalExports": true,
+        "allCooldownJoinsMatchOriginalExports": true
+      },
+      {
+        "label": "Luna",
+        "heroRow": "88000000028",
+        "archiveName": "露娜",
+        "expertRow": "40005",
+        "groupRow": "40005",
+        "skillIDs": [
+          2002017,
+          3008002,
+          4008002,
+          4008007,
+          4008010,
+          30010203,
+          40010201
+        ],
+        "skillConfigCount": 6,
+        "missingSkillIDs": [
+          4008010
+        ],
+        "allSerializedFieldsMatchOriginalExports": true,
+        "allCooldownJoinsMatchOriginalExports": true
+      },
+      {
+        "label": "Vyron",
+        "heroRow": "88000000025",
+        "archiveName": "威龙",
+        "expertRow": "10010",
+        "groupRow": "10010",
+        "skillIDs": [
+          1009001,
+          1009002,
+          1009003,
+          1009004,
+          1009005,
+          4008007,
+          4008010,
+          10010301,
+          30010203
+        ],
+        "skillConfigCount": 8,
+        "missingSkillIDs": [
+          4008010
+        ],
+        "allSerializedFieldsMatchOriginalExports": true,
+        "allCooldownJoinsMatchOriginalExports": true
+      },
+      {
+        "label": "Hackclaw",
+        "heroRow": "88000000026",
+        "archiveName": "骇爪",
+        "expertRow": "40010",
+        "groupRow": "40010",
+        "skillIDs": [
+          1002016,
+          4008007,
+          4008010,
+          4009002,
+          4009003,
+          30010203,
+          40010202
+        ],
+        "skillConfigCount": 6,
+        "missingSkillIDs": [
+          4008010
+        ],
+        "allSerializedFieldsMatchOriginalExports": true,
+        "allCooldownJoinsMatchOriginalExports": true
+      },
+      {
+        "label": "Shepherd",
+        "heroRow": "88000000029",
+        "archiveName": "牧羊人",
+        "expertRow": "30008",
+        "groupRow": "30008",
+        "skillIDs": [
+          3008001,
+          3008008,
+          4008007,
+          4008010,
+          30010101,
+          30010201,
+          30010202
+        ],
+        "skillConfigCount": 6,
+        "missingSkillIDs": [
+          4008010
+        ],
+        "allSerializedFieldsMatchOriginalExports": true,
+        "allCooldownJoinsMatchOriginalExports": true
+      }
+    ]
+  }
+}

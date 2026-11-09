@@ -123,6 +123,7 @@ reentrantAdapter.OnDispose=()=>nestedResult=reentrant.Activate(reentrantActor,sk
 reentrantClock.Elapsed=TimeSpan.FromSeconds(7);
 Check(reentrant.Activate(reentrantActor,skill.SkillId)==null);
 Check(nestedResult!=null); Check(reentrantAdapter.Calls==4);
+nestedResult=null;
 reentrantClock.Elapsed=TimeSpan.FromSeconds(14);
 reentrant.Tick(); Check(nestedResult!=null); Check(reentrantAdapter.Calls==4);
 reentrantAdapter.OnDispose=null; Check(reentrant.MapEnd());
