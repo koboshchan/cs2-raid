@@ -242,6 +242,106 @@
       "contract": "Generated schema accessor, not custom raw native memory.",
       "unproved": "Setter availability alone does not prove gameplay correctness, replication, stacking or restore ownership.",
       "disabled": true
+    },
+    {
+      "symbol": "PluginCapability<T>.Get()",
+      "source": "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Core/Capabilities/PluginCapability.cs",
+      "version": "v1.0.379",
+      "commit": "f58e383b0553be16c0f8c6dd68a8194de17691e9",
+      "verification": "source implementation read",
+      "contract": "Enumerates Providers[Name], returns FIRST supplier result immediately. Missing name throws dictionary exception; no null-safe guarantee.",
+      "unproved": "No unregister or hot-reload replacement API here; register appends. Stale supplier lifetime and coexistence require explicit treatment before resident damage publication.",
+      "disabled": true
+    },
+    {
+      "symbol": "Capabilities.RegisterPluginCapability<T>",
+      "source": "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Core/Capabilities/Capabilities.cs",
+      "version": "v1.0.379",
+      "commit": "f58e383b0553be16c0f8c6dd68a8194de17691e9",
+      "verification": "source implementation read",
+      "contract": "Appends supplier to static per-generic-type provider list; creates list when missing.",
+      "unproved": "Does not replace first provider or establish unloading cleanup. Never treat this as a resident enforcement guarantee.",
+      "disabled": true
+    },
+    {
+      "symbol": "NativeObject.As<T>",
+      "source": "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/BaseNative.cs",
+      "version": "v1.0.379",
+      "commit": "f58e383b0553be16c0f8c6dd68a8194de17691e9",
+      "verification": "source implementation read",
+      "contract": "Constructs wrapper with same pointer via FastNew; not runtime native type validation.",
+      "unproved": "Callers must independently prove subclass identity. Generic type alone is not proof.",
+      "disabled": true
+    },
+    {
+      "symbol": "NativeEntity.Handle/constructors",
+      "source": "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/NativeEntity.cs",
+      "version": "v1.0.379",
+      "commit": "f58e383b0553be16c0f8c6dd68a8194de17691e9",
+      "verification": "source implementation read",
+      "contract": "Caches full entity handle and resolves current pointer by raw handle on each Handle get.",
+      "unproved": "Source depends on EntitySystem native identity layout and version; reference assembly source match now established by metadata only.",
+      "disabled": true
+    },
+    {
+      "symbol": "Vector constructors, X/Y/Z",
+      "source": "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Modules/Utils/Vector.cs",
+      "version": "v1.0.379",
+      "commit": "f58e383b0553be16c0f8c6dd68a8194de17691e9",
+      "verification": "source implementation read",
+      "contract": "Owned float constructor stores managed fields; native pointer materialized lazily, tracked allocation. IntPtr constructor borrows pointer; ref elements alias memory.",
+      "unproved": "Borrowed origin/color wrappers must not outlive native owner. No arbitrary frees; no guessed layouts introduced.",
+      "disabled": true
+    },
+    {
+      "symbol": "CSmokeGrenadeProjectile.SmokeColor",
+      "source": "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Generated/Schema/Classes/CSmokeGrenadeProjectile.g.cs",
+      "version": "v1.0.379",
+      "commit": "f58e383b0553be16c0f8c6dd68a8194de17691e9",
+      "verification": "source implementation read",
+      "contract": "Generated Vector alias of m_vSmokeColor schema field.",
+      "unproved": "Does not prove pre-spawn configuration retained, smoke ownership, healing conversion or post-unload cleanup. Disabled.",
+      "disabled": true
+    },
+    {
+      "symbol": "EventPlayerHurt.Userid/Attacker/DmgHealth",
+      "source": "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Generated/GameEvents/EventPlayerHurt.g.cs",
+      "version": "v1.0.379",
+      "commit": "f58e383b0553be16c0f8c6dd68a8194de17691e9",
+      "verification": "source implementation read",
+      "contract": "Generated player_hurt keys userid,attacker,dmg_health. Default registration post.",
+      "unproved": "Not pre-damage authority; field naming does not prove squad-wide mark behavior.",
+      "disabled": true
+    },
+    {
+      "symbol": "CCSPlayerController.PrintToChat",
+      "source": "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Core/Model/CCSPlayerController.cs",
+      "version": "v1.0.379",
+      "commit": "f58e383b0553be16c0f8c6dd68a8194de17691e9",
+      "verification": "source implementation read",
+      "contract": "Guard valid entity then ClientPrint for this slot/chat destination.",
+      "unproved": "Private recipient API is verified; DF target selection and mark meaning are still assumptions; do not broadcast enemy coordinates.",
+      "disabled": true
+    },
+    {
+      "symbol": "CommandInfo.GetArg/ArgCount/ReplyToCommand",
+      "source": "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Modules/Commands/CommandInfo.cs",
+      "version": "v1.0.379",
+      "commit": "f58e383b0553be16c0f8c6dd68a8194de17691e9",
+      "verification": "source implementation read",
+      "contract": "Native command getters; reply chooses player console/chat by calling context or server console.",
+      "unproved": "No automatic index safety or untrusted string sanitization guarantee.",
+      "disabled": true
+    },
+    {
+      "symbol": "Trace.TraceShape/TraceEndShape/TraceResult",
+      "source": "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Modules/Utils/Trace.cs",
+      "version": "v1.0.379",
+      "commit": "f58e383b0553be16c0f8c6dd68a8194de17691e9",
+      "verification": "source implementation read",
+      "contract": "Result is packed unmanaged VALUE type, stack allocated and returned by value; no disposal. DidHit = fraction<1 or start-in-solid. No options => all collision layers.",
+      "unproved": "A line trace is not a pawn hull clearance proof; default options not DF targeting semantics. Native trace engine/gamedata still separate QA.",
+      "disabled": true
     }
   ],
   "referenceAssembly": {

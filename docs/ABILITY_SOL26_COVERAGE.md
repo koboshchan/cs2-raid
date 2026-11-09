@@ -1,6 +1,6 @@
 # PC SOL effect coverage and concrete remaining work
 
-DF extracted behavior and values outrank all wiki hints. All native acceptance remains unperformed. This is NOT a full-effect completion report. Repeated remove-arrow entries are distinct operator-skill instances, giving exactly 26 entries. Missing 4008010 remains outside executable catalog.
+DF extracted behavior and values outrank all wiki hints. All native acceptance remains unperformed. All new interpreted native admission is currently DISABLED pending API contract audit. Call paths below describe offline implementation, not enabled gameplay. This is NOT a full-effect completion report. Repeated remove-arrow entries are distinct operator-skill instances, giving exactly 26 entries. Missing 4008010 remains outside executable catalog.
 
 ## Operator 1 / Skill 2008002 / 烟幕
 
@@ -32,7 +32,7 @@ Actual path: CssPorts.Heal -> EnactOwned -> Pawn.Health setter + SetStateChanged
 Current interpretation: 25 HP bounded by MaxHealth, instant; committed health not rolled back
 Evidence: Literal allSerializedFields retained in raw r2; full runtime behavior not recovered
 Remaining: Instant heal setter is only a partial CS2 port; target acquisition, sustained multiheal, ADS focus, selfheal and owned-smoke conversion require DF effect/buff decoding.
-Admission blocker: Partial adapter admits; this does not mean full mechanic complete.
+Admission blocker: API contract audit gate disables this partial adapter; full DF mechanic also remains incomplete.
 
 ## Operator 1 / Skill 20010201 / 高效救援
 
@@ -48,7 +48,7 @@ Actual path: CssPorts.Recon -> enemy policy -> private PrintToChat coordinates
 Current interpretation: 1200 Source-unit radius; one-shot coordinate telemetry, no DF-duration reveal
 Evidence: Literal allSerializedFields retained in raw r2; full runtime behavior not recovered
 Remaining: Private radius recon is not arrow trajectory, dropped sensors or minimap reveal. Need owned sensor lifecycle and DF sensor evidence.
-Admission blocker: Partial adapter admits; this does not mean full mechanic complete.
+Admission blocker: API contract audit gate disables this partial adapter; full DF mechanic also remains incomplete.
 
 ## Operator 2 / Skill 3008002 / 破片手雷
 
@@ -64,7 +64,7 @@ Actual path: CssPorts.Pulse -> session-owned velocity modifier leases; optional 
 Current interpretation: 240 Source-unit radius; 2 seconds; velocity modifier .65; Hackclaw also suppresses interpreted activations
 Evidence: Literal allSerializedFields retained in raw r2; full runtime behavior not recovered
 Remaining: Pulse only slows. Persistent voltage damage requires resident attributed native damage driver plus owned ticking area and source-derived duration.
-Admission blocker: Partial adapter admits; this does not mean full mechanic complete.
+Admission blocker: API contract audit gate disables this partial adapter; full DF mechanic also remains incomplete.
 
 ## Operator 2 / Skill 4008007 / 拔箭
 
@@ -80,7 +80,7 @@ Actual path: NativeTrackedHit -> EventPlayerHurt -> private PrintToChat coordina
 Current interpretation: CS2ASSUMPTION post-hit allied coordinate telemetry; squad scope not proved by extracted buffs
 Evidence: allSerializedFields.AddBuffs=[8011,100008]; bEnableSniperMark=true; bOverrideAimingCheck=true; TeamPlayerIcon.AssetPathName=None; trigger and squad scope unresolved
 Remaining: Hit trigger, sharing scope and mark duration remain unresolved buffs8011/100008; allied text is lowconfidence assumption.
-Admission blocker: Partial adapter admits; this does not mean full mechanic complete.
+Admission blocker: API contract audit gate disables this partial adapter; full DF mechanic also remains incomplete.
 
 ## Operator 3 / Skill 1009001 / 动力推进
 
@@ -88,7 +88,7 @@ Actual path: CssPorts.Rush -> EnactOwned -> Pawn.Teleport velocity
 Current interpretation: 400 Source-units/s horizontal velocity; current vertical velocity retained
 Evidence: Literal allSerializedFields retained in raw r2; full runtime behavior not recovered
 Remaining: Dash uses view yaw, not chosen movement direction. Need source-driven dash/reset conditions; no invented kill cooldown reset.
-Admission blocker: Partial adapter admits; this does not mean full mechanic complete.
+Admission blocker: API contract audit gate disables this partial adapter; full DF mechanic also remains incomplete.
 
 ## Operator 3 / Skill 1009003 / 虎蹲炮
 
@@ -136,7 +136,7 @@ Actual path: CssPorts.Recon -> enemy policy -> private PrintToChat coordinates
 Current interpretation: 1200 Source-unit radius; one-shot coordinate telemetry, no DF-duration reveal
 Evidence: Literal allSerializedFields retained in raw r2; full runtime behavior not recovered
 Remaining: One-shot recon is not periodic decoder signal paths. Need source-decoded selection, duration and owner-specific presentation.
-Admission blocker: Partial adapter admits; this does not mean full mechanic complete.
+Admission blocker: API contract audit gate disables this partial adapter; full DF mechanic also remains incomplete.
 
 ## Operator 4 / Skill 4008007 / 拔箭
 
@@ -152,7 +152,7 @@ Actual path: CssPorts.Pulse -> session-owned velocity modifier leases; optional 
 Current interpretation: 240 Source-unit radius; 2 seconds; velocity modifier .65; Hackclaw also suppresses interpreted activations
 Evidence: Literal allSerializedFields retained in raw r2; full runtime behavior not recovered
 Remaining: Instant pulse suppression is not thrown knife impact/direct damage. Need owned impact entity and validated attributed driver.
-Admission blocker: Partial adapter admits; this does not mean full mechanic complete.
+Admission blocker: API contract audit gate disables this partial adapter; full DF mechanic also remains incomplete.
 
 ## Operator 4 / Skill 4009003 / 闪光巡飞器
 
@@ -176,7 +176,7 @@ Actual path: CssPorts.Trap -> owned zone -> serial-safe velocity leases
 Current interpretation: No enabled approximation; blocked/incomplete
 Evidence: Literal allSerializedFields retained in raw r2; full runtime behavior not recovered
 Remaining: Owned zone has movement slowdown only. Firerate, recon interference, device resonance and alerts not source-decoded.
-Admission blocker: Partial adapter admits; this does not mean full mechanic complete.
+Admission blocker: API contract audit gate disables this partial adapter; full DF mechanic also remains incomplete.
 
 ## Operator 5 / Skill 3008008 / 破片手雷
 
@@ -200,7 +200,7 @@ Actual path: CssPorts.Pulse -> session-owned velocity modifier leases; optional 
 Current interpretation: 240 Source-unit radius; 2 seconds; velocity modifier .65; Hackclaw also suppresses interpreted activations
 Evidence: Literal allSerializedFields retained in raw r2; full runtime behavior not recovered
 Remaining: Instant pulse slow is partial; sonic recon/firerate/resonance mechanisms require source decoding.
-Admission blocker: Partial adapter admits; this does not mean full mechanic complete.
+Admission blocker: API contract audit gate disables this partial adapter; full DF mechanic also remains incomplete.
 
 ## Operator 5 / Skill 30010201 / 共振防御
 
@@ -208,4 +208,4 @@ Actual path: NativePassiveDamage -> existing engine CTakeDamageInfo.Damage modif
 Current interpretation: DFPROVEN SkillID30010201 DamgeCoifficient explosion multiplier .7; native blast classification is CS2 mapping
 Evidence: allSerializedFields.DamgeCoifficient[0]={fModifyRateExplodeDamage:0.7,fModifyRateAbilitAssault:1.0,LimitPlayMode:[]}
 Remaining: DF coefficient implemented exactly for existing native blast events. CSS blast classification, assault classification and added child skills4010002/4010003 require native/source validation.
-Admission blocker: Partial adapter admits; this does not mean full mechanic complete.
+Admission blocker: API contract audit gate disables this partial adapter; full DF mechanic also remains incomplete.

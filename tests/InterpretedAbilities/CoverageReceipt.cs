@@ -42,8 +42,12 @@ static class CoverageReceipt
    Evidence="DFPROVEN PC SOL mapping and literal imported fields; all other adapter mechanics CS2ASSUMPTION unless individually cited; wiki only LOWCONFIDENCE hint",
    Binding="PC SOL; sol-binding-v1/receipt.json; raw r2 immutable",
    Values="docs/ABILITY_SOL_VALUES.Generated.md; effect magnitude tuning is separate CS2 interpretation",
-   Adapter=NativeAbilityRouter.Blocker(s.Operator,s.Id)==null?"partial experimental adapter available; NOT full DF effect completion":"blocked/incomplete",
+   Adapter=NativeAbilityRouter.Blocker(s.Operator,s.Id)==null?"partial experimental implementation only; admission DISABLED by API audit; NOT full DF effect completion":"blocked/incomplete",
    Blocker=NativeAbilityRouter.Blocker(s.Operator,s.Id),
+   NativeAdmission="disabled pending per-capability API contract audit; NativeApiEvidenceGate.cs",
+   ApiLedger="docs/ABILITY_API_EVIDENCE.json; call-site inventory docs/ABILITY_API_CALLS.json",
+   SignatureEvidence="reference API self-reports pinned source SHA; bound symbols inventoried; contract review incomplete",
+   EngineContractEvidence="per-boundary partial; unsupported damage construction/expiry/competing scalar ownership fail closed",
    NativeAcceptance=false
   }).ToArray();
   if(rows.Any(r=>r.Blocker==null && r.Calls.StartsWith("Router rejects")))throw new Exception("Enabled path missing literal call mapping");
