@@ -113,11 +113,38 @@ public sealed partial class DeltaOpsPlugin
         }
         public IDisposable? Grant(string weapon)
         {
-            // GiveNamedItem may throw before returning a serial handle; thrown
-            // grenades change entities. Neither outcome has a durable cleanup owner.
-            // Do not invoke the native grant at all until both boundaries are accepted.
-            return null;
+            if(!Valid()||plugin._entityEscrow==null)return null;
+            var designer=weapon switch{
+                "weapon_smokegrenade"=>"smokegrenade_projectile",
+                "weapon_hegrenade"=>"hegrenade_projectile",
+                "weapon_flashbang"=>"flashbang_projectile",_=>null};
+            if(designer==null)return null;
+            var creation=new CssProjectileCreation(plugin,player,actor.Pawn,designer,25,grenade=>{
+                grenade.DetonateTime=Server.CurrentTime+1.5f;
+                if(designer=="hegrenade_projectile"){grenade.Damage=60;grenade.DmgRadius=240;}
+                if(grenade is CSmokeGrenadeProjectile smoke){
+                    smoke.SmokeColor.X=180;smoke.SmokeColor.Y=180;smoke.SmokeColor.Z=180;
+                }
+            });
+            var transaction=new NativeEntityTransaction(plugin._entityEscrow,creation);
+            Action? tick=null;bool complete=false;
+            void Cleanup(){
+                if(complete)return;
+                transaction.Dispose();
+                plugin._nativeTicks.Remove(tick!);
+                complete=true;
+            }
+            var end=Environment.TickCount64+25000;
+            tick=()=>{
+                try{if(!Valid()||Environment.TickCount64>=end)Cleanup();}
+                catch{actor.Session.Quarantine();actor.Session.Revoke();}
+            };
+            return actor.Session.EnactOwned(()=>{
+                plugin._nativeTicks.Add(tick);
+                transaction.Activate();
+            },Cleanup);
         }
+
         public IDisposable? Recon()
         {
             var radius=plugin.Config.NativePorts.ReconRadiusSourceUnits;

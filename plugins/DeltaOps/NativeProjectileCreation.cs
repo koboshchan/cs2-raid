@@ -4,6 +4,21 @@ using CounterStrikeSharp.API.Modules.Utils;
 namespace DeltaOps;
 public sealed partial class DeltaOpsPlugin
 {
+    private readonly Dictionary<uint,(uint Controller,uint Pawn)> _ownedProjectileAttackers=[];
+    private HookResult OwnedProjectileDamage(CBaseEntity victim,CTakeDamageInfo info)
+    {
+        var inflictor=info.Inflictor.Raw;
+        if(!_ownedProjectileAttackers.TryGetValue(inflictor,out var owner))return HookResult.Continue;
+        // Same owner proof is mandatory even if native Thrower attribution differs.
+        var attacker=Utilities.GetPlayers().FirstOrDefault(p=>IsHumanController(p)&&
+            p.EntityHandle.Raw==owner.Controller&&p.PlayerPawn.Raw==owner.Pawn);
+        var target=Utilities.GetPlayers().FirstOrDefault(p=>IsHumanController(p)&&p.PlayerPawn.Raw==victim.EntityHandle.Raw);
+        if(attacker==null||target==null||!attacker.PawnIsAlive||!target.PawnIsAlive||
+            !EntityWorldReady()||_raidMode&&(!RaidActive(attacker.SteamID)||!QueryRaid(2,attacker.SteamID,target.SteamID)))
+            return HookResult.Handled;
+        if(info.Attacker.Raw!=owner.Pawn)return HookResult.Handled;
+        return HookResult.Continue;
+    }
     // Direct inert creation, never GiveNamedItem and never an unowned weapon-to-projectile
     // conversion. This adapter is offline implementation, not installed-engine acceptance.
     private sealed class CssProjectileCreation(
@@ -16,7 +31,9 @@ public sealed partial class DeltaOpsPlugin
         public NativeEntityTicket CreateInert(){
             if(!plugin.EntityWorldReady()||player.PlayerPawn.Raw!=pawnSerial)
                 throw new InvalidOperationException("Projectile world/pawn changed");
-            allocated=Utilities.CreateEntityByName<CBaseGrenade>(designer);
+            allocated=designer=="smokegrenade_projectile"
+                ?Utilities.CreateEntityByName<CSmokeGrenadeProjectile>(designer)
+                :Utilities.CreateEntityByName<CBaseGrenade>(designer);
             if(allocated is not {IsValid:true})throw new InvalidOperationException("Projectile allocation failed");
             allocatedSerial=allocated.EntityHandle.Raw; // Retain before marker/schema writes.
             var identity=allocated.Entity??throw new InvalidOperationException("Projectile identity absent");
@@ -46,6 +63,7 @@ public sealed partial class DeltaOpsPlugin
             grenade.Damage=0; // A specialized adapter must explicitly configure safe damage.
             grenade.DmgRadius=0;
             configure(grenade);
+            plugin._ownedProjectileAttackers.Add(ticket.Serial,(player.EntityHandle.Raw,pawnSerial));
             // Engine-owned delayed IO does not depend on plugin timers after unload.
             // Delivery and full-handle targeting still require installed-engine verification.
             grenade.DispatchSpawn();
@@ -56,8 +74,15 @@ public sealed partial class DeltaOpsPlugin
             grenade.Teleport(new Vector(origin.X,origin.Y,origin.Z+48),null,
                 new Vector((float)Math.Cos(yaw)*600,(float)Math.Sin(yaw)*600,140));
         }
-        public bool Exists(uint serial)=>boundary.Exists(serial);
+        public bool Exists(uint serial){
+            var exists=boundary.Exists(serial);
+            if(!exists)plugin._ownedProjectileAttackers.Remove(serial);
+            return exists;
+        }
         public bool Matches(NativeEntityTicket ticket)=>boundary.Matches(ticket);
-        public void Remove(NativeEntityTicket ticket)=>boundary.Remove(ticket);
+        public void Remove(NativeEntityTicket ticket){
+            boundary.Remove(ticket);
+            if(!boundary.Exists(ticket.Serial))plugin._ownedProjectileAttackers.Remove(ticket.Serial);
+        }
     }
 }
