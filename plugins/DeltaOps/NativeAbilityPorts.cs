@@ -28,6 +28,7 @@ public sealed partial class DeltaOpsPlugin
         if(!Config.UseInterpretedAbilities||_fixtureMode)return HookResult.Continue;
         var victim=Utilities.GetPlayers().FirstOrDefault(p=>IsHumanController(p)&&p.PlayerPawn.Value is {IsValid:true} pawn&&pawn.EntityHandle.Raw==entity.EntityHandle.Raw);
         if(victim==null||GetExistingState(victim)?.Operator!=OperatorId.Shepherd)return HookResult.Continue;
+        if(!_nativeActors.TryGetValue(GetPlayerKey(victim),out var actor)||!actor.Session.Alive||actor.Session.Quarantined)return HookResult.Continue;
         var pawn=victim.PlayerPawn.Value!;
         if(!NativeAdmission(victim,victim.EntityHandle.Raw,pawn.EntityHandle.Raw))return HookResult.Continue;
         // Reduction only. Never create damage, revive an attack or overrule Raid's blocking hook.
@@ -112,18 +113,10 @@ public sealed partial class DeltaOpsPlugin
         }
         public IDisposable? Grant(string weapon)
         {
-            if(!Valid())return null;
-            if(plugin._raidMode && weapon=="weapon_hegrenade") {player.PrintToChat(" [r2 blocked] Native HE custom-team damage policy has not been verified; no grant or token spent.");return null;}
-            // One pending grant per native weapon type; inventory-full rejection spends no token.
-            if(Pawn.WeaponServices?.MyWeapons.Any(w=>w.Value is {IsValid:true} e&&e.DesignerName==weapon)!=false)return null;
-            var item=player.GiveNamedItem<CBasePlayerWeapon>(weapon);
-            if(item==null||!item.IsValid)throw new InvalidOperationException("Native grant outcome unknown; quarantine rather than retry minting.");
-            var raw=item.EntityHandle.Raw;
-            return new OwnedAbilityEffect(()=>{
-                var owned=new CHandle<CBasePlayerWeapon>(raw).Value;
-                // Full serial handle, never entity index. Remove even dropped grants at lifecycle end.
-                if(owned is {IsValid:true}){owned.Remove();if(owned.IsValid)throw new InvalidOperationException("Grant cleanup not confirmed");}
-            });
+            // GiveNamedItem may throw before returning a serial handle; thrown
+            // grenades change entities. Neither outcome has a durable cleanup owner.
+            // Do not invoke the native grant at all until both boundaries are accepted.
+            return null;
         }
         public IDisposable? Recon()
         {
@@ -152,36 +145,39 @@ public sealed partial class DeltaOpsPlugin
             var targets=plugin.GetEnemies(player).Where(e=>Distance(player,e)<=t.PulseRadiusSourceUnits)
                 .Select(e=>e.PlayerPawn.Value).Where(p=>p is {IsValid:true} && p.VelocityModifier==1f).ToArray();
             if(targets.Length==0)return null;
-            var owned=new List<(CCSPlayerPawn Pawn,uint Serial,float Before)>();
+            var owned=new List<(uint Serial,NativeStatusLease Lease)>();
             var until=Environment.TickCount64+(long)(t.PulseSeconds*1000);Action? tick=null;bool disposed=false;
-            var effect=new OwnedAbilityEffect(()=>{
+            void Cleanup(){
                 if(disposed)return;
                 for(var i=owned.Count-1;i>=0;i--){
                     var x=owned[i];
-                    if(x.Pawn.IsValid&&x.Pawn.EntityHandle.Raw==x.Serial&&x.Pawn.VelocityModifier==t.PulseSlowModifier){
-                        x.Pawn.VelocityModifier=x.Before;Utilities.SetStateChanged(x.Pawn,"CCSPlayerPawn","m_flVelocityModifier");
-                    }
+                    x.Lease.Dispose();
                     if(suppress&&plugin._nativeSuppressed.TryGetValue(x.Serial,out var count)){
                         if(count<=1)plugin._nativeSuppressed.Remove(x.Serial);else plugin._nativeSuppressed[x.Serial]=count-1;
                     }
                     owned.RemoveAt(i);
                 }
                 disposed=true;plugin._nativeTicks.Remove(tick!);
-            });
+            }
             // Register ownership before the first mutation so exceptions retain cleanup.
             tick=()=>{
-                try{if(!Valid()||Environment.TickCount64>=until)effect.Dispose();}
+                try{if(!Valid()||Environment.TickCount64>=until)Cleanup();}
                 catch{actor.Session.Quarantine();actor.Session.Revoke();}
             };
-            plugin._nativeTicks.Add(tick);
-            try{
+            return actor.Session.EnactOwned(()=>{
+                plugin._nativeTicks.Add(tick);
                 foreach(var body in targets){
-                    var serial=body!.EntityHandle.Raw;owned.Add((body,serial,body.VelocityModifier));
+                    var serial=body!.EntityHandle.Raw;
+                    var lease=new NativeStatusLease(
+                        ()=>body.IsValid&&body.EntityHandle.Raw==serial,
+                        ()=>body.VelocityModifier,v=>body.VelocityModifier=v,
+                        ()=>Utilities.SetStateChanged(body,"CCSPlayerPawn","m_flVelocityModifier"),
+                        body.VelocityModifier,t.PulseSlowModifier);
+                    owned.Add((serial,lease));
                     if(suppress)plugin._nativeSuppressed[serial]=plugin._nativeSuppressed.GetValueOrDefault(serial)+1;
-                    body.VelocityModifier=t.PulseSlowModifier;Utilities.SetStateChanged(body,"CCSPlayerPawn","m_flVelocityModifier");
+                    lease.Apply();
                 }
-                return effect;
-            }catch{try{effect.Dispose();}catch{}throw;}
+            },Cleanup);
         }
         public IDisposable? Trap()
         {
@@ -192,31 +188,32 @@ public sealed partial class DeltaOpsPlugin
                 !float.IsFinite(t.TrapVelocityModifier)||t.TrapVelocityModifier<=0||t.TrapVelocityModifier>1)return null;
             var origin=Pawn.AbsOrigin;var point=new Vector(origin.X,origin.Y,origin.Z);
             var end=Environment.TickCount64+(long)(t.TrapLifetimeSeconds*1000);bool closed=false;
-            CCSPlayerPawn? targetPawn=null;uint targetSerial=0;float previous=1,applied=1;long restore=0;
-            Action? tick=null;OwnedAbilityEffect? effect=null;
+            NativeStatusLease? slow=null;long restore=0;
+            Action? tick=null;
             void Cleanup(){
                 if(closed)return;
-                if(targetPawn is {IsValid:true} && targetPawn.EntityHandle.Raw==targetSerial && targetPawn.VelocityModifier==applied){
-                    targetPawn.VelocityModifier=previous;Utilities.SetStateChanged(targetPawn,"CCSPlayerPawn","m_flVelocityModifier");
-                }
+                slow?.Dispose();
                 closed=true;plugin._nativeTicks.Remove(tick!);
             }
-            effect=new OwnedAbilityEffect(Cleanup);
             tick=()=>{
                 try {
                 if(closed)return;
-                if(!Valid()||Environment.TickCount64>=end||restore!=0&&Environment.TickCount64>=restore){effect.Dispose();return;}
+                if(!Valid()||Environment.TickCount64>=end||restore!=0&&Environment.TickCount64>=restore){Cleanup();return;}
                 if(restore!=0)return;
                 var enemy=plugin.GetEnemies(player).FirstOrDefault(e=>DistanceToPoint(e,point)<=t.TrapRadiusSourceUnits);
                 var body=enemy?.PlayerPawn.Value;if(body==null||!body.IsValid)return;
                 // Do not stack with another movement modifier; avoid restoring over another owner.
                 if(body.VelocityModifier!=1f)return;
-                targetPawn=body;targetSerial=body.EntityHandle.Raw;previous=body.VelocityModifier;applied=t.TrapVelocityModifier;
+                var serial=body.EntityHandle.Raw;
+                slow=new NativeStatusLease(()=>body.IsValid&&body.EntityHandle.Raw==serial,
+                    ()=>body.VelocityModifier,v=>body.VelocityModifier=v,
+                    ()=>Utilities.SetStateChanged(body,"CCSPlayerPawn","m_flVelocityModifier"),
+                    body.VelocityModifier,t.TrapVelocityModifier);
                 restore=Environment.TickCount64+(long)(t.TrapSlowSeconds*1000);
-                body.VelocityModifier=applied;Utilities.SetStateChanged(body,"CCSPlayerPawn","m_flVelocityModifier");
+                slow.Apply();
                 }catch{actor.Session.Quarantine();actor.Session.Revoke();}
             };
-            plugin._nativeTicks.Add(tick);return effect;
+            return actor.Session.EnactOwned(()=>plugin._nativeTicks.Add(tick),Cleanup);
         }
     }
 }

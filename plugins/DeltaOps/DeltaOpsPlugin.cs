@@ -170,14 +170,14 @@ public sealed partial class DeltaOpsPlugin : BasePlugin, IPluginConfig<DeltaOpsC
     private bool _nativeLifecycleLoaded;
     public void OnConfigParsed(DeltaOpsConfig config)
     {
-        ArgumentNullException.ThrowIfNull(config.NativePorts);
+        NativeConfigTransition.Validate(_nativeLifecycleLoaded,Config.UseInterpretedAbilities,config.UseInterpretedAbilities,config.NativePorts);
         // Runtime mode switches are rejected, not partially applied. Legacy timers and
         // engine projectiles have no accepted cross-mode drain contract yet.
-        if(_nativeLifecycleLoaded && config.UseInterpretedAbilities!=Config.UseInterpretedAbilities)
-            throw new InvalidOperationException("Ability mode changes require offline teardown and reviewed reload; runtime switch rejected.");
         if(_nativeLifecycleLoaded){
-            ResetNative();
-            if(_nativeActors.Count!=0)throw new InvalidOperationException("Config unchanged: native cleanup pending; polling retains ownership.");
+            var clean=true;
+            foreach(var actor in _nativeActors.Values.ToArray())clean=actor.Session.Revoke()&&clean;
+            if(!clean)throw new InvalidOperationException("Config unchanged: native cleanup pending; polling retains ownership.");
+            // Keep source charge ledgers: a tuning reload must not refill resources.
         }
         config.SelectionSeconds = Math.Clamp(config.SelectionSeconds, 10, 120);
         config.VCooldownSeconds = Math.Clamp(config.VCooldownSeconds, 1, 120);
@@ -254,6 +254,8 @@ public sealed partial class DeltaOpsPlugin : BasePlugin, IPluginConfig<DeltaOpsC
         _bridgeLoaded = false;
         if (_fixtureMode) return;
         ResetAllPlayersAndState("插件卸载", broadcast: false);
+        if(_nativeActors.Count!=0)
+            Logger.LogError("UNLOAD CLEANUP INCOMPLETE: {Count} actors retain failed native rollback. Reload acceptance BLOCKED; plugin unload cannot guarantee retries.",_nativeActors.Count);
     }
 
     private HookResult OnPlayerSpawn(EventPlayerSpawn @event, GameEventInfo info)
@@ -2813,6 +2815,16 @@ public sealed partial class DeltaOpsPlugin : BasePlugin, IPluginConfig<DeltaOpsC
     private void ResetAllPlayersAndState(string reason, bool broadcast)
     {
         ResetNative();
+        if(Config.UseInterpretedAbilities){
+            // Only owned effects may restore native scalars. No global baseline write.
+            foreach(var state in _states.Values){
+                state.SelectionTimer?.Kill();
+                state.SelectionTimer=null;
+                ResetSkillCooldowns(state);
+            }
+            _states.Clear();
+            return;
+        }
         ClearAllOutlines();
         ClearAllLunaDots();
         ClearAllArmedGrenades();

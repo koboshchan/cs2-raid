@@ -25,7 +25,7 @@ public sealed class InterpretedAbilitySession(int operatorId, long now)
             var effect=enact();
             if(effect==null){charge.Restore(snapshot);return false;}
             // Own first, including stale/failed cleanup; Revoke during enact cannot orphan it.
-            effects.Add(effect);
+            if(!effects.Contains(effect))effects.Add(effect);
             if(epoch!=generation||Quarantined||!Alive||!admission()||epoch!=generation||Quarantined||!Alive){
                 try{effect.Dispose();effects.Remove(effect);}catch{Quarantined=true;}
                 charge.Restore(snapshot);return false;
@@ -33,9 +33,21 @@ public sealed class InterpretedAbilitySession(int operatorId, long now)
             return true;
         }catch {
             // Unknown native outcome consumes reserved charge and fences further activation.
-            Quarantined=true;return false;
+            Quarantined=true;Revoke();return false;
         }finally{activating=false;}
     }
+    // The native boundary must register rollback BEFORE its first mutation.
+    // If mutation throws, Activate's catch revokes and retains failed cleanup for retry.
+    public IDisposable EnactOwned(Action mutate,Action cleanup)
+    {
+        if(!activating||revoking||!Alive||Quarantined)
+            throw new InvalidOperationException("No admitted activation");
+        var effect=new OwnedAbilityEffect(cleanup);
+        effects.Add(effect);
+        mutate();
+        return effect;
+    }
+    public int PendingCleanup => effects.Count;
     public int Available(int skill,long at){if(!charges.TryGetValue(skill,out var c))return 0;c.Advance(at);return c.Available;}
     public void Quarantine(){generation++;Quarantined=true;}
     public bool Revoke()

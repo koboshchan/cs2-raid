@@ -28,7 +28,8 @@ public static class NativeAbilityRouter
             30010201=>null,
             _=>"Passive buff has no mapped CS2 trigger."};
         return id switch {
-            2008002 or 2008005 or 20010101 or 2002017 or 3008002 or 1009001 or 1002016 or 4009003 or 3008001 or 3008008 or 4008002 or 4009002 or 30010101=>null,
+            2008002 or 2008005 or 3008002 or 3008008 or 4009003=>"Native grenade grants disabled: pre-return grant and thrown-projectile ownership across revoke/unload is not verified.",
+            20010101 or 2002017 or 1009001 or 1002016 or 3008001 or 4008002 or 4009002 or 30010101=>null,
 
             1009002 or 1009005=>"Magnetic attachment, explosion and custom-team damage hooks unresolved; HE is not an equivalent substitute.",
             1009003=>"Tiger cannon projectile/damage rows unresolved; no native cannon entity.",

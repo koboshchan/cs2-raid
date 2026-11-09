@@ -65,6 +65,45 @@ Check(!admissionThrow.Activate(2008002,0,()=>throw new Exception(),()=>new Effec
 var disposeReentry=new InterpretedAbilitySession(1,0);int disposals=0;
 Check(disposeReentry.Activate(2008002,0,()=>true,()=>new OwnedAbilityEffect(()=>{disposals++;Check(!disposeReentry.Revoke());})));
 Check(disposeReentry.Revoke());Check(disposals==1);
+// Exercise the exact mutation/cleanup boundary used by CSS pulse/trap, not router self-consistency.
+var boundary=new InterpretedAbilitySession(1,0);
+float nativeValue=1;uint serial=42;int writes=0,notifications=0;
+NativeStatusLease Lease()=>new(()=>serial==42,()=>nativeValue,v=>{writes++;nativeValue=v;},
+    ()=>{notifications++;},1,0.5f);
+var lease=Lease();
+Check(boundary.Activate(2008002,0,()=>true,()=>boundary.EnactOwned(lease.Apply,lease.Dispose)));
+Check(nativeValue==0.5f);Check(boundary.PendingCleanup==1);
+Check(boundary.Revoke());Check(nativeValue==1);Check(writes==2);Check(notifications==2);
+var other=Lease();other.Apply();nativeValue=0.8f;var previousWrites=writes;
+other.Dispose();Check(nativeValue==0.8f);Check(writes==previousWrites);
+nativeValue=1;var replaced=Lease();replaced.Apply();serial=43;previousWrites=writes;
+replaced.Dispose();Check(nativeValue==0.5f);Check(writes==previousWrites);
+serial=42;nativeValue=1;
+var failedNative=new InterpretedAbilitySession(1,0);int rollbackAttempts=0;
+Check(!failedNative.Activate(2008002,0,()=>true,()=>failedNative.EnactOwned(
+    ()=>{nativeValue=0.5f;throw new Exception("native post-write");},
+    ()=>{if(++rollbackAttempts==1)throw new Exception("rollback unavailable");nativeValue=1;})));
+Check(failedNative.Quarantined);Check(failedNative.PendingCleanup==1);
+Check(failedNative.Revoke());Check(nativeValue==1);Check(rollbackAttempts==2);
+Check(failedNative.Available(2008002,0)==0);
+int notifyCalls=0;nativeValue=1;writes=0;
+var notifyRetry=new NativeStatusLease(()=>true,()=>nativeValue,v=>{nativeValue=v;writes++;},
+    ()=>{if(++notifyCalls==2)throw new Exception("state changed");},1,0.5f);
+notifyRetry.Apply();try{notifyRetry.Dispose();Check(false);}catch{Check(true);}
+Check(nativeValue==1);Check(writes==2);notifyRetry.Dispose();Check(writes==2);Check(notifyCalls==3);
+var lateAdmission=new InterpretedAbilitySession(1,0);int lateCalls=0;var lateEffect=new Effect();
+Check(!lateAdmission.Activate(2008002,0,()=>++lateCalls==1?true:throw new Exception("admission"),()=>lateEffect));
+Check(lateEffect.Disposed);Check(lateAdmission.PendingCleanup==0);
+foreach(var initial in new[]{true,false}){
+ NativeConfigTransition.Validate(false,!initial,initial,new object());Check(true);
+ NativeConfigTransition.Validate(true,initial,initial,new object());Check(true);
+ try{NativeConfigTransition.Validate(true,initial,!initial,new object());Check(false);}catch(InvalidOperationException){Check(true);}
+ try{NativeConfigTransition.Validate(true,initial,initial,null);Check(false);}catch(ArgumentNullException){Check(true);}
+}
+foreach(var grant in new[]{(1,2008002),(1,2008005),(5,3008002),(5,3008008),(4,4009003)}){
+ var grants=new FakePort();Check(NativeAbilityRouter.Blocker(grant.Item1,grant.Item2)!=null);
+ Check(NativeAbilityRouter.Enact(grant.Item1,grant.Item2,grants)==null);Check(grants.Calls==0);
+}
 Console.WriteLine($"{count} interpreted lifecycle checks PASS; router + lifecycle PASS; CSS calls compile, not native QA");
 sealed class Effect:IDisposable{public bool Disposed;public void Dispose()=>Disposed=true;}
 
