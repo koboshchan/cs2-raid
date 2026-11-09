@@ -20,11 +20,16 @@ Check(session.Activate(2008002,61000,()=>true,()=>new Effect()));
 var failed=new InterpretedAbilitySession(1,0);
 Check(!failed.Activate(2008002,0,()=>true,()=>throw new Exception()));Check(failed.Quarantined);
 failed.Resume();Check(!failed.Alive);
+Check(NativePassiveRules.Reduce(100,0.9f)==90);
+Check(NativePassiveRules.Reduce(0,0.9f)==0);
+Check(NativePassiveRules.Reduce(-2,0.9f)==-2);
+Check(NativePassiveRules.Reduce(100,2)==100);
+Check(NativePassiveRules.Reduce(100,float.NaN)==100);
 var port=new FakePort();
 foreach(var skill in InterpretedR2.Skills.Values){
  var before=port.Calls;
  var result=NativeAbilityRouter.Enact(skill.Operator,skill.Id,port);
- Check((result!=null)==(NativeAbilityRouter.Blocker(skill.Operator,skill.Id)==null));
+ Check((result!=null)==(!skill.Passive && NativeAbilityRouter.Blocker(skill.Operator,skill.Id)==null));
  Check(port.Calls==before+(result==null?0:1));result?.Dispose();
 }
 foreach(var op in Enumerable.Range(1,5))foreach(var v in new[]{true,false})Check(InterpretedR2.Skills.ContainsKey((op,NativeAbilityRouter.Slot(op,v))));
@@ -40,5 +45,6 @@ sealed class Effect:IDisposable{public bool Disposed;public void Dispose()=>Disp
 sealed class FakePort:INativeAbilityPort{
  public int Calls;
  IDisposable New(){Calls++;return new OwnedAbilityEffect(()=>{});}
+ public IDisposable? Pulse(bool suppress)=>New();
  public IDisposable? Heal()=>New();public IDisposable? Grant(string weapon)=>New();public IDisposable? Recon()=>New();public IDisposable? Rush()=>New();public IDisposable? Trap()=>New();
 }

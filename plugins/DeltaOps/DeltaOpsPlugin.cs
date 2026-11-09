@@ -212,6 +212,7 @@ public sealed partial class DeltaOpsPlugin : BasePlugin, IPluginConfig<DeltaOpsC
         // Unaccepted fixture provider exposes status/policy only; never register legacy
         // native lifecycle handlers (global reset, deferred passive grants, or cooldown resets).
         if (_fixtureMode) return;
+        RegisterListener<Listeners.OnEntityTakeDamagePre>(NativePassiveDamage);
         RegisterEventHandler<EventPlayerSpawn>(OnPlayerSpawn);
         RegisterEventHandler<EventPlayerTeam>(OnPlayerTeam);
         RegisterEventHandler<EventRoundStart>(OnRoundStart);
@@ -785,7 +786,7 @@ public sealed partial class DeltaOpsPlugin : BasePlugin, IPluginConfig<DeltaOpsC
         var definition = GetOperator(state.Operator.Value);
         player.PrintToChat($" [三角洲模式] {definition.Name} / {definition.EnglishName} | {definition.Role}");
         if(Config.UseInterpretedAbilities){
-            player.PrintToChat($" [r2 CS2 ports] V={NativeAbilityRouter.Slot((int)definition.Id,true)}, X={NativeAbilityRouter.Slot((int)definition.Id,false)}; !ability <source ID>. Unsupported effects reject without spending. Passives disabled.");
+            player.PrintToChat($" [r2 CS2 ports] V={NativeAbilityRouter.Slot((int)definition.Id,true)}, X={NativeAbilityRouter.Slot((int)definition.Id,false)}; !ability <source ID>. Unsupported effects reject without spending. Only Shepherd passive has a CS2 damage-reduction port; other passives blocked.");
             return;
         }
         player.PrintToChat($" [V] {definition.VName}: {definition.VDescription}");

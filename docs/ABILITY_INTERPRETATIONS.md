@@ -202,3 +202,61 @@ ports and do not pretend to execute native CSS. The complete DeltaOps DLL compil
 against installed CSS API with zero warnings/errors. Live/native gameplay, client
 visuals, drop/throw/projectile lifecycle, custom-team damage and concurrency with
 other movement plugins remain unverified. No live load/restart/push authorized here.
+
+## Follow-up ports and source-path integration audit
+
+Supersedes the corresponding blocked entries above. Electric4008002 and sonic30010101
+now have an explicit nearby pulse approximation: current custom enemies within
+PulseRadiusSourceUnits240 receive a 0.65 VelocityModifier for PulseSeconds2. No
+projectile, damage, destruction or electric damage-over-time is claimed. Knife4009002
+uses the same pulse plus imported-ability suppression keyed by victim pawn serial;
+it does not silence all native weapons or affect unrelated plugins. These values are
+CS2 port tuning, not exact raw scalars. No-target use is transactional rejection.
+Cleanup restores owned changes, removes suppression reference counts and tick action;
+exception fences quarantine the actor. This implementation intentionally avoids unsafe
+CTakeDamageInfo allocation or health subtraction masquerading as attributed damage.
+
+Shepherd passive30010201 now has an OnEntityTakeDamagePre port reducing positive
+incoming damage by configured multiplier0.9, only on admitted living Shepherd actors.
+It cannot increase damage, undo a Handled result, or override Raid policy. It is not a
+claim of exact DF explosion-only resistance or its scalar. Other passive blockers are
+individual: Stinger needs a downed/revive state that Raid does not have; Luna's global
+Glow would reveal contacts to every squad; Vyron fall/recovery/ADS behavior needs
+fall-damage and movement baseline ownership; Hackclaw footsteps need per-recipient
+sound control, not a speed multiplier. Exact buff magnitudes remain unexported.
+
+Magnet1009002/1009005 still lacks a safe owned attachment/explosion implementation.
+Cannon1009003 lacks an attributed projectile/damage implementation. Native damage
+pre-hooks are available and cancellable, but this is not an allocator or constructor
+for CTakeDamageInfo. Installed historical DealDamage uses an unvalidated layout/ABI
+and stays disabled. A native HE would be a grenade approximation, not a cannon or
+magnetic bomb; it remains blocked in Raid until the projectile owner-to-custom-team
+attribution path is accepted. Damage must never be emulated by bare Health subtraction,
+which bypasses Raid death outcomes, attacker attribution and policy hooks.
+
+Official API checked: https://docs.cssharp.dev/api/CounterStrikeSharp.API.Core.Listeners.OnEntityTakeDamagePre.html
+Documents Handled as cancelling entire damage application. chub had no CSS entry.
+
+Read-only integration target cs2-raid-build:/home/kit/extract-zone-flow is clean at
+raid-flow-v2 bbff2eb. This worktree descends from bbff2eb; it has NOT been merged back.
+The parent-owned target was not edited. Eight prior commits include initial scaffold,
+roster and import; do not cherry-pick only the newest ports without their dependencies.
+DeltaOps/Raid primitive capability names/signatures remain compatible. In this worktree
+LoadGameplay reads gameplay.json then requires GameplayConfig.Enabled (default false).
+Ready additionally requires NativeFlowVerified, CoordinatesConfirmed and valid spawn
+coordinates; this change does not set them. DeltaOps ConfigureRaidBridge reads sibling
+RaidPlugin/gameplay.json. Fixture/TestServer mode returns before native registration.
+Nonfixture imported mode defaults true, routes skill slots through UseNativeAbility and
+NativeAbilityRouter; old mode false continues legacy effects. RaidActive uses capability
+operation3 (Active + living); selection op0 is CharacterSelect; target operation2 uses
+CanDamage; full reset operation4 is Lobby. Financial freeze checks remain Raid-side.
+NativeAdmission fences human controller and exact pawn serial, life, suppression and
+RaidActive. No source setting or test pass proves the currently installed server uses
+this path. Fixture-v2 is still a separate, unavailable adapter, not silently enabled.
+
+Fresh after this change: 239 router/lifecycle/passive-rule checks PASS; DeltaOps and
+RaidPlugin Release build zero warnings/errors; Raid suites PASS including10527 flow,
+261 testmode,166 bot-combat and all other existing suites. Raid test project emits its
+existing CS0649 PrivateRehearsalHardOff warning. These tests do not prove native pulse,
+trap, projectile cleanup, footsteps or rendered abilities. Native acceptance remains
+for separate review/load approval; no target worktree merge, push or live operation.

@@ -9,6 +9,10 @@ namespace DeltaOps;
 public sealed class NativePortTuning
 {
     // Explicit CS2 port choices, NONE are decoded DF effect magnitudes.
+    public float ShepherdDamageMultiplier {get;set;}=0.9f;
+    public float PulseRadiusSourceUnits {get;set;}=240;
+    public float PulseSeconds {get;set;}=2;
+    public float PulseSlowModifier {get;set;}=0.65f;
     public int HealHp {get;set;}=25;
     public float ReconRadiusSourceUnits {get;set;}=1200;
     public float RushSpeedSourceUnits {get;set;}=400;
@@ -19,11 +23,23 @@ public sealed class NativePortTuning
 }
 public sealed partial class DeltaOpsPlugin
 {
+    private HookResult NativePassiveDamage(CBaseEntity entity,CTakeDamageInfo info)
+    {
+        if(!Config.UseInterpretedAbilities||_fixtureMode)return HookResult.Continue;
+        var victim=Utilities.GetPlayers().FirstOrDefault(p=>IsHumanController(p)&&p.PlayerPawn.Value is {IsValid:true} pawn&&pawn.EntityHandle.Raw==entity.EntityHandle.Raw);
+        if(victim==null||GetExistingState(victim)?.Operator!=OperatorId.Shepherd)return HookResult.Continue;
+        var pawn=victim.PlayerPawn.Value!;
+        if(!NativeAdmission(victim,victim.EntityHandle.Raw,pawn.EntityHandle.Raw))return HookResult.Continue;
+        // Reduction only. Never create damage, revive an attack or overrule Raid's blocking hook.
+        info.Damage=NativePassiveRules.Reduce(info.Damage,Config.NativePorts.ShepherdDamageMultiplier);
+        return HookResult.Continue;
+    }
     private sealed record NativeActor(uint Controller,uint Pawn,InterpretedAbilitySession Session);
     private readonly Dictionary<string,NativeActor> _nativeActors=[];
     private readonly List<Action> _nativeTicks=[];
+    private readonly Dictionary<uint,int> _nativeSuppressed=[];
     private bool NativeAdmission(CCSPlayerController p,uint controller,uint pawn)=>
-        !_fixtureMode && IsHumanController(p) && p.EntityHandle.Raw==controller && p.PawnIsAlive &&
+        !_fixtureMode && !_nativeSuppressed.ContainsKey(pawn) && IsHumanController(p) && p.EntityHandle.Raw==controller && p.PawnIsAlive &&
         p.PlayerPawn.Value is {IsValid:true} body && body.EntityHandle.Raw==pawn && (!_raidMode||RaidActive(p.SteamID));
 
     private NativeActor? NativeActorFor(CCSPlayerController p,int op)
@@ -126,6 +142,46 @@ public sealed partial class DeltaOpsPlugin
             // Velocity only, never origin teleport or noclip. Collision is entirely engine-owned.
             Pawn.Teleport(null,null,new Vector((float)Math.Cos(yaw)*speed,(float)Math.Sin(yaw)*speed,Pawn.AbsVelocity.Z));
             return new OwnedAbilityEffect(()=>{});
+        }
+        public IDisposable? Pulse(bool suppress)
+        {
+            var t=plugin.Config.NativePorts;
+            if(!Valid()||!float.IsFinite(t.PulseRadiusSourceUnits)||t.PulseRadiusSourceUnits<=0||t.PulseRadiusSourceUnits>1000||
+                !float.IsFinite(t.PulseSeconds)||t.PulseSeconds<=0||t.PulseSeconds>10||
+                !float.IsFinite(t.PulseSlowModifier)||t.PulseSlowModifier<=0||t.PulseSlowModifier>1)return null;
+            var targets=plugin.GetEnemies(player).Where(e=>Distance(player,e)<=t.PulseRadiusSourceUnits)
+                .Select(e=>e.PlayerPawn.Value).Where(p=>p is {IsValid:true} && p.VelocityModifier==1f).ToArray();
+            if(targets.Length==0)return null;
+            var owned=new List<(CCSPlayerPawn Pawn,uint Serial,float Before)>();
+            var until=Environment.TickCount64+(long)(t.PulseSeconds*1000);Action? tick=null;bool disposed=false;
+            var effect=new OwnedAbilityEffect(()=>{
+                if(disposed)return;
+                for(var i=owned.Count-1;i>=0;i--){
+                    var x=owned[i];
+                    if(x.Pawn.IsValid&&x.Pawn.EntityHandle.Raw==x.Serial&&x.Pawn.VelocityModifier==t.PulseSlowModifier){
+                        x.Pawn.VelocityModifier=x.Before;Utilities.SetStateChanged(x.Pawn,"CCSPlayerPawn","m_flVelocityModifier");
+                    }
+                    if(suppress&&plugin._nativeSuppressed.TryGetValue(x.Serial,out var count)){
+                        if(count<=1)plugin._nativeSuppressed.Remove(x.Serial);else plugin._nativeSuppressed[x.Serial]=count-1;
+                    }
+                    owned.RemoveAt(i);
+                }
+                disposed=true;plugin._nativeTicks.Remove(tick!);
+            });
+            // Register ownership before the first mutation so exceptions retain cleanup.
+            tick=()=>{
+                try{if(!Valid()||Environment.TickCount64>=until)effect.Dispose();}
+                catch{actor.Session.Quarantine();actor.Session.Revoke();}
+            };
+            plugin._nativeTicks.Add(tick);
+            try{
+                foreach(var body in targets){
+                    var serial=body!.EntityHandle.Raw;owned.Add((body,serial,body.VelocityModifier));
+                    if(suppress)plugin._nativeSuppressed[serial]=plugin._nativeSuppressed.GetValueOrDefault(serial)+1;
+                    body.VelocityModifier=t.PulseSlowModifier;Utilities.SetStateChanged(body,"CCSPlayerPawn","m_flVelocityModifier");
+                }
+                return effect;
+            }catch{try{effect.Dispose();}catch{}throw;}
         }
         public IDisposable? Trap()
         {
