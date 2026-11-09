@@ -145,16 +145,14 @@ public sealed partial class DeltaOpsPlugin
             var targets=plugin.GetEnemies(player).Where(e=>Distance(player,e)<=t.PulseRadiusSourceUnits)
                 .Select(e=>e.PlayerPawn.Value).Where(p=>p is {IsValid:true} && p.VelocityModifier==1f).ToArray();
             if(targets.Length==0)return null;
-            var owned=new List<(uint Serial,NativeStatusLease Lease)>();
+            var owned=new List<(NativeStatusLease Lease,NativeSuppressionLease? Suppression)>();
             var until=Environment.TickCount64+(long)(t.PulseSeconds*1000);Action? tick=null;bool disposed=false;
             void Cleanup(){
                 if(disposed)return;
                 for(var i=owned.Count-1;i>=0;i--){
                     var x=owned[i];
                     x.Lease.Dispose();
-                    if(suppress&&plugin._nativeSuppressed.TryGetValue(x.Serial,out var count)){
-                        if(count<=1)plugin._nativeSuppressed.Remove(x.Serial);else plugin._nativeSuppressed[x.Serial]=count-1;
-                    }
+                    x.Suppression?.Dispose();
                     owned.RemoveAt(i);
                 }
                 disposed=true;plugin._nativeTicks.Remove(tick!);
@@ -173,8 +171,9 @@ public sealed partial class DeltaOpsPlugin
                         ()=>body.VelocityModifier,v=>body.VelocityModifier=v,
                         ()=>Utilities.SetStateChanged(body,"CCSPlayerPawn","m_flVelocityModifier"),
                         body.VelocityModifier,t.PulseSlowModifier);
-                    owned.Add((serial,lease));
-                    if(suppress)plugin._nativeSuppressed[serial]=plugin._nativeSuppressed.GetValueOrDefault(serial)+1;
+                    var suppression=suppress?new NativeSuppressionLease(plugin._nativeSuppressed,serial):null;
+                    owned.Add((lease,suppression));
+                    suppression?.Acquire();
                     lease.Apply();
                 }
             },Cleanup);

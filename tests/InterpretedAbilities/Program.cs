@@ -104,6 +104,21 @@ foreach(var grant in new[]{(1,2008002),(1,2008005),(5,3008002),(5,3008008),(4,40
  var grants=new FakePort();Check(NativeAbilityRouter.Blocker(grant.Item1,grant.Item2)!=null);
  Check(NativeAbilityRouter.Enact(grant.Item1,grant.Item2,grants)==null);Check(grants.Calls==0);
 }
+var suppressionCounts=new Dictionary<uint,int>();
+var ownSuppression=new NativeSuppressionLease(suppressionCounts,42);
+var anotherSuppression=new NativeSuppressionLease(suppressionCounts,42);
+ownSuppression.Acquire();ownSuppression.Acquire();anotherSuppression.Acquire();
+Check(suppressionCounts[42]==2);ownSuppression.Dispose();Check(suppressionCounts[42]==1);
+ownSuppression.Dispose();Check(suppressionCounts[42]==1);
+Check(!suppressionCounts.ContainsKey(43));anotherSuppression.Dispose();Check(suppressionCounts.Count==0);
+foreach(var end in new[]{"disconnect","pawn replacement","unload"}){
+ var life=new InterpretedAbilitySession(1,0);nativeValue=1;
+ var scalar=Lease();var suppression=new NativeSuppressionLease(suppressionCounts,42);
+ Check(life.Activate(2008002,0,()=>true,()=>life.EnactOwned(
+    ()=>{suppression.Acquire();scalar.Apply();},
+    ()=>{scalar.Dispose();suppression.Dispose();})));
+ Check(suppressionCounts[42]==1);Check(life.Revoke());Check(nativeValue==1);Check(suppressionCounts.Count==0);
+}
 Console.WriteLine($"{count} interpreted lifecycle checks PASS; router + lifecycle PASS; CSS calls compile, not native QA");
 sealed class Effect:IDisposable{public bool Disposed;public void Dispose()=>Disposed=true;}
 

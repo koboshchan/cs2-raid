@@ -27,3 +27,16 @@ public static class NativeConfigTransition
             throw new InvalidOperationException("Ability mode changes require offline teardown and reviewed reload; runtime switch rejected.");
     }
 }
+
+// Full serial keys prevent a disconnected/replaced pawn inheriting suppression.
+// Each effect releases only its own reference; another owner's count survives.
+public sealed class NativeSuppressionLease(IDictionary<uint,int> counts,uint serial)
+{
+    private bool acquired;
+    public void Acquire(){if(acquired)return;counts[serial]=counts.TryGetValue(serial,out var n)?n+1:1;acquired=true;}
+    public void Dispose(){
+        if(!acquired)return;
+        if(counts.TryGetValue(serial,out var n)){if(n<=1)counts.Remove(serial);else counts[serial]=n-1;}
+        acquired=false;
+    }
+}
