@@ -864,11 +864,23 @@
     "Passive": true,
     "Calls": "No native ADS movement adapter",
     "Approximation": "No enabled approximation; blocked/incomplete",
-    "Implementation": "skill-specific effect unimplemented",
-    "ExactApiReferences": [],
-    "InterpretationTuning": [],
+    "Implementation": "implemented partial cooperative scoped-mobility interpretation",
+    "ExactApiReferences": [
+      "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Generated/Schema/Classes/CCSPlayerPawn.g.cs#L265-L267",
+      "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Generated/Schema/Classes/CCSPlayerPawn.g.cs#L317-L319",
+      "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Modules/Memory/Schema.cs#L109-L114",
+      "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Utilities.cs#L231-L254"
+    ],
+    "InterpretationTuning": [
+      {
+        "Field": "ScopedMobilityModifier",
+        "Default": 1.1,
+        "Unit": "dimensionless",
+        "Authority": "CS2 cooperative scoped-only assumption, not decoded DF buff303054"
+      }
+    ],
     "Activation": "activation held pending reviewed deployment approval; offline implementation permitted",
-    "NativeSafetyBlocker": "No skill-specific native effect boundary implemented.",
+    "NativeSafetyBlocker": "Cooperative-only scalar lease; nonparticipant writers and unload restoration remain outside guarantee.",
     "Fidelity": "Partial CS2 interpretation; remaining DF behavior is separately listed in ABILITY_SOL26_COVERAGE.md, not a blanket prohibition on offline implementation",
     "TypedSourceFields": {
       "CdId": {
@@ -897,7 +909,7 @@
     "Binding": "PC SOL; sol-binding-v1/receipt.json; raw r2 immutable",
     "Values": "docs/ABILITY_SOL_VALUES.Generated.md; effect magnitude tuning is separate CS2 interpretation",
     "Adapter": "blocked/incomplete",
-    "Blocker": "ADS movement trigger and baseline ownership unresolved.",
+    "Blocker": "Cooperative scoped-mobility interpretation implemented offline; global writer participation and activation approval absent.",
     "NativeAdmission": "disabled pending per-capability API contract audit; NativeApiEvidenceGate.cs",
     "ApiLedger": "docs/ABILITY_EFFECT_BOUNDARIES.json; docs/ABILITY_API_EVIDENCE.json; call-site inventory docs/ABILITY_API_CALLS.json",
     "SignatureEvidence": "reference API self-reports pinned source SHA; bound symbols inventoried; contract review incomplete",

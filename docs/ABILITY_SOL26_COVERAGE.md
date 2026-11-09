@@ -124,11 +124,11 @@ Admission blocker: No owned DF arrow projectile exists to remove.
 
 ## Operator 3 / Skill 10010301 / 敏捷射手
 
-Actual path: No native ADS movement adapter
+Actual path: NativeScopedMobilityAdapter -> IsScoped state -> cooperative reservation -> NativeStatusLease
 Current interpretation: No enabled approximation; blocked/incomplete
 Evidence: Literal allSerializedFields retained in raw r2; full runtime behavior not recovered
 Remaining: No source-decoded ADS movement multiplier/trigger; safe weapon-state speed ownership adapter absent.
-Admission blocker: ADS movement trigger and baseline ownership unresolved.
+Admission blocker: Cooperative scoped-mobility interpretation implemented offline; nonparticipant writers and unload restoration remain outside guarantee.
 
 ## Operator 4 / Skill 1002016 / 信号破译器
 
@@ -213,3 +213,5 @@ Admission blocker: Activation held pending reviewed deployment approval; consult
 Boundary-specific source review and residual engine/behavior blockers are in ABILITY_EFFECT_BOUNDARIES.md/.json. Private recon prints names and distances, not XYZ coordinates; coordinate reads are internal distance inputs only. NativeCommittedHeal improves failure ownership but does not enable healing or establish DF effect values.
 
 Cooperative status boundary is implemented in CooperativeStatusOwnership.cs, including session-owned failed rollback retention. It is NOT globally enforced or wired into native Pulse/Trap: no claim is made that other engine/plugins participate. The original reversible scalar adapter remains activation-held.
+
+Skill10010301 now has an offline functional scoped-state movement interpretation. IsScoped is read through the pinned generated API. Modifier1.1 is CS2 tuning, not buff303054. Lease acquisition/release, retry after failed cleanup, unscoping/admission loss and disposal are tested. Global writer participation and native activation remain held.

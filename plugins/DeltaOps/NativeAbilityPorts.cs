@@ -10,6 +10,7 @@ public sealed class NativePortTuning
 {
     // Explicit CS2 port choices, NONE are decoded DF effect magnitudes.
     // CS2 interpretation only; no decoded DF buff magnitude.
+    public float ScopedMobilityModifier {get;set;}=1.1f; // CS2-only dimensionless assumption, not decoded DF buff.
     public float VyronFallDamageMultiplier {get;set;}=0.5f;
     // Retained config compatibility only. Native Shepherd uses extracted .7, never this field.
     public float ShepherdDamageMultiplier {get;set;}=0.9f;
@@ -55,11 +56,12 @@ public sealed partial class DeltaOpsPlugin
             if(old.Pawn!=pawn.EntityHandle.Raw||old.Controller!=p.EntityHandle.Raw) {
                 if(!old.Session.Revoke())return null;
                 old=old with {Controller=p.EntityHandle.Raw,Pawn=pawn.EntityHandle.Raw};_nativeActors[key]=old;
+                old.Session.Resume();AttachScopedMobility(p,old);
             }
             old.Session.Resume();return old;
         }
         var actor=new NativeActor(p.EntityHandle.Raw,pawn.EntityHandle.Raw,new(op,Environment.TickCount64));
-        _nativeActors[key]=actor;return actor;
+        _nativeActors[key]=actor;AttachScopedMobility(p,actor);return actor;
     }
     [ConsoleCommand("css_ability","Use imported operator skill by its source ID; !ability <id>")]
     public void NativeAbilityCommand(CCSPlayerController? p,CommandInfo cmd)

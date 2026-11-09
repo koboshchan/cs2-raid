@@ -6,6 +6,7 @@ namespace DeltaOps;
 public static class NativeImplementationEvidence
 {
     public static string Implementation(int id)=>id switch {
+        10010301=>"implemented partial cooperative scoped-mobility interpretation",
         20010101=>"implemented partial committed heal interpretation",
         2002017 or 1002016=>"implemented partial private names-and-distances interpretation",
         1009001=>"implemented partial velocity-only impulse interpretation",
@@ -17,6 +18,7 @@ public static class NativeImplementationEvidence
         _=>"skill-specific effect unimplemented"
     };
     public static string? SafetyBlocker(int id)=>id switch {
+        10010301=>"Cooperative-only scalar lease; nonparticipant writers and unload restoration remain outside guarantee.",
         20010101=>null, // Committed write semantics reviewed; NOT a DF healing equivalence claim.
         2002017 or 1002016=>null,
         1009001=>null, // Verified velocity-only API; deployment/gamedata and native QA still pending.

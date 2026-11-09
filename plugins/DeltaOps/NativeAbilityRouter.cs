@@ -24,7 +24,7 @@ public static class NativeAbilityRouter
             20010201=>"Revive passive requires a downed/revive state; Raid death currently creates death outcomes, not a revivable pawn.",
             40010201=>null, // Post-hurt, private coordinate telemetry; no global Glow.
             1009004=>"CS2-assumed fall mitigation implemented; DF buff magnitude and kinetic speed triggers unresolved.",
-            10010301=>"ADS movement trigger and baseline ownership unresolved.",
+            10010301=>"Cooperative scoped-mobility interpretation implemented offline; global writer participation and activation approval absent.",
             40010202=>"Footstep attenuation is client/audio-path behavior; player speed alone is not silent footsteps.",
             30010201=>null,
             _=>"Passive buff has no mapped CS2 trigger."};

@@ -13,6 +13,7 @@ public static class NativeApiCapabilityEvidence
         (ReadOnlyRecon(operatorId,skillId)?null:
             (NativeImplementationEvidence.SafetyBlocker(skillId) ??
              "Offline interpretation implemented; native activation held pending reviewed deployment approval."));
+    public static bool ScopedMobilityActivation => false; // Cooperative ADS interpretation implemented; global writer participation and approval absent.
     public static bool EntityCreation => false; // Engine allocation/spawn/expiry contract pending.
     public static bool HealingActivation => false; // Reviewed committed setter; activation approval pending.
     public static bool ScalarMutation => false; // Competing-owner restore/teardown not proved.

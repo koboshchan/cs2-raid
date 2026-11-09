@@ -473,6 +473,23 @@ foreach(var staleBaseline in new[]{0.8f,float.NaN}) {
  var releasedReservation=cooperation.Reserve("world",42,"speed");Check(releasedReservation!=null);
  releasedReservation!.Dispose();
 }
+
+{
+ bool aiming=false,admittedScoped=true,rollbackBroken=false;int acquiredScoped=0,releasedScoped=0;
+ var scopedEffect=new NativeScopedMobility(()=>admittedScoped,()=>aiming,()=>{
+     acquiredScoped++;return new OwnedAbilityEffect(()=>{
+         if(rollbackBroken)throw new Exception();releasedScoped++;
+     });
+ });
+ scopedEffect.Tick();Check(acquiredScoped==0);
+ aiming=true;scopedEffect.Tick();scopedEffect.Tick();Check(acquiredScoped==1);
+ aiming=false;rollbackBroken=true;
+ try{scopedEffect.Tick();Check(false);}catch{Check(true);}
+ aiming=true;scopedEffect.Tick();Check(acquiredScoped==1);
+ rollbackBroken=false;admittedScoped=false;scopedEffect.Tick();Check(releasedScoped==1);
+ admittedScoped=true;scopedEffect.Tick();Check(acquiredScoped==2);
+ scopedEffect.Dispose();scopedEffect.Dispose();scopedEffect.Tick();Check(releasedScoped==2&&acquiredScoped==2);
+}
 Console.WriteLine($"{count} interpreted lifecycle checks PASS; router + lifecycle PASS; CSS calls compile, not native QA");
 sealed class Effect:IDisposable{public bool Disposed;public void Dispose()=>Disposed=true;}
 
