@@ -10,9 +10,9 @@ RUN curl -fL --retry 3 https://github.com/roflmuffin/CounterStrikeSharp/releases
 FROM dependencies AS deltaops-build
 ENV HOME=/work/home DOTNET_CLI_HOME=/work/home NUGET_PACKAGES=/work/nuget
 RUN --network=none mkdir /work && chown 1000:1000 /work
-COPY --chown=1000:1000 plugins/DeltaOps/DeltaOps.csproj plugins/DeltaOps/DeltaOpsConfig.cs plugins/DeltaOps/DeltaOpsPlugin.cs plugins/DeltaOps/FixtureAbilityPolicyV2.cs plugins/DeltaOps/RaidCapabilityBridge.cs plugins/DeltaOps/config.example.json plugins/DeltaOps/source.sha256 /input/
+COPY --chown=1000:1000 plugins/DeltaOps/ /input/
 COPY --chown=1000:1000 tests/FixtureAbilitiesV2 /policy/tests/FixtureAbilitiesV2
-COPY --chown=1000:1000 plugins/DeltaOps/FixtureAbilityPolicyV2.cs /policy/plugins/DeltaOps/FixtureAbilityPolicyV2.cs
+COPY --chown=1000:1000 plugins/DeltaOps/FixtureAbilityPolicyV2.cs plugins/DeltaOps/StableOperatorIdentity.cs /policy/plugins/DeltaOps/
 USER 1000:1000
 WORKDIR /work
 RUN --network=none <<'BUILD'
@@ -26,7 +26,7 @@ cat > /work/NuGet.Config <<'EOF'
 EOF
 for n in 1 2; do
   mkdir -p /work/run$n/src /work/artifacts/build-$n
-  cp /input/DeltaOps.csproj /input/DeltaOpsConfig.cs /input/DeltaOpsPlugin.cs /input/FixtureAbilityPolicyV2.cs /input/RaidCapabilityBridge.cs /work/run$n/src/
+  cp -R /input/. /work/run$n/src/
   dotnet build /work/run$n/src/DeltaOps.csproj -c Release --configfile /work/NuGet.Config \
     -o /work/artifacts/build-$n -p:CSS_API_DIR=/deps/css/addons/counterstrikesharp/api \
     -p:Deterministic=true -p:ContinuousIntegrationBuild=true -p:PathMap=/work/run$n/src=/_/deltaops \
@@ -76,8 +76,8 @@ COPY --from=deltaops-build /work/artifacts/ /
 FROM dependencies AS raid-build
 ENV HOME=/work/home DOTNET_CLI_HOME=/work/home NUGET_PACKAGES=/work/nuget
 RUN --network=none mkdir /work && chown 1000:1000 /work
-COPY --chown=1000:1000 plugins/RaidPlugin/RaidPlugin.csproj plugins/RaidPlugin/RaidPlugin.cs plugins/RaidPlugin/RaidState.cs plugins/RaidPlugin/RaidOutcomes.cs plugins/RaidPlugin/SpawnProfile.cs plugins/RaidPlugin/GameplayState.cs plugins/RaidPlugin/GameplayAdapter.cs plugins/RaidPlugin/PartnerVisuals.cs plugins/RaidPlugin/ReloadPolicy.cs plugins/RaidPlugin/NativeBuyPolicy.cs plugins/RaidPlugin/PurchasePricing.cs plugins/RaidPlugin/TestMoneyHandler.cs plugins/RaidPlugin/TestPresentation.cs plugins/RaidPlugin/TestMode.cs plugins/RaidPlugin/TestFlow.cs plugins/RaidPlugin/TestModeState.cs plugins/RaidPlugin/TonightGameplay.cs plugins/RaidPlugin/TonightRules.cs plugins/RaidPlugin/DeltaOpsBridge.cs plugins/RaidPlugin/SettlementRecovery.cs plugins/RaidPlugin/SettlementProtocol.cs plugins/RaidPlugin/SettlementBridge.cs plugins/RaidPlugin/PrivateLink.cs plugins/RaidPlugin/LinkOnlyHandler.cs plugins/RaidPlugin/source.sha256 /input/
-COPY --chown=1000:1000 plugins/RaidPlugin/tests/ /input/tests/
+COPY --chown=1000:1000 plugins/RaidPlugin/ /input/
+COPY --chown=1000:1000 plugins/PrivateRaidHandoff.cs /PrivateRaidHandoff.cs
 COPY --chown=1000:1000 config/spawns/spaceport-default-20261105.json /work/config/spawns/spaceport-default-20261105.json
 USER 1000:1000
 WORKDIR /work
@@ -92,10 +92,11 @@ cat > /work/NuGet.Config <<'EOF'
 EOF
 for n in 1 2; do
   mkdir -p /work/run$n/src /work/artifacts/build-$n
-  cp /input/RaidPlugin.csproj /input/RaidPlugin.cs /input/RaidState.cs /input/RaidOutcomes.cs /input/SpawnProfile.cs /input/GameplayState.cs /input/GameplayAdapter.cs /input/PartnerVisuals.cs /input/ReloadPolicy.cs /input/NativeBuyPolicy.cs /input/PurchasePricing.cs /input/TestMoneyHandler.cs /input/TestPresentation.cs /input/TestMode.cs /input/TestFlow.cs /input/TestModeState.cs /input/TonightGameplay.cs /input/TonightRules.cs /input/DeltaOpsBridge.cs /input/SettlementRecovery.cs /input/SettlementProtocol.cs /input/SettlementBridge.cs /input/PrivateLink.cs /input/LinkOnlyHandler.cs /work/run$n/src/; cp -R /input/tests /work/run$n/src/
+  cp -R /input/. /work/run$n/src/
+  cp /PrivateRaidHandoff.cs /work/run$n/PrivateRaidHandoff.cs
   dotnet build /work/run$n/src/RaidPlugin.csproj -c Release --configfile /work/NuGet.Config \
     -o /work/artifacts/build-$n -p:CSS_API_DIR=/deps/css/addons/counterstrikesharp/api \
-    -p:Deterministic=true -p:ContinuousIntegrationBuild=true -p:PathMap=/work/run$n/src=/_/raidplugin \
+    -p:Deterministic=true -p:ContinuousIntegrationBuild=true -p:PathMap=/work/run$n=/_/raidplugin \
     -p:UseSharedCompilation=false -p:TreatWarningsAsErrors=true > /work/artifacts/build-$n.log 2>&1 || { cat /work/artifacts/build-$n.log; exit 1; }
   cat /work/artifacts/build-$n.log
   grep -q '0 Warning(s)' /work/artifacts/build-$n.log

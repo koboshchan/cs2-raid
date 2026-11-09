@@ -3,7 +3,7 @@ namespace Cs2Raid;
 // Dedicated server lifetime policy: fixture OFF never re-enables external money/link.
 internal sealed class MoneyOffHandler : DelegatingHandler
 {
-    internal static volatile bool PrivateRehearsalHardOff;
+    internal static volatile bool PrivateRehearsalHardOff = false;
     public MoneyOffHandler():this(new HttpClientHandler()){}
     internal MoneyOffHandler(HttpMessageHandler inner):base(inner){}
     protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request,CancellationToken cancellationToken)
