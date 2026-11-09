@@ -11,6 +11,7 @@ public sealed class NativePortTuning
     // Explicit CS2 port choices, NONE are decoded DF effect magnitudes.
     // CS2 interpretation only; no decoded DF buff magnitude.
     public float VyronFallDamageMultiplier {get;set;}=0.5f;
+    // Retained config compatibility only. Native Shepherd uses extracted .7, never this field.
     public float ShepherdDamageMultiplier {get;set;}=0.9f;
     public float PulseRadiusSourceUnits {get;set;}=240;
     public float PulseSeconds {get;set;}=2;
@@ -34,7 +35,7 @@ public sealed partial class DeltaOpsPlugin
         var pawn=victim.PlayerPawn.Value!;
         if(!NativeAdmission(victim,victim.EntityHandle.Raw,pawn.EntityHandle.Raw))return HookResult.Continue;
         // Reduction only. Never create damage, revive an attack or overrule Raid's blocking hook.
-        info.Damage=NativePassiveRules.ReduceBlast(info.Damage,Config.NativePorts.ShepherdDamageMultiplier,(uint)info.BitsDamageType);
+        info.Damage=NativePassiveRules.ReduceBlast(info.Damage,ExtractedPassiveValues.ShepherdExplosionMultiplier,(uint)info.BitsDamageType);
         return HookResult.Continue;
     }
     private sealed record NativeActor(uint Controller,uint Pawn,InterpretedAbilitySession Session);

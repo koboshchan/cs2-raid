@@ -1,3 +1,34 @@
+# Authority correction, supersedes lower wording
+
+Extracted DF tables, source Lua and native evidence govern behavior AND values.
+Corrected PC SOL joins select applicable rows. Wikis and supplied summaries are
+LOWCONFIDENCE hints only, never mandates and never overrides of extracted flags.
+Contradictory hints are discarded.
+
+DFPROVEN Shepherd SkillID30010201 has DamgeCoifficient[0]:
+fModifyRateExplodeDamage=0.7, fModifyRateAbilitAssault=1.0, LimitPlayMode=[].
+This directly establishes explosion-specific modification in the selected raw
+row. NativePassiveDamage now uses the extracted .7 constant, replacing the old
+.9 CS2 tuning. Mapping DF explosion to CSS DMG_BLAST is CS2ASSUMPTION pending native
+QA; the Wiki is NOT authority for this change. The raw r2 bytes are unchanged.
+
+DFPROVEN Luna SkillID40010201 is Scout/Passive, AddBuffs=[8011,100008],
+bEnableSniperMark=true, bOverrideAimingCheck=true, TeamPlayerIcon=None.
+Those fields establish a marking-related passive, but do NOT establish allied
+recipient scope, post-hit trigger, duration, wall/smoke visibility or minimap.
+Ally coordinate telemetry is LOWCONFIDENCE CS2ASSUMPTION, not usermandated and
+not DFPROVEN. No contradictory decoded field is identified; None icon is not
+proof of private-only visibility. Resolving buffs8011/100008 and relevant native
+implementation is required before claiming faithful squad marking.
+Current output uses Raid allies only as an explicit experimental interpretation.
+
+Vyron1009004 AddSkills=[1009001], AddBuffs=[303016,8013], UseCustomHeight=true
+do not by themselves prove a .5 fall modifier or a particular speed trigger.
+These remain explicit CS2ASSUMPTION, not exact extracted behavior.
+
+All mechanic claims in the following historical fetch summary are subordinate
+to this correction. Lowconfidence web descriptions are not behavioral authority.
+
 # Qualitative references, not numeric authority
 
 Full fetched responses are retained at /home/kit/out/ability-web-semantics-sources.json.

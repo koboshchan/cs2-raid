@@ -21,15 +21,16 @@ static class CoverageReceipt
   4008002 or 4008001 or 4001010=>"1200 Source-unit radius; one-shot coordinate telemetry, no DF-duration reveal",
   1009005=>"400 Source-units/s horizontal velocity; current vertical velocity retained",
   3001001 or 3001002 or 4001001=>"240 Source-unit radius; 2 seconds; velocity modifier .65; Hackclaw also suppresses interpreted activations",
-  30010201=>"Existing damage multiplier .9",
+  30010201=>"DFPROVEN SkillID30010201 DamgeCoifficient explosion multiplier .7; native blast classification is CS2 mapping",
   1009004=>"Pure fall damage multiplier .5; buff-referenced speed boost not yet interpreted",
-  40010201=>"One coordinate message per positive-health enemy hit; no duration or global Glow",
+  40010201=>"CS2ASSUMPTION post-hit allied coordinate telemetry; squad scope not proved by extracted buffs",
   _=>"No enabled approximation; blocked/incomplete"
  };
  public static void Write(string path){
   var rows=InterpretedR2.Skills.Values.OrderBy(s=>s.Operator).ThenBy(s=>s.Id).Select(s=>new{
    s.Operator,s.Id,s.Name,s.CdId,s.Initial,s.Capacity,s.RechargeSeconds,s.Passive,
    Calls=Calls(s.Id), Approximation=Approximation(s.Id),
+   Evidence="DFPROVEN PC SOL mapping and literal imported fields; all other adapter mechanics CS2ASSUMPTION unless individually cited; wiki only LOWCONFIDENCE hint",
    Binding="PC SOL; sol-binding-v1/receipt.json; raw r2 immutable",
    Values="docs/ABILITY_SOL_VALUES.Generated.md; effect magnitude tuning is separate CS2 interpretation",
    Adapter=NativeAbilityRouter.Blocker(s.Operator,s.Id)==null?"offline interpretation implemented":"blocked/incomplete",
