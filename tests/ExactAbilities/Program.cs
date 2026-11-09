@@ -123,7 +123,38 @@ reentrantAdapter.OnDispose=()=>nestedResult=reentrant.Activate(reentrantActor,sk
 reentrantClock.Elapsed=TimeSpan.FromSeconds(7);
 Check(reentrant.Activate(reentrantActor,skill.SkillId)==null);
 Check(nestedResult!=null); Check(reentrantAdapter.Calls==4);
+reentrantClock.Elapsed=TimeSpan.FromSeconds(14);
+reentrant.Tick(); Check(nestedResult!=null); Check(reentrantAdapter.Calls==4);
 reentrantAdapter.OnDispose=null; Check(reentrant.MapEnd());
+
+// Admission is an untrusted synchronous callback too. Death, nested selection,
+// reset and post-adapter revocation cannot bypass ownership or consume a charge.
+ExactAbilityRuntime admission = null!;
+Action? onAdmission = null;
+var admissionAdapter = new FakeAdapter(); var admissionAdapters = new ExactAbilityAdapters();
+admissionAdapters.Register("synthetic-adapter",admissionAdapter);
+admission = new ExactAbilityRuntime(copied,admissionAdapters,new FakeClock(),_=>{onAdmission?.Invoke();return true;});
+var admissionActor = new AbilityActor(70,700,admission.Generation);
+bool nestedSelection=true;
+onAdmission=()=>nestedSelection=admission.Select(admissionActor,op.OperatorId);
+Check(admission.Select(admissionActor,op.OperatorId)); Check(!nestedSelection);
+onAdmission=()=>admission.Death(admissionActor);
+Check(admission.Activate(admissionActor,skill.SkillId)!=null); Check(admissionAdapter.Calls==0);
+onAdmission=null; Check(admission.MapEnd());
+admissionActor=admissionActor with {Generation=admission.Generation};
+onAdmission=()=>admission.Death(admissionActor);
+Check(!admission.Select(admissionActor,op.OperatorId));
+onAdmission=null; Check(!admission.Select(admissionActor,op.OperatorId)); Check(admission.MapEnd());
+admissionActor=admissionActor with {Generation=admission.Generation};
+onAdmission=()=>admission.MapEnd();
+Check(!admission.Select(admissionActor,op.OperatorId));
+onAdmission=null; admissionActor=admissionActor with {Generation=admission.Generation};
+Check(admission.Select(admissionActor,op.OperatorId));
+int admissions=0;
+onAdmission=()=>{if(++admissions==2)admission.Death(admissionActor);};
+Check(admission.Activate(admissionActor,skill.SkillId)!=null);
+Check(admissionAdapter.Calls==1 && admissionAdapter.Disposals==1);
+onAdmission=null; Check(admission.MapEnd());
 
 Console.WriteLine($"{checks} exact ability scaffold checks passed; synthetic data only.");
 

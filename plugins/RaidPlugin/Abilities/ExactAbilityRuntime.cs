@@ -35,6 +35,7 @@ public sealed class ExactAbilityRuntime
     private readonly IAbilityClock clock;
     private readonly Func<AbilityActor, bool> admitted;
     private readonly Dictionary<ulong, PlayerState> players = [];
+    private readonly HashSet<ulong> pendingSelections = [];
     private readonly HashSet<ulong> spentSelections = []; // Tombstones prevent death/reconnect resource minting.
     private TimeSpan last;
     private long generation = 1;
@@ -47,7 +48,10 @@ public sealed class ExactAbilityRuntime
     }
     public bool Select(AbilityActor actor, string operatorId)
     {
-        if (!Fence(actor) || !catalog.HasOperator(operatorId) || spentSelections.Contains(actor.PlayerId) || !Allowed(actor)) return false;
+        if (!Fence(actor) || !catalog.HasOperator(operatorId) || spentSelections.Contains(actor.PlayerId) ||
+            !pendingSelections.Add(actor.PlayerId)) return false;
+        try {
+        if (!Allowed(actor) || !Fence(actor) || spentSelections.Contains(actor.PlayerId) || players.ContainsKey(actor.PlayerId)) return false;
         var state = new PlayerState { Actor = actor, Operator = operatorId };
         foreach (var id in catalog.Operator(operatorId).SkillIds) {
             var definition = catalog.Skill(id);
@@ -56,16 +60,18 @@ public sealed class ExactAbilityRuntime
                 ? (int)definition.Charges.Value.Value : null });
         }
         spentSelections.Add(actor.PlayerId); players.Add(actor.PlayerId, state); return true;
+        } finally { pendingSelections.Remove(actor.PlayerId); }
     }
     public string? Activate(AbilityActor actor, string skillId)
     {
         if (!Fence(actor) || !players.TryGetValue(actor.PlayerId, out var player) || player.Actor != actor ||
-            player.Quarantined || player.Busy || !Allowed(actor)) return "actor unavailable";
+            player.Quarantined || player.Busy) return "actor unavailable";
+        player.Busy = true;
+        try {
+        if (!Allowed(actor) || !Current(actor, player)) return "actor revoked during admission";
         if (!player.Skills.TryGetValue(skillId, out var state)) return "skill not selected";
         var blocker = catalog.ActivationBlocker(skillId); if (blocker != null) return blocker;
         if (!Now(out var now)) return "clock regressed";
-        player.Busy = true;
-        try {
         if (!Expire(player, state, now)) return "cleanup failed";
         if (player.Quarantined || !players.TryGetValue(actor.PlayerId, out var afterExpiry) || afterExpiry != player) return "actor revoked during expiry";
         if (state.Active || now < state.Ready || state.Remaining == 0) return "skill unavailable";
@@ -81,7 +87,7 @@ public sealed class ExactAbilityRuntime
                 return "adapter rejected";
             }
             state.Effect = effect;
-            if (!Fence(actor) || !players.TryGetValue(actor.PlayerId, out var current) || current != player || player.Quarantined || !Allowed(actor)) {
+            if (!Allowed(actor) || !Current(actor, player)) {
                 Cleanup(player, state); return "actor revoked during activation";
             }
             state.Active = true; state.Ready = ready; state.End = end;
@@ -94,13 +100,19 @@ public sealed class ExactAbilityRuntime
     {
         if (!Now(out var now)) return;
         foreach (var player in players.Values.ToArray())
-            foreach (var state in player.Skills.Values.ToArray()) Expire(player, state, now);
+        {
+            if (player.Busy) continue;
+            player.Busy = true;
+            try { foreach (var state in player.Skills.Values.ToArray()) Expire(player, state, now); }
+            finally { player.Busy = false; }
+        }
     }
     // All three invalidate the pawn session without allowing same-generation reselection.
     public void Death(AbilityActor actor) => Revoke(actor);
     public void Disconnect(AbilityActor actor) => Revoke(actor);
     public void Revoke(AbilityActor actor)
     {
+        if (Fence(actor)) spentSelections.Add(actor.PlayerId);
         if (players.TryGetValue(actor.PlayerId, out var p) && p.Actor == actor) {
             p.Quarantined = true;
             foreach (var state in p.Skills.Values) Cleanup(p, state);
@@ -115,6 +127,8 @@ public sealed class ExactAbilityRuntime
         checked { generation++; }
         spentSelections.Clear(); return true;
     }
+    private bool Current(AbilityActor actor, PlayerState player) =>
+        Fence(actor) && !player.Quarantined && players.TryGetValue(actor.PlayerId, out var current) && current == player && player.Actor == actor;
     private bool Allowed(AbilityActor actor) { try { return admitted(actor); } catch { return false; } }
     private bool Fence(AbilityActor actor) => actor.Generation == generation && actor.PlayerId != 0 && actor.PawnHandle is not (0 or uint.MaxValue);
     private bool Now(out TimeSpan now)
@@ -126,7 +140,8 @@ public sealed class ExactAbilityRuntime
         }
         last = now; return true;
     }
-    private static bool Expire(PlayerState p, SkillState s, TimeSpan now) => !s.Active || now < s.End || Cleanup(p, s);
+    private static bool Expire(PlayerState p, SkillState s, TimeSpan now) =>
+        !s.Disposing && (!(p.Quarantined || s.Active && now >= s.End) || Cleanup(p, s));
     private static bool Cleanup(PlayerState p, SkillState s)
     {
         s.Active = false;
