@@ -121,7 +121,11 @@ public sealed partial class DeltaOpsPlugin
             if(designer==null)return null;
             var creation=new CssProjectileCreation(plugin,player,actor.Pawn,designer,25,grenade=>{
                 grenade.DetonateTime=Server.CurrentTime+1.5f;
-                if(designer=="hegrenade_projectile"){grenade.Damage=60;grenade.DmgRadius=240;}
+                // Native blast damage cannot be enabled merely by having a loaded hook.
+                // If unload removal fails, the hook disappears while the entity remains.
+                // Keep inert damage until an independent resident authority can enforce
+                // custom-team policy through failed unload. Router retains the QA gate.
+                grenade.Damage=0;grenade.DmgRadius=0;
                 if(grenade is CSmokeGrenadeProjectile smoke){
                     smoke.SmokeColor.X=180;smoke.SmokeColor.Y=180;smoke.SmokeColor.Z=180;
                 }

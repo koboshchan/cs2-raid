@@ -263,6 +263,27 @@ for(var mask=0;mask<1024;mask++){
  else if(!Bit(9))expected=false;
  Check(NativeProjectileDamagePolicy.Allow(Bit(0),Bit(1),Bit(2),Bit(3),Bit(4),Bit(5),Bit(6),Bit(7),Bit(8),Bit(9))==expected);
 }
+// Session owns pre-ticket failures too, including cleanup throwing twice then recovering.
+var preTicketSession=new InterpretedAbilitySession(1,0);
+creation=new CreationMock(Ticket(830)){FailCreate=true,FailRemove=true};
+transaction=new NativeEntityTransaction(transactionEscrow,creation);
+Check(!preTicketSession.Activate(2008002,0,()=>true,
+ ()=>preTicketSession.EnactOwned(transaction.Activate,transaction.Dispose)));
+Check(preTicketSession.Quarantined);Check(preTicketSession.PendingCleanup==1);
+Check(creation.Exists(830));Check(!preTicketSession.Revoke());
+creation.FailRemove=false;Check(preTicketSession.Revoke());Check(!creation.Exists(830));
+Check(preTicketSession.PendingCleanup==0);
+// A returned entity with post-spawn error and failed remove is durably reconstructible.
+var spawnSession=new InterpretedAbilitySession(1,0);
+creation=new CreationMock(Ticket(831)){FailActivate=true,FailRemove=true};
+transaction=new NativeEntityTransaction(transactionEscrow,creation);
+Check(!spawnSession.Activate(2008002,0,()=>true,
+ ()=>spawnSession.EnactOwned(transaction.Activate,transaction.Dispose)));
+Check(spawnSession.PendingCleanup==1);Check(disk.Single().Serial==831);
+var nextOwner=new NativeEntityEscrow("map-A",disk,Save);
+creation.FailRemove=false;Check(nextOwner.Drain(creation));
+Check(disk.Count==0);Check(!creation.Exists(831));
+Check(spawnSession.Revoke());Check(spawnSession.PendingCleanup==0);
 Console.WriteLine($"{count} interpreted lifecycle checks PASS; router + lifecycle PASS; CSS calls compile, not native QA");
 sealed class Effect:IDisposable{public bool Disposed;public void Dispose()=>Disposed=true;}
 

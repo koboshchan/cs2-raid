@@ -8,7 +8,7 @@ public interface INativeEntityCreation:INativeEntityBoundary
     NativeEntityTicket CreateInert();
     // Creation implementations must retain their allocated handle before any marker write.
     // This hook covers exceptions before a complete ticket could be returned.
-    void CleanupIncompleteCreation() {}
+    void CleanupIncompleteCreation();
     void Activate(NativeEntityTicket ticket);
 }
 public sealed class NativeEntityTransaction(NativeEntityEscrow escrow,INativeEntityCreation native):IDisposable
