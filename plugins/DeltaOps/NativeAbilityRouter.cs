@@ -21,7 +21,7 @@ public static class NativeAbilityRouter
     public static string? Blocker(int op,int id) {
         if(!InterpretedR2.Skills.TryGetValue((op,id),out var s))return "Skill not in this operator's source rows (4008010 is missing).";
         if(s.Passive)return id switch {
-            20010201 or 20010215=>"Revive passive requires a downed/revive state; Raid death currently creates death outcomes, not a revivable pawn.",
+            20010201=>"Revive passive requires a downed/revive state; Raid death currently creates death outcomes, not a revivable pawn.",
             40010201=>"Tracking passive needs per-owner hit reveal ownership; global Glow leaks to every squad and is not safe.",
             1009004 or 10010301=>"Kinetic fall/recovery and ADS movement triggers need fall-damage classification and weapon-state semantics; no movement baseline ownership contract.",
             40010202=>"Footstep attenuation is client/audio-path behavior; player speed alone is not silent footsteps.",
@@ -31,12 +31,11 @@ public static class NativeAbilityRouter
             2008002 or 2008005 or 3008002 or 3008008 or 4009003=>"Native grenade grants disabled: pre-return grant and thrown-projectile ownership across revoke/unload is not verified.",
             20010101 or 2002017 or 1009001 or 1002016 or 3008001 or 4008002 or 4009002 or 30010101=>null,
 
-            1009002 or 1009005=>"Magnetic attachment, explosion and custom-team damage hooks unresolved; HE is not an equivalent substitute.",
+            1009005=>"Magnetic attachment, explosion and custom-team damage hooks unresolved; HE is not an equivalent substitute.",
             1009003=>"Tiger cannon projectile/damage rows unresolved; no native cannon entity.",
 
 
             4008007=>"No owned DF arrow projectile exists to remove.",
-            30010202 or 30010203=>"Repair/tool interaction target, rate and resource semantics unresolved.",
             _=>"No supported native adapter."};
     }
     public static IDisposable? Enact(int op,int id,INativeAbilityPort port) {

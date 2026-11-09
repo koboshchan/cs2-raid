@@ -1,3 +1,5 @@
+> Superseded mode binding and coverage counts: see ABILITY_SOL_BINDING_AUDIT-v1.md and ABILITY_SOL_VALUES.Generated.md. Raw r2 unchanged. Previous mixed-mode rows are evidence only, not executable SOL.
+
 # Authorized r2 interpretation, offline only
 
 Raw r2 is unchanged. Raid-mode slot rows are chosen, not MP/BombDefusal. This layer is interpreted, not a claim of DF-equivalent effects. Zero Max with weapon-count ammo is modeled as one ability token; no free unlimited casting. Init remains literal (0 starts charging). Seconds are inferred from Time and TimeRecoverSec field families. Non-CD skills receive a one-second anti-repeat guard, not an archive cooldown. Recharge is sequential, one token per Time; score/perk recovery is not implemented.

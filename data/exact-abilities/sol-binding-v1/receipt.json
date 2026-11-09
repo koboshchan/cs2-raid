@@ -1,0 +1,401 @@
+{
+  "version": 1,
+  "mode": "SOL",
+  "sourceSHA256": {
+    "fullR2": "eba371ead6334450f9e3d1b73ce22e539870de0fff29f8de2e5b19fdfd06b69b",
+    "fiveOperatorR2": "c80841bee9bf0d3d93452329921be736a8eb237fe7a495584159eac20a38d246"
+  },
+  "lua": {
+    "path": "D:/df-lua-decompile/decompiled/pak-0-0-pakchunk1-WindowsClient.pak/DeltaForce/Content/LuaSource/DFM/StandaloneLua/BusinessTool/SkillHelperTool.lua",
+    "sha256": "13c362877517d886b0f4363d562a4766e443f410f4c8eebce458be6c42b72432",
+    "lines": {
+      "heroExpert": [
+        10,
+        17
+      ],
+      "configBySkillID": [
+        179,
+        186
+      ],
+      "modeFields": [
+        213,
+        247
+      ],
+      "blastingOnly": [
+        249,
+        262
+      ],
+      "SOLGetter": [
+        265,
+        269
+      ],
+      "worldToSOL": [
+        138,
+        151
+      ]
+    }
+  },
+  "limitations": [
+    "Decompiled source, not proved semantic equivalence.",
+    "SOLCommonSkillID arrays are explicit source fields; GetSkillID suffix list only covers five main slots.",
+    "No SOLCustomSkillID is serialized. MPCustomSkillID and BombDefusal group are not SOL bindings.",
+    "Base SkillDataConfig package chosen per Lua table name; runtime package override precedence not proved.",
+    "Lua provides no cooldown or effect magnitudes; raw DataTable numbers remain evidence."
+  ],
+  "operators": [
+    {
+      "operator": 1,
+      "name": "Stinger",
+      "heroRow": "88000000027",
+      "heroPackage": "DeltaForce/Content/R13N/Common/Base/DataTables/Hero/HeroData.uasset",
+      "ExpertID": 20003,
+      "expertRow": "20003",
+      "expertPackage": "DeltaForce/Content/R13N/Global/Base/DataTables/Skill/ExpertSkillData.uasset",
+      "SOLFields": {
+        "SOLUltimateSkillID": 20010101,
+        "SOLSupportSkillID": 2008002,
+        "SOLActiveSkillID": 2008005,
+        "SOLPassiveSkillID": 20010201,
+        "SOLCommonPassiveSkillID": 0,
+        "SOLCommonSkillID": [
+          4008007,
+          4008010
+        ]
+      },
+      "bindings": [
+        {
+          "field": "SOLUltimateSkillID",
+          "SkillID": 20010101,
+          "package": "DeltaForce/Content/DataTables/Skill/SkillDataConfig.uasset",
+          "resolvedRowLabel": "20010101",
+          "missing": false
+        },
+        {
+          "field": "SOLSupportSkillID",
+          "SkillID": 2008002,
+          "package": "DeltaForce/Content/DataTables/Skill/SkillDataConfig.uasset",
+          "resolvedRowLabel": "2008002",
+          "missing": false
+        },
+        {
+          "field": "SOLActiveSkillID",
+          "SkillID": 2008005,
+          "package": "DeltaForce/Content/DataTables/Skill/SkillDataConfig.uasset",
+          "resolvedRowLabel": "2008005",
+          "missing": false
+        },
+        {
+          "field": "SOLPassiveSkillID",
+          "SkillID": 20010201,
+          "package": "DeltaForce/Content/DataTables/Skill/SkillDataConfig.uasset",
+          "resolvedRowLabel": "20010201",
+          "missing": false
+        },
+        {
+          "field": "SOLCommonSkillID",
+          "SkillID": 4008007,
+          "package": "DeltaForce/Content/DataTables/Skill/SkillDataConfig.uasset",
+          "resolvedRowLabel": "4008007",
+          "missing": false
+        },
+        {
+          "field": "SOLCommonSkillID",
+          "SkillID": 4008010,
+          "package": null,
+          "resolvedRowLabel": null,
+          "missing": true
+        }
+      ],
+      "excludedOldUnionIDs": [
+        20010215,
+        30010203
+      ],
+      "newIDs": [],
+      "rowLabelDiffers": []
+    },
+    {
+      "operator": 2,
+      "name": "Luna",
+      "heroRow": "88000000028",
+      "heroPackage": "DeltaForce/Content/R13N/Common/Base/DataTables/Hero/HeroData.uasset",
+      "ExpertID": 40005,
+      "expertRow": "40005",
+      "expertPackage": "DeltaForce/Content/R13N/Global/Base/DataTables/Skill/ExpertSkillData.uasset",
+      "SOLFields": {
+        "SOLUltimateSkillID": 2002017,
+        "SOLSupportSkillID": 4008002,
+        "SOLActiveSkillID": 3008002,
+        "SOLPassiveSkillID": 40010201,
+        "SOLCommonPassiveSkillID": 0,
+        "SOLCommonSkillID": [
+          4008007,
+          4008010
+        ]
+      },
+      "bindings": [
+        {
+          "field": "SOLUltimateSkillID",
+          "SkillID": 2002017,
+          "package": "DeltaForce/Content/DataTables/Skill/SkillDataConfig.uasset",
+          "resolvedRowLabel": "2002017",
+          "missing": false
+        },
+        {
+          "field": "SOLSupportSkillID",
+          "SkillID": 4008002,
+          "package": "DeltaForce/Content/DataTables/Skill/SkillDataConfig.uasset",
+          "resolvedRowLabel": "4008002",
+          "missing": false
+        },
+        {
+          "field": "SOLActiveSkillID",
+          "SkillID": 3008002,
+          "package": "DeltaForce/Content/DataTables/Skill/SkillDataConfig.uasset",
+          "resolvedRowLabel": "3008002",
+          "missing": false
+        },
+        {
+          "field": "SOLPassiveSkillID",
+          "SkillID": 40010201,
+          "package": "DeltaForce/Content/DataTables/Skill/SkillDataConfig.uasset",
+          "resolvedRowLabel": "40010201",
+          "missing": false
+        },
+        {
+          "field": "SOLCommonSkillID",
+          "SkillID": 4008007,
+          "package": "DeltaForce/Content/DataTables/Skill/SkillDataConfig.uasset",
+          "resolvedRowLabel": "4008007",
+          "missing": false
+        },
+        {
+          "field": "SOLCommonSkillID",
+          "SkillID": 4008010,
+          "package": null,
+          "resolvedRowLabel": null,
+          "missing": true
+        }
+      ],
+      "excludedOldUnionIDs": [
+        30010203
+      ],
+      "newIDs": [],
+      "rowLabelDiffers": []
+    },
+    {
+      "operator": 3,
+      "name": "Vyron",
+      "heroRow": "88000000025",
+      "heroPackage": "DeltaForce/Content/R13N/Common/Base/DataTables/Hero/HeroData.uasset",
+      "ExpertID": 10010,
+      "expertRow": "10010",
+      "expertPackage": "DeltaForce/Content/R13N/Global/Base/DataTables/Skill/ExpertSkillData.uasset",
+      "SOLFields": {
+        "SOLUltimateSkillID": 1009003,
+        "SOLSupportSkillID": 1009001,
+        "SOLActiveSkillID": 1009005,
+        "SOLPassiveSkillID": 1009004,
+        "SOLCommonPassiveSkillID": 10010301,
+        "SOLCommonSkillID": [
+          4008007,
+          4008010
+        ]
+      },
+      "bindings": [
+        {
+          "field": "SOLUltimateSkillID",
+          "SkillID": 1009003,
+          "package": "DeltaForce/Content/DataTables/Skill/SkillDataConfig.uasset",
+          "resolvedRowLabel": "1009003",
+          "missing": false
+        },
+        {
+          "field": "SOLSupportSkillID",
+          "SkillID": 1009001,
+          "package": "DeltaForce/Content/DataTables/Skill/SkillDataConfig.uasset",
+          "resolvedRowLabel": "1009001",
+          "missing": false
+        },
+        {
+          "field": "SOLActiveSkillID",
+          "SkillID": 1009005,
+          "package": "DeltaForce/Content/DataTables/Skill/SkillDataConfig.uasset",
+          "resolvedRowLabel": "1009005",
+          "missing": false
+        },
+        {
+          "field": "SOLPassiveSkillID",
+          "SkillID": 1009004,
+          "package": "DeltaForce/Content/DataTables/Skill/SkillDataConfig.uasset",
+          "resolvedRowLabel": "1009004",
+          "missing": false
+        },
+        {
+          "field": "SOLCommonPassiveSkillID",
+          "SkillID": 10010301,
+          "package": "DeltaForce/Content/DataTables/Skill/SkillDataConfig.uasset",
+          "resolvedRowLabel": "10010301",
+          "missing": false
+        },
+        {
+          "field": "SOLCommonSkillID",
+          "SkillID": 4008007,
+          "package": "DeltaForce/Content/DataTables/Skill/SkillDataConfig.uasset",
+          "resolvedRowLabel": "4008007",
+          "missing": false
+        },
+        {
+          "field": "SOLCommonSkillID",
+          "SkillID": 4008010,
+          "package": null,
+          "resolvedRowLabel": null,
+          "missing": true
+        }
+      ],
+      "excludedOldUnionIDs": [
+        1009002,
+        30010203
+      ],
+      "newIDs": [],
+      "rowLabelDiffers": []
+    },
+    {
+      "operator": 4,
+      "name": "Hackclaw",
+      "heroRow": "88000000026",
+      "heroPackage": "DeltaForce/Content/R13N/Common/Base/DataTables/Hero/HeroData.uasset",
+      "ExpertID": 40010,
+      "expertRow": "40010",
+      "expertPackage": "DeltaForce/Content/R13N/Global/Base/DataTables/Skill/ExpertSkillData.uasset",
+      "SOLFields": {
+        "SOLUltimateSkillID": 1002016,
+        "SOLSupportSkillID": 4009003,
+        "SOLActiveSkillID": 4009002,
+        "SOLPassiveSkillID": 40010202,
+        "SOLCommonPassiveSkillID": 0,
+        "SOLCommonSkillID": [
+          4008007,
+          4008010
+        ]
+      },
+      "bindings": [
+        {
+          "field": "SOLUltimateSkillID",
+          "SkillID": 1002016,
+          "package": "DeltaForce/Content/DataTables/Skill/SkillDataConfig.uasset",
+          "resolvedRowLabel": "1002016",
+          "missing": false
+        },
+        {
+          "field": "SOLSupportSkillID",
+          "SkillID": 4009003,
+          "package": "DeltaForce/Content/DataTables/Skill/SkillDataConfig.uasset",
+          "resolvedRowLabel": "4009003",
+          "missing": false
+        },
+        {
+          "field": "SOLActiveSkillID",
+          "SkillID": 4009002,
+          "package": "DeltaForce/Content/DataTables/Skill/SkillDataConfig.uasset",
+          "resolvedRowLabel": "4009002",
+          "missing": false
+        },
+        {
+          "field": "SOLPassiveSkillID",
+          "SkillID": 40010202,
+          "package": "DeltaForce/Content/DataTables/Skill/SkillDataConfig.uasset",
+          "resolvedRowLabel": "40010202",
+          "missing": false
+        },
+        {
+          "field": "SOLCommonSkillID",
+          "SkillID": 4008007,
+          "package": "DeltaForce/Content/DataTables/Skill/SkillDataConfig.uasset",
+          "resolvedRowLabel": "4008007",
+          "missing": false
+        },
+        {
+          "field": "SOLCommonSkillID",
+          "SkillID": 4008010,
+          "package": null,
+          "resolvedRowLabel": null,
+          "missing": true
+        }
+      ],
+      "excludedOldUnionIDs": [
+        30010203
+      ],
+      "newIDs": [],
+      "rowLabelDiffers": []
+    },
+    {
+      "operator": 5,
+      "name": "Shepherd",
+      "heroRow": "88000000029",
+      "heroPackage": "DeltaForce/Content/R13N/Common/Base/DataTables/Hero/HeroData.uasset",
+      "ExpertID": 30008,
+      "expertRow": "30008",
+      "expertPackage": "DeltaForce/Content/R13N/Global/Base/DataTables/Skill/ExpertSkillData.uasset",
+      "SOLFields": {
+        "SOLUltimateSkillID": 30010101,
+        "SOLSupportSkillID": 3008001,
+        "SOLActiveSkillID": 3008008,
+        "SOLPassiveSkillID": 30010201,
+        "SOLCommonPassiveSkillID": 0,
+        "SOLCommonSkillID": [
+          4008007,
+          4008010
+        ]
+      },
+      "bindings": [
+        {
+          "field": "SOLUltimateSkillID",
+          "SkillID": 30010101,
+          "package": "DeltaForce/Content/DataTables/Skill/SkillDataConfig.uasset",
+          "resolvedRowLabel": "30010101",
+          "missing": false
+        },
+        {
+          "field": "SOLSupportSkillID",
+          "SkillID": 3008001,
+          "package": "DeltaForce/Content/DataTables/Skill/SkillDataConfig.uasset",
+          "resolvedRowLabel": "3008001",
+          "missing": false
+        },
+        {
+          "field": "SOLActiveSkillID",
+          "SkillID": 3008008,
+          "package": "DeltaForce/Content/DataTables/Skill/SkillDataConfig.uasset",
+          "resolvedRowLabel": "3008008",
+          "missing": false
+        },
+        {
+          "field": "SOLPassiveSkillID",
+          "SkillID": 30010201,
+          "package": "DeltaForce/Content/DataTables/Skill/SkillDataConfig.uasset",
+          "resolvedRowLabel": "30010201",
+          "missing": false
+        },
+        {
+          "field": "SOLCommonSkillID",
+          "SkillID": 4008007,
+          "package": "DeltaForce/Content/DataTables/Skill/SkillDataConfig.uasset",
+          "resolvedRowLabel": "4008007",
+          "missing": false
+        },
+        {
+          "field": "SOLCommonSkillID",
+          "SkillID": 4008010,
+          "package": null,
+          "resolvedRowLabel": null,
+          "missing": true
+        }
+      ],
+      "excludedOldUnionIDs": [
+        30010202
+      ],
+      "newIDs": [],
+      "rowLabelDiffers": []
+    }
+  ]
+}

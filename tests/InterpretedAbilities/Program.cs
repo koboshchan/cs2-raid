@@ -1,7 +1,18 @@
 using DeltaOps;
 int count=0;
 void Check(bool x){count++;if(!x)throw new Exception($"check {count}");}
-Check(InterpretedR2.Skills.Count==33);
+Check(InterpretedR2.Skills.Count==26);
+foreach(var excluded in new[]{(1,20010215),(1,30010203),(2,30010203),(3,1009002),(3,30010203),(4,30010203),(5,30010202)}){
+ Check(!InterpretedR2.Skills.ContainsKey(excluded));
+ var rejectedPort=new FakePort();
+ Check(NativeAbilityRouter.Enact(excluded.Item1,excluded.Item2,rejectedPort)==null);
+ Check(rejectedPort.Calls==0);
+ var excludedSession=new InterpretedAbilitySession(excluded.Item1,0);
+ Check(!excludedSession.Activate(excluded.Item2,999999,()=>true,()=>new Effect()));
+}
+Check(InterpretedR2.Skills[(3,1009005)].CdId==16);
+Check(!InterpretedR2.Skills.ContainsKey((3,1009002)));
+Check(InterpretedR2.Skills.Values.Count(s=>s.Passive)==6);
 foreach(var s in InterpretedR2.Skills.Values){
  var c=new AbilityCharge(s,1000);Check(c.Available==Math.Clamp(s.Initial,0,s.Capacity));
  c.Advance(1000+c.Period*100);Check(c.Available==c.Capacity);
