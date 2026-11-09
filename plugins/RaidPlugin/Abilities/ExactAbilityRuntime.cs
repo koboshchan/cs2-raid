@@ -23,7 +23,7 @@ public sealed class ExactAbilityAdapters
 // Single-threaded state machine; caller owns admission, lifecycle delivery and monotonic clock.
 public sealed class ExactAbilityRuntime
 {
-    private sealed class SkillState { public int? Remaining; public TimeSpan Ready; public TimeSpan End; public IDisposable? Effect; public bool Active; }
+    private sealed class SkillState { public int? Remaining; public TimeSpan Ready; public TimeSpan End; public IDisposable? Effect; public bool Active; public bool Disposing; }
     private sealed class PlayerState
     {
         public required AbilityActor Actor; public required string Operator;
@@ -64,14 +64,16 @@ public sealed class ExactAbilityRuntime
         if (!player.Skills.TryGetValue(skillId, out var state)) return "skill not selected";
         var blocker = catalog.ActivationBlocker(skillId); if (blocker != null) return blocker;
         if (!Now(out var now)) return "clock regressed";
+        player.Busy = true;
+        try {
         if (!Expire(player, state, now)) return "cleanup failed";
+        if (player.Quarantined || !players.TryGetValue(actor.PlayerId, out var afterExpiry) || afterExpiry != player) return "actor revoked during expiry";
         if (state.Active || now < state.Ready || state.Remaining == 0) return "skill unavailable";
         var skill = catalog.Skill(skillId);
         if (!adapters.Find(skill.AdapterKey!, out var adapter)) return "adapter unavailable";
         TimeSpan ready, end;
         try { ready = now + TimeSpan.FromTicks(checked((long)(skill.Cooldown.Value!.Value * TimeSpan.TicksPerSecond))); end = now + TimeSpan.FromTicks(checked((long)(skill.Duration.Value!.Value * TimeSpan.TicksPerSecond))); }
         catch (OverflowException) { return "timing overflow"; }
-        player.Busy = true;
         try {
             if (!adapter.TryActivate(actor, skill, out var effect)) {
                 // A rejected adapter must not return ownership; clean it if it violates the contract.
@@ -79,14 +81,14 @@ public sealed class ExactAbilityRuntime
                 return "adapter rejected";
             }
             state.Effect = effect;
-            if (!Fence(actor) || !players.TryGetValue(actor.PlayerId, out var current) || current != player || !Allowed(actor)) {
+            if (!Fence(actor) || !players.TryGetValue(actor.PlayerId, out var current) || current != player || player.Quarantined || !Allowed(actor)) {
                 Cleanup(player, state); return "actor revoked during activation";
             }
             state.Active = true; state.Ready = ready; state.End = end;
             if (state.Remaining != null) state.Remaining--;
             return null;
         } catch { player.Quarantined = true; Cleanup(player, state); return "adapter failed; actor quarantined"; }
-        finally { player.Busy = false; }
+        } finally { player.Busy = false; }
     }
     public void Tick()
     {
@@ -128,8 +130,11 @@ public sealed class ExactAbilityRuntime
     private static bool Cleanup(PlayerState p, SkillState s)
     {
         s.Active = false;
+        if (s.Disposing) return false; // Reentrant cleanup never disposes the same handle twice.
         if (s.Effect == null) return true;
+        s.Disposing = true;
         try { s.Effect.Dispose(); s.Effect = null; return true; }
         catch { p.Quarantined = true; return false; }
+        finally { s.Disposing = false; }
     }
 }

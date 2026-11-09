@@ -99,18 +99,44 @@ var blockedActor = new AbilityActor(30,333,blocked.Generation); Check(blocked.Se
 var before = fake.Calls; Check(blocked.Activate(blockedActor,skill.SkillId)!=null); Check(fake.Calls==before);
 var denied = new ExactAbilityRuntime(copied,adapters,new FakeClock(),_=>throw new Exception());
 Check(!denied.Select(new(50,500,denied.Generation),op.OperatorId));
+
+var reentrantAdapter = new FakeAdapter(); var reentrantAdapters = new ExactAbilityAdapters();
+reentrantAdapters.Register("synthetic-adapter",reentrantAdapter);
+var reentrantClock = new FakeClock();
+var reentrant = new ExactAbilityRuntime(copied,reentrantAdapters,reentrantClock,_=>true);
+var reentrantActor = new AbilityActor(60,600,reentrant.Generation);
+Check(reentrant.Select(reentrantActor,op.OperatorId));
+reentrantAdapter.OnActivate=()=>reentrant.Death(reentrantActor);
+Check(reentrant.Activate(reentrantActor,skill.SkillId)!=null);
+Check(reentrantAdapter.Disposals==1); Check(reentrant.MapEnd());
+reentrantActor=reentrantActor with {Generation=reentrant.Generation};
+Check(reentrant.Select(reentrantActor,op.OperatorId)); reentrantAdapter.OnActivate=null;
+Check(reentrant.Activate(reentrantActor,skill.SkillId)==null);
+reentrantAdapter.OnDispose=()=>reentrant.Revoke(reentrantActor);
+reentrant.Death(reentrantActor); Check(reentrantAdapter.Disposals==2); Check(reentrant.MapEnd());
+reentrantAdapter.OnDispose=null;
+reentrantActor=reentrantActor with {Generation=reentrant.Generation};
+Check(reentrant.Select(reentrantActor,op.OperatorId));
+Check(reentrant.Activate(reentrantActor,skill.SkillId)==null);
+string? nestedResult=null;
+reentrantAdapter.OnDispose=()=>nestedResult=reentrant.Activate(reentrantActor,skill.SkillId);
+reentrantClock.Elapsed=TimeSpan.FromSeconds(7);
+Check(reentrant.Activate(reentrantActor,skill.SkillId)==null);
+Check(nestedResult!=null); Check(reentrantAdapter.Calls==4);
+reentrantAdapter.OnDispose=null; Check(reentrant.MapEnd());
+
 Console.WriteLine($"{checks} exact ability scaffold checks passed; synthetic data only.");
 
 sealed class FakeClock : IAbilityClock { public TimeSpan Elapsed {get;set;} }
 sealed class FakeAdapter : IExactAbilityAdapter
 {
-    public int Calls,Disposals; public bool Fail,Throw,DisposeFails;
+    public Action? OnActivate,OnDispose; public int Calls,Disposals; public bool Fail,Throw,DisposeFails;
     public bool TryActivate(AbilityActor actor,AbilityDefinition skill,out IDisposable? effect) {
         Calls++; effect=null; if(Throw)throw new Exception("synthetic failure");
         if(Fail)return false;
-        effect=new Effect(this);return true;
+        OnActivate?.Invoke(); effect=new Effect(this);return true;
     }
     private sealed class Effect(FakeAdapter owner) : IDisposable {
-        public void Dispose() { if(owner.DisposeFails)throw new Exception("synthetic cleanup failure"); owner.Disposals++; }
+        public void Dispose() { if(owner.DisposeFails)throw new Exception("synthetic cleanup failure"); owner.Disposals++; owner.OnDispose?.Invoke(); }
     }
 }
