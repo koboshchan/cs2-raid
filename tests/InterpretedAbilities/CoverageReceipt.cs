@@ -33,10 +33,16 @@ static class CoverageReceipt
   var rows=InterpretedR2.Skills.Values.OrderBy(s=>s.Operator).ThenBy(s=>s.Id).Select(s=>new{
    s.Operator,s.Id,s.Name,s.CdId,s.Initial,s.Capacity,s.RechargeSeconds,s.Passive,
    Calls=Calls(s.Id), Approximation=Approximation(s.Id),
+   DfBehaviorEvidence=s.Id switch{
+    30010201=>"allSerializedFields.DamgeCoifficient[0]={fModifyRateExplodeDamage:0.7,fModifyRateAbilitAssault:1.0,LimitPlayMode:[]}",
+    40010201=>"allSerializedFields.AddBuffs=[8011,100008]; bEnableSniperMark=true; bOverrideAimingCheck=true; TeamPlayerIcon.AssetPathName=None; trigger and squad scope unresolved",
+    1009004=>"allSerializedFields.AddSkills=[1009001]; AddBuffs=[303016,8013]; UseCustomHeight=true; decoded buff effects unavailable",
+    _=>"Literal allSerializedFields retained in raw r2; full runtime behavior not recovered"
+   },
    Evidence="DFPROVEN PC SOL mapping and literal imported fields; all other adapter mechanics CS2ASSUMPTION unless individually cited; wiki only LOWCONFIDENCE hint",
    Binding="PC SOL; sol-binding-v1/receipt.json; raw r2 immutable",
    Values="docs/ABILITY_SOL_VALUES.Generated.md; effect magnitude tuning is separate CS2 interpretation",
-   Adapter=NativeAbilityRouter.Blocker(s.Operator,s.Id)==null?"offline interpretation implemented":"blocked/incomplete",
+   Adapter=NativeAbilityRouter.Blocker(s.Operator,s.Id)==null?"partial experimental adapter available; NOT full DF effect completion":"blocked/incomplete",
    Blocker=NativeAbilityRouter.Blocker(s.Operator,s.Id),
    NativeAcceptance=false
   }).ToArray();
