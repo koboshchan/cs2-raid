@@ -25,6 +25,8 @@ public sealed class InterpretedAbilitySession(int operatorId, long now)
             Quarantined=true;return false;
         }
     }
+    public int Available(int skill,long at){if(!charges.TryGetValue(skill,out var c))return 0;c.Advance(at);return c.Available;}
+    public void Quarantine()=>Quarantined=true;
     public bool Revoke()
     {
         Alive=false;

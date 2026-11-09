@@ -136,3 +136,69 @@ Raw r2 is unchanged. Raid-mode slot rows are chosen, not MP/BombDefusal. This la
 | 30010202/Init | absent | 1 | Raid slot count, high if present; absent=one adapter token |
 | 30010202/Max | absent | 1 | literal count except 0=weapon-backed one token, medium |
 | 30010202/Time | absent | 1 seconds | SlotChargingData.Time + TimeRecoverSec, medium; absent uses explicit UseCD or one second adapter guard |
+
+## Executable offline CS2 ports
+
+UseInterpretedAbilities defaults true in source. This is NOT deployed configuration.
+V/X route to explicit source IDs; !ability <id> exposes other source abilities. !cd
+reports imported charges. Shared IDs use (operator, skill), never a global ID key.
+Old handlers remain available only with UseInterpretedAbilities=false. Imported mode
+bypasses legacy passives, damage/blind/grenade handlers, cooking, shared V/X cooldowns
+and legacy tick effects. Fixture-v2 remains deliberately unaccepted and unavailable;
+this work does not waive its independent native acceptance requirements.
+
+Actual CSS implementations live in NativeAbilityPorts.cs, not the synthetic router.
+Stinger 20010101 writes Health and replicates m_iHealth; self-heal only, no revive or
+aimed hormone projectile. 2008002/2008005 grant a native smoke grenade using
+GiveNamedItem<CBasePlayerWeapon>; native throw/fuse/smoke, not a DF healing hive.
+Luna 2002017 and Hackclaw 1002016 use current pawn origins and custom-enemy policy,
+then owner-only PrintToChat contact telemetry. These are instantaneous no-LOS scans,
+not arrow flight, persistent tracking, team outlines or a deciphering animation.
+Luna 3008002 and Shepherd 3008008 grant a native HE; raid-mode HE delivery is BLOCKED
+until native grenade custom-team damage enforcement is verified, with no token spent.
+Hackclaw 4009003 grants a native flashbang, not an autonomous tracking drone.
+Vyron 1009001 calls pawn.Teleport with velocity only and preserved Z velocity.
+No origin teleport, collision disable, vertical launch or timed collision restoration.
+Shepherd 3008001 installs a game-thread proximity trap, checks custom enemy policy,
+writes/replicates VelocityModifier once, and restores the prior value after slow/end.
+It is an invisible local sensor, not an explosion, rendered device or destructible prop.
+It avoids stacking and uses serial-pawn and compare-before-restore guards; other plugins
+writing identical modifier values still cannot be distinguished by engine properties.
+
+NativePorts configuration defaults are explicit CS2 balancing choices, NOT decoded
+DF magnitudes: HealHp25; ReconRadiusSourceUnits1200; RushSpeedSourceUnits400;
+TrapRadiusSourceUnits160, TrapLifetimeSeconds30, TrapSlowSeconds2,
+TrapVelocityModifier0.5. All adapters validate numeric bounds before touching CSS.
+RushData's partially typed 1000cm/1s evidence is NOT silently converted to these values.
+Smoke, HE and flash engine radius/fuse/effect duration are stock CS2 and are not exact
+DF values. No legacy Config damage, scan, movement or cooldown values are reused.
+
+Blockers are per ability, visible to !ability and !cd. Luna4008002 needs electric
+projectile/status/damage rows and safe native damage path. Vyron1009002/1009005 needs
+magnetic attachment and explosion data, 1009003 cannon projectile/damage. Hackclaw
+4009002 needs knife projectile/electronic suppression rows. Shepherd30010101 needs
+sonic destruction/damage definitions. Passives need actual Buff rows (e.g.8009,
+8011/100008,303016/8013,100020/202001,401001/8010), triggers and magnitudes, not just
+AddBuffs IDs. 4008007 has no owned arrow to remove. 30010202/30010203 need repair
+target/resource/rate semantics. 4008010 is missing altogether. These reject and spend
+nothing; they do not stop supported skills of the same operator.
+
+Sessions retain charges through death/disconnect/pawn replacement and prevent
+operator switching to replenish resources. Serial pawn changes revoke owned effects
+before rebinding. Raid phase loss revokes effects without resetting charges. Only
+full caller-owned reset clears successful-cleanup sessions; standalone round reset is
+explicit. Native exceptions quarantine the actor, failed cleanup retains ownership for
+retry. Granted weapon handles use full entity serials, including dropped grants, and
+are removed at lifecycle end; converted in-flight grenade projectiles remain engine-
+owned and are NOT proven cancellable by weapon removal. Do not treat these grants as
+accepted for fixture-v2 or claim strict projectile rollback. Trap has no external timer;
+tick polls are removed on cleanup. Instant health/recon/velocity are committed actions,
+not undone on lifecycle revoke. No live reload/config toggle acceptance tested.
+
+Offline verification: tests/InterpretedAbilities has 234 focused routing/token/cleanup
+checks, including every imported skill, operator-slot mappings, cross-operator denial,
+transactional rejection, exception quarantine and failed-cleanup retry. These use fake
+ports and do not pretend to execute native CSS. The complete DeltaOps DLL compiles
+against installed CSS API with zero warnings/errors. Live/native gameplay, client
+visuals, drop/throw/projectile lifecycle, custom-team damage and concurrency with
+other movement plugins remain unverified. No live load/restart/push authorized here.

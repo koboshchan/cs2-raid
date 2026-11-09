@@ -5,6 +5,8 @@ namespace DeltaOps;
 
 public sealed class DeltaOpsConfig : BasePluginConfig
 {
+    public bool UseInterpretedAbilities {get;set;} = true;
+    public NativePortTuning NativePorts {get;set;} = new();
     [JsonPropertyName("SelectionSeconds")]
     public int SelectionSeconds { get; set; } = 120;
 

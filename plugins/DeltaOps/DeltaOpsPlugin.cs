@@ -309,6 +309,7 @@ public sealed partial class DeltaOpsPlugin : BasePlugin, IPluginConfig<DeltaOpsC
     {
         if (_fixtureMode) return HookResult.Continue;
         _roundNumber++;
+        if(Config.UseInterpretedAbilities && !_raidMode)ResetNative();
         ClearTemporarySpeedEffects();
         ClearAllLunaDots();
         ClearAllArmedGrenades();
@@ -330,7 +331,7 @@ public sealed partial class DeltaOpsPlugin : BasePlugin, IPluginConfig<DeltaOpsC
             {
                 ApplyPassive(player, state.Operator.Value);
                 player.PrintToCenter(
-                    $"干员 {GetOperator(state.Operator.Value).Name}：V / X 冷却已重置");
+                    Config.UseInterpretedAbilities?"r2 CS2 ports; source charges independent of legacy cooldowns.":$"干员 {GetOperator(state.Operator.Value).Name}：V / X 冷却已重置");
             }
         }
 
@@ -340,6 +341,7 @@ public sealed partial class DeltaOpsPlugin : BasePlugin, IPluginConfig<DeltaOpsC
     private HookResult OnRoundEnd(EventRoundEnd @event, GameEventInfo info)
     {
         ClearTemporarySpeedEffects();
+        if(_raidMode){foreach(var a in _nativeActors.Values)a.Session.Revoke();}else ResetNative();
         ClearAllOutlines();
         ClearAllLunaDots();
         ClearAllArmedGrenades();
@@ -355,6 +357,7 @@ public sealed partial class DeltaOpsPlugin : BasePlugin, IPluginConfig<DeltaOpsC
         if (IsCombatController(victim))
         {
             var victimKey = GetPlayerKey(victim!);
+            RevokeNative(victimKey);
             ClearOutline(victimKey);
             CancelArmedGrenade(victimKey);
             ClearControl(victimKey);
@@ -372,6 +375,7 @@ public sealed partial class DeltaOpsPlugin : BasePlugin, IPluginConfig<DeltaOpsC
 
     private HookResult OnPlayerHurt(EventPlayerHurt @event, GameEventInfo info)
     {
+        if(Config.UseInterpretedAbilities)return HookResult.Continue;
         var attacker = @event.Attacker;
         var victim = @event.Userid;
         if (attacker == null || victim == null ||
@@ -405,6 +409,7 @@ public sealed partial class DeltaOpsPlugin : BasePlugin, IPluginConfig<DeltaOpsC
 
     private HookResult OnHegrenadeDetonate(EventHegrenadeDetonate @event, GameEventInfo info)
     {
+        if(Config.UseInterpretedAbilities)return HookResult.Continue;
         var owner = @event.Userid;
         if (owner == null || !IsHumanController(owner))
         {
@@ -435,6 +440,7 @@ public sealed partial class DeltaOpsPlugin : BasePlugin, IPluginConfig<DeltaOpsC
 
     private HookResult OnPlayerBlind(EventPlayerBlind @event, GameEventInfo info)
     {
+        if(Config.UseInterpretedAbilities)return HookResult.Continue;
         var attacker = @event.Attacker;
         var victim = @event.Userid;
         if (!IsHumanController(attacker) || !IsCombatController(victim) ||
@@ -456,6 +462,7 @@ public sealed partial class DeltaOpsPlugin : BasePlugin, IPluginConfig<DeltaOpsC
 
     private void OnTick()
     {
+        if(Config.UseInterpretedAbilities){TickNative();return;}
         var now = Environment.TickCount64;
         if (now < _nextGrenadePollMs)
         {
@@ -520,6 +527,7 @@ public sealed partial class DeltaOpsPlugin : BasePlugin, IPluginConfig<DeltaOpsC
 
     private HookResult OnGrenadeThrown(EventGrenadeThrown @event, GameEventInfo info)
     {
+        if(Config.UseInterpretedAbilities)return HookResult.Continue;
         var player = @event.Userid;
         if (player == null || !IsHumanController(player))
         {
@@ -678,6 +686,7 @@ public sealed partial class DeltaOpsPlugin : BasePlugin, IPluginConfig<DeltaOpsC
         }
 
         var key = GetPlayerKey(player);
+        RevokeNative(key);
         ClearTemporarySpeed(key, applyBaseSpeed: false);
         StopLunaDot(key);
         CancelArmedGrenade(key);
@@ -775,9 +784,14 @@ public sealed partial class DeltaOpsPlugin : BasePlugin, IPluginConfig<DeltaOpsC
 
         var definition = GetOperator(state.Operator.Value);
         player.PrintToChat($" [三角洲模式] {definition.Name} / {definition.EnglishName} | {definition.Role}");
+        if(Config.UseInterpretedAbilities){
+            player.PrintToChat($" [r2 CS2 ports] V={NativeAbilityRouter.Slot((int)definition.Id,true)}, X={NativeAbilityRouter.Slot((int)definition.Id,false)}; !ability <source ID>. Unsupported effects reject without spending. Passives disabled.");
+            return;
+        }
         player.PrintToChat($" [V] {definition.VName}: {definition.VDescription}");
         player.PrintToChat($" [X] {definition.XName}: {definition.XDescription}");
         player.PrintToChat($" [被动] {definition.PassiveName}: {definition.PassiveDescription}");
+        if(Config.UseInterpretedAbilities){PrintNativeStatus(player,(int)state.Operator.Value);return;}
         PrintCooldownStatus(player, state);
     }
 
@@ -798,6 +812,7 @@ public sealed partial class DeltaOpsPlugin : BasePlugin, IPluginConfig<DeltaOpsC
             return;
         }
 
+        if(Config.UseInterpretedAbilities){PrintNativeStatus(player,(int)state.Operator.Value);return;}
         PrintCooldownStatus(player, state);
     }
 
@@ -1028,6 +1043,8 @@ public sealed partial class DeltaOpsPlugin : BasePlugin, IPluginConfig<DeltaOpsC
             return;
         }
 
+        if (Config.UseInterpretedAbilities) { UseNativeAbility(player,NativeAbilityRouter.Slot((int)state.Operator.Value,useV)); return; }
+
         var remainingSeconds = GetCooldownRemainingSeconds(state, useV);
         if (remainingSeconds > 0)
         {
@@ -1134,6 +1151,10 @@ public sealed partial class DeltaOpsPlugin : BasePlugin, IPluginConfig<DeltaOpsC
 
     private void PrintRoleList(CCSPlayerController player, bool includeDescriptions)
     {
+        if(Config.UseInterpretedAbilities){
+            foreach(var role in _operators) player.PrintToChat($" {StableOperatorIdentity.Wire((int)role.Id)}. {role.Name} ({role.EnglishName}); V={NativeAbilityRouter.Slot((int)role.Id,true)} X={NativeAbilityRouter.Slot((int)role.Id,false)}; !ability <ID>; CS2 ports, passives blocked.");
+            return;
+        }
         player.PrintToChat(" [三角洲模式] 选择干员：!characterselect <2-6>");
         for (var i = 0; i < _operators.Count; i++)
         {
@@ -1160,6 +1181,7 @@ public sealed partial class DeltaOpsPlugin : BasePlugin, IPluginConfig<DeltaOpsC
         if (_fixtureMode || _raidMode && !_bridgeAssigning) return;
         var state = GetOrCreateState(player, key);
         if (state.SelectionRetired) return; // Explicit global reset required, never migrate to another identity.
+        if(Config.UseInterpretedAbilities && _nativeActors.TryGetValue(key,out var existing) && existing.Session.Operator!=(int)definition.Id)return;
         if (state.Operator.HasValue && state.Operator.Value != definition.Id)
         {
             ResetOperatorForSwitch(player, key, state);
@@ -1170,6 +1192,7 @@ public sealed partial class DeltaOpsPlugin : BasePlugin, IPluginConfig<DeltaOpsC
         state.Operator = definition.Id;
         ResetSkillCooldowns(state);
         ApplyPassive(player, definition.Id);
+        if(Config.UseInterpretedAbilities)NativeActorFor(player,(int)definition.Id);
         ShowSkillBindingHelp(player);
 
         player.PrintToChat(
@@ -2366,6 +2389,7 @@ public sealed partial class DeltaOpsPlugin : BasePlugin, IPluginConfig<DeltaOpsC
 
     private void ApplyPassive(CCSPlayerController player, OperatorId operatorId)
     {
+        if(Config.UseInterpretedAbilities)return; // No guessed legacy HP/speed/armor or Luna flash grants.
         var pawn = player.PlayerPawn.Value;
         if (!IsHumanController(player) || !player.PawnIsAlive ||
             pawn == null || !pawn.IsValid)
@@ -2775,6 +2799,7 @@ public sealed partial class DeltaOpsPlugin : BasePlugin, IPluginConfig<DeltaOpsC
 
     private void ResetAllPlayersAndState(string reason, bool broadcast)
     {
+        ResetNative();
         ClearAllOutlines();
         ClearAllLunaDots();
         ClearAllArmedGrenades();
