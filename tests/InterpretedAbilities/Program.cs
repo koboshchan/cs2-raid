@@ -424,8 +424,8 @@ foreach(var sk in InterpretedR2.Skills.Values) {
 }
 
 // A stale captured baseline cannot authorize replacing another writer's scalar.
-foreach(var stale in new[]{0.8f,float.NaN}) {
- float actual=stale;int changes=0;
+foreach(var staleBaseline in new[]{0.8f,float.NaN}) {
+ float actual=staleBaseline;int changes=0;
  var guarded=new NativeStatusLease(()=>true,()=>actual,v=>{actual=v;changes++;},()=>{},1,.5f);
  try{guarded.Apply();Check(false);}catch(InvalidOperationException){Check(true);}
  guarded.Dispose();Check(changes==0);
