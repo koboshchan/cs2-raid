@@ -43,7 +43,7 @@ public sealed partial class DeltaOpsPlugin
     private readonly List<Action> _nativeTicks=[];
     private readonly Dictionary<uint,int> _nativeSuppressed=[];
     private bool NativeAdmission(CCSPlayerController p,uint controller,uint pawn)=>
-        Config.UseInterpretedAbilities && EntityWorldReady() && !_fixtureMode && !_nativeSuppressed.ContainsKey(pawn) && IsHumanController(p) && p.EntityHandle.Raw==controller && p.PawnIsAlive &&
+        NativeApiEvidenceComplete && Config.UseInterpretedAbilities && EntityWorldReady() && !_fixtureMode && !_nativeSuppressed.ContainsKey(pawn) && IsHumanController(p) && p.EntityHandle.Raw==controller && p.PawnIsAlive &&
         p.PlayerPawn.Value is {IsValid:true} body && body.EntityHandle.Raw==pawn && (!_raidMode||RaidActive(p.SteamID));
 
     private NativeActor? NativeActorFor(CCSPlayerController p,int op)

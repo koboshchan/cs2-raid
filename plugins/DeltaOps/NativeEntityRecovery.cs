@@ -32,6 +32,8 @@ public sealed partial class DeltaOpsPlugin
     private void InitializeEntityRecovery(bool witnessedNewMap=false)
     {
         _entityRecoveryReady=false;
+        // Audit gate also covers anchor allocation before ability admission.
+        if(!NativeApiEvidenceComplete)return;
         try{
             var saved=EntityStore.Read(); // Corruption/IO failure never enables grants.
             var process=EntityProcessIdentity();var boundary=new CssEntityBoundary();

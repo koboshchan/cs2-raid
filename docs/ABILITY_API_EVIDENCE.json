@@ -1,0 +1,247 @@
+{
+  "status": "INCOMPLETE FAIL CLOSED",
+  "sourceCheckout": "f58e383b0553be16c0f8c6dd68a8194de17691e9",
+  "installedVersionMatch": "NOT PROVEN",
+  "boundaries": [
+    {
+      "symbol": "Utilities.CreateEntityByName<T>(string)",
+      "source": "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Utilities.cs#L59",
+      "version": "v1.0.379",
+      "commit": "f58e383b0553be16c0f8c6dd68a8194de17691e9",
+      "verification": "source declaration/implementation read; not engine acceptance",
+      "contract": "Calls UTIL_CreateEntityByName(name,-1), wraps returned pointer. Generic constraint CBaseEntity.",
+      "unproved": "Does not establish classname/subclass correctness, inertness, pre-spawn safety or native allocation failure behavior.",
+      "disabled": true
+    },
+    {
+      "symbol": "CBaseEntity.DispatchSpawn()",
+      "source": "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Core/Model/CBaseEntity.cs#L70",
+      "version": "v1.0.379",
+      "commit": "f58e383b0553be16c0f8c6dd68a8194de17691e9",
+      "verification": "source declaration/implementation read; not engine acceptance",
+      "contract": "Valid entity guard then NativeAPI.DispatchSpawn(handle,zero).",
+      "unproved": "No guarantee marker or damage fields survive spawn; reentry and pre-spawn configuration require engine/source proof.",
+      "disabled": true
+    },
+    {
+      "symbol": "CBaseEntity.Teleport(Vector?,QAngle?,Vector?)",
+      "source": "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Core/Model/CBaseEntity.cs#L15",
+      "version": "v1.0.379",
+      "commit": "f58e383b0553be16c0f8c6dd68a8194de17691e9",
+      "verification": "source declaration/implementation read; not engine acceptance",
+      "contract": "Nullable position/angle/velocity forwarded; at least one specified. Guard checks valid entity.",
+      "unproved": "Velocity-only signature is valid; no proof of dash movement/collision/knockback outcomes or unchanged position in all engine cases.",
+      "disabled": true
+    },
+    {
+      "symbol": "CEntityInstance.Remove()",
+      "source": "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Core/Model/CEntityInstance.cs#L35",
+      "version": "v1.0.379",
+      "commit": "f58e383b0553be16c0f8c6dd68a8194de17691e9",
+      "verification": "source declaration/implementation read; not engine acceptance",
+      "contract": "Valid guard then UTIL_Remove(handle).",
+      "unproved": "Does not promise synchronous invalidation; immediate IsValid check is conservative pending, not proof of failed engine removal.",
+      "disabled": true
+    },
+    {
+      "symbol": "CEntityInstance.AddEntityIOEvent",
+      "source": "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Core/Model/CEntityInstance.cs#L104",
+      "version": "v1.0.379",
+      "commit": "f58e383b0553be16c0f8c6dd68a8194de17691e9",
+      "verification": "source declaration/implementation read; not engine acceptance",
+      "contract": "inputName,activator,caller,value,delay seconds,outputId; forwarded to native queue.",
+      "unproved": "Exact Kill input support, serial-safe deferred target retention, delivery after unload and map transition not proved. No unload-expiry guarantee.",
+      "disabled": true
+    },
+    {
+      "symbol": "CEntityInstance.IsValid/DesignerName",
+      "source": "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Core/Model/CEntityInstance.cs#L26",
+      "version": "v1.0.379",
+      "commit": "f58e383b0553be16c0f8c6dd68a8194de17691e9",
+      "verification": "source declaration/implementation read; not engine acceptance",
+      "contract": "Handle validity plus nonzero pointer; DesignerName reads identity if valid.",
+      "unproved": "Not thread-safety or immunity to stale handle reuse; marker/class/process guards remain app-level assumptions.",
+      "disabled": true
+    },
+    {
+      "symbol": "CHandle<T>(uint),Raw,Value/Get",
+      "source": "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Modules/Utils/CHandle.cs#L49",
+      "version": "v1.0.379",
+      "commit": "f58e383b0553be16c0f8c6dd68a8194de17691e9",
+      "verification": "source declaration/implementation read; not engine acceptance",
+      "contract": "Raw uint includes index+serial; Get resolves EntitySystem by handle and constructs wrapper. Raw setter may write backing memory.",
+      "unproved": "Lifetime must remain within valid native entity; no persistent-global identity across map/server restart.",
+      "disabled": true
+    },
+    {
+      "symbol": "CEntityIdentity.Name",
+      "source": "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Generated/Schema/Classes/CEntityIdentity.g.cs#L27",
+      "version": "v1.0.379",
+      "commit": "f58e383b0553be16c0f8c6dd68a8194de17691e9",
+      "verification": "source declaration/implementation read; not engine acceptance",
+      "contract": "Schema string getter/setter for m_name.",
+      "unproved": "Random marker persistence through spawn/map changes not promised; constructor and aliasing still native contracts.",
+      "disabled": true
+    },
+    {
+      "symbol": "CBaseGrenade.Damage",
+      "source": "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Generated/Schema/Classes/CBaseGrenade.g.cs#L59",
+      "version": "v1.0.379",
+      "commit": "f58e383b0553be16c0f8c6dd68a8194de17691e9",
+      "verification": "source declaration/implementation read; not engine acceptance",
+      "contract": "Generated schema field or handle accessor; no guessed offsets.",
+      "unproved": "Not permission to initialize a directly-created grenade; zero damage/radius does not prove no blind/smoke/team side effects.",
+      "disabled": true
+    },
+    {
+      "symbol": "CBaseGrenade.DmgRadius",
+      "source": "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Generated/Schema/Classes/CBaseGrenade.g.cs#L47",
+      "version": "v1.0.379",
+      "commit": "f58e383b0553be16c0f8c6dd68a8194de17691e9",
+      "verification": "source declaration/implementation read; not engine acceptance",
+      "contract": "Generated schema field or handle accessor; no guessed offsets.",
+      "unproved": "Not permission to initialize a directly-created grenade; zero damage/radius does not prove no blind/smoke/team side effects.",
+      "disabled": true
+    },
+    {
+      "symbol": "CBaseGrenade.DetonateTime",
+      "source": "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Generated/Schema/Classes/CBaseGrenade.g.cs#L51",
+      "version": "v1.0.379",
+      "commit": "f58e383b0553be16c0f8c6dd68a8194de17691e9",
+      "verification": "source declaration/implementation read; not engine acceptance",
+      "contract": "Generated schema field or handle accessor; no guessed offsets.",
+      "unproved": "Not permission to initialize a directly-created grenade; zero damage/radius does not prove no blind/smoke/team side effects.",
+      "disabled": true
+    },
+    {
+      "symbol": "CBaseGrenade.Thrower",
+      "source": "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Generated/Schema/Classes/CBaseGrenade.g.cs#L79",
+      "version": "v1.0.379",
+      "commit": "f58e383b0553be16c0f8c6dd68a8194de17691e9",
+      "verification": "source declaration/implementation read; not engine acceptance",
+      "contract": "Generated schema field or handle accessor; no guessed offsets.",
+      "unproved": "Not permission to initialize a directly-created grenade; zero damage/radius does not prove no blind/smoke/team side effects.",
+      "disabled": true
+    },
+    {
+      "symbol": "CBaseGrenade.OriginalThrower",
+      "source": "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Generated/Schema/Classes/CBaseGrenade.g.cs#L87",
+      "version": "v1.0.379",
+      "commit": "f58e383b0553be16c0f8c6dd68a8194de17691e9",
+      "verification": "source declaration/implementation read; not engine acceptance",
+      "contract": "Generated schema field or handle accessor; no guessed offsets.",
+      "unproved": "Not permission to initialize a directly-created grenade; zero damage/radius does not prove no blind/smoke/team side effects.",
+      "disabled": true
+    },
+    {
+      "symbol": "CTakeDamageInfo.Damage/BitsDamageType/Attacker/Inflictor",
+      "source": "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Generated/Schema/Classes/CTakeDamageInfo.g.cs#L51",
+      "version": "v1.0.379",
+      "commit": "f58e383b0553be16c0f8c6dd68a8194de17691e9",
+      "verification": "source declaration/implementation read; not engine acceptance",
+      "contract": "Generated accessors wrap existing native pointer.",
+      "unproved": "Borrowed hook object only; no allocator, constructor, destructor, alignment or ownership proof. Never retain hook pointer.",
+      "disabled": true
+    },
+    {
+      "symbol": "CTakeDamageInfo(IntPtr)",
+      "source": "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Generated/Schema/Classes/CTakeDamageInfo.g.cs#L19",
+      "version": "v1.0.379",
+      "commit": "f58e383b0553be16c0f8c6dd68a8194de17691e9",
+      "verification": "source declaration/implementation read; not engine acceptance",
+      "contract": "Wraps supplied pointer; does not construct native damage state.",
+      "unproved": "Native allocation/invocation remains disabled. Schema size alone and zero-filled buffer are insufficient.",
+      "disabled": true
+    },
+    {
+      "symbol": "Listeners.OnEntityTakeDamagePre",
+      "source": "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Core/Listeners.g.cs#L48",
+      "version": "v1.0.379",
+      "commit": "f58e383b0553be16c0f8c6dd68a8194de17691e9",
+      "verification": "source declaration/implementation read; not engine acceptance",
+      "contract": "CBaseEntity,CTakeDamageInfo; Handled or greater prevents entire damage application.",
+      "unproved": "Native hook sequencing, borrowed lifetime and installed version require separate verification; no damage driver proven.",
+      "disabled": true
+    },
+    {
+      "symbol": "BasePlugin.RegisterEventHandler<T>",
+      "source": "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Core/BasePlugin.cs#L163",
+      "version": "v1.0.379",
+      "commit": "f58e383b0553be16c0f8c6dd68a8194de17691e9",
+      "verification": "source declaration/implementation read; not engine acceptance",
+      "contract": "Default HookMode.Post; handler GameEventHandler<T>(event,GameEventInfo).",
+      "unproved": "Post hurt is telemetry after damage, not cancellable authority. Event payload ownership not fully audited.",
+      "disabled": false
+    },
+    {
+      "symbol": "BasePlugin.RegisterListener<T>",
+      "source": "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Core/BasePlugin.cs#L280",
+      "version": "v1.0.379",
+      "commit": "f58e383b0553be16c0f8c6dd68a8194de17691e9",
+      "verification": "source declaration/implementation read; not engine acceptance",
+      "contract": "Requires named listener delegate; wrapper converts callback args.",
+      "unproved": "Remaining native forwarding and teardown implementation still to audit.",
+      "disabled": false
+    },
+    {
+      "symbol": "BasePlugin.AddTimer",
+      "source": "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Core/BasePlugin.cs#L368",
+      "version": "v1.0.379",
+      "commit": "f58e383b0553be16c0f8c6dd68a8194de17691e9",
+      "verification": "source declaration/implementation read; not engine acceptance",
+      "contract": "Seconds,Action,nullable TimerFlags; Timer stored in plugin timers.",
+      "unproved": "Not independent of plugin unload. No new timer assumed to survive unload.",
+      "disabled": true
+    },
+    {
+      "symbol": "Utilities.SetStateChanged",
+      "source": "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Utilities.cs#L231",
+      "version": "v1.0.379",
+      "commit": "f58e383b0553be16c0f8c6dd68a8194de17691e9",
+      "verification": "source declaration/implementation read; not engine acceptance",
+      "contract": "Checks schema networked field; warns/returns when not networked; derives schema offsets.",
+      "unproved": "Does not validate game semantic ownership or persistence. Exact class/field must be audited for every use.",
+      "disabled": true
+    },
+    {
+      "symbol": "CBaseEntity.Health",
+      "source": "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Generated/Schema/Classes/CBaseEntity.g.cs#L67",
+      "version": "v1.0.379",
+      "commit": "f58e383b0553be16c0f8c6dd68a8194de17691e9",
+      "verification": "source declaration/implementation read; not engine acceptance",
+      "contract": "Generated schema accessor, not custom raw native memory.",
+      "unproved": "Setter availability alone does not prove gameplay correctness, replication, stacking or restore ownership.",
+      "disabled": true
+    },
+    {
+      "symbol": "CBaseEntity.MaxHealth",
+      "source": "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Generated/Schema/Classes/CBaseEntity.g.cs#L71",
+      "version": "v1.0.379",
+      "commit": "f58e383b0553be16c0f8c6dd68a8194de17691e9",
+      "verification": "source declaration/implementation read; not engine acceptance",
+      "contract": "Generated schema accessor, not custom raw native memory.",
+      "unproved": "Setter availability alone does not prove gameplay correctness, replication, stacking or restore ownership.",
+      "disabled": true
+    },
+    {
+      "symbol": "CCSPlayerPawn.VelocityModifier",
+      "source": "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Generated/Schema/Classes/CCSPlayerPawn.g.cs#L319",
+      "version": "v1.0.379",
+      "commit": "f58e383b0553be16c0f8c6dd68a8194de17691e9",
+      "verification": "source declaration/implementation read; not engine acceptance",
+      "contract": "Generated schema accessor, not custom raw native memory.",
+      "unproved": "Setter availability alone does not prove gameplay correctness, replication, stacking or restore ownership.",
+      "disabled": true
+    },
+    {
+      "symbol": "CCSPlayerPawn.EyeAngles",
+      "source": "https://github.com/roflmuffin/CounterStrikeSharp/blob/f58e383b0553be16c0f8c6dd68a8194de17691e9/managed/CounterStrikeSharp.API/Generated/Schema/Classes/CCSPlayerPawn.g.cs#L459",
+      "version": "v1.0.379",
+      "commit": "f58e383b0553be16c0f8c6dd68a8194de17691e9",
+      "verification": "source declaration/implementation read; not engine acceptance",
+      "contract": "Generated schema accessor, not custom raw native memory.",
+      "unproved": "Setter availability alone does not prove gameplay correctness, replication, stacking or restore ownership.",
+      "disabled": true
+    }
+  ]
+}
