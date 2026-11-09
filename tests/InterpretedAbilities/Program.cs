@@ -254,6 +254,15 @@ transaction=new NativeEntityTransaction(transactionEscrow,creation);
 try{transaction.Activate();Check(false);}catch(Exception){}
 Check(creation.Exists(821));Check(transactionEscrow.Pending==0);
 creation.FailRemove=false;transaction.Dispose();Check(!creation.Exists(821));
+// Production projectile damage gate, exhaustive truth table against independently stated policy.
+for(var mask=0;mask<1024;mask++){
+ bool Bit(int index)=>(mask&(1<<index))!=0;
+ var expected=true;
+ for(var n=0;n<6;n++)if(!Bit(n))expected=false;
+ if(Bit(6)){if(!Bit(7)||!Bit(8))expected=false;}
+ else if(!Bit(9))expected=false;
+ Check(NativeProjectileDamagePolicy.Allow(Bit(0),Bit(1),Bit(2),Bit(3),Bit(4),Bit(5),Bit(6),Bit(7),Bit(8),Bit(9))==expected);
+}
 Console.WriteLine($"{count} interpreted lifecycle checks PASS; router + lifecycle PASS; CSS calls compile, not native QA");
 sealed class Effect:IDisposable{public bool Disposed;public void Dispose()=>Disposed=true;}
 

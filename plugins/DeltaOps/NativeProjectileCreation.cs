@@ -13,10 +13,13 @@ public sealed partial class DeltaOpsPlugin
         var attacker=Utilities.GetPlayers().FirstOrDefault(p=>IsHumanController(p)&&
             p.EntityHandle.Raw==owner.Controller&&p.PlayerPawn.Raw==owner.Pawn);
         var target=Utilities.GetPlayers().FirstOrDefault(p=>IsHumanController(p)&&p.PlayerPawn.Raw==victim.EntityHandle.Raw);
-        if(attacker==null||target==null||!attacker.PawnIsAlive||!target.PawnIsAlive||
-            !EntityWorldReady()||_raidMode&&(!RaidActive(attacker.SteamID)||!QueryRaid(2,attacker.SteamID,target.SteamID)))
-            return HookResult.Handled;
-        if(info.Attacker.Raw!=owner.Pawn)return HookResult.Handled;
+        var allowed=NativeProjectileDamagePolicy.Allow(attacker!=null,target!=null,
+            attacker?.PawnIsAlive==true,target?.PawnIsAlive==true,EntityWorldReady(),
+            info.Attacker.Raw==owner.Pawn,_raidMode,
+            attacker!=null&&RaidActive(attacker.SteamID),
+            attacker!=null&&target!=null&&QueryRaid(2,attacker.SteamID,target.SteamID),
+            attacker!=null&&target!=null&&IsEnemy(attacker,target));
+        if(!allowed)return HookResult.Handled;
         return HookResult.Continue;
     }
     // Direct inert creation, never GiveNamedItem and never an unowned weapon-to-projectile
